@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { path: "/control", label: "Control", icon: Home },
-  { path: "/center", label: "Center", icon: LayoutGrid },
-  { path: "/shop", label: "Shop", icon: ShoppingBag },
-  { path: "/data", label: "Data", icon: BarChart3 },
+  { path: "/control", label: "Контроль", icon: Home },
+  { path: "/center", label: "Центр", icon: LayoutGrid },
+  { path: "/shop", label: "Магазин", icon: ShoppingBag },
+  { path: "/data", label: "Данные", icon: BarChart3 },
 ];
 
 const BottomNav = () => {

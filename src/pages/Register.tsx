@@ -17,14 +17,14 @@ import {
 } from "@/components/ui/select";
 
 const COUNTRIES = [
-  { code: "KZ", name: "Kazakhstan", dial: "+7", flag: "🇰🇿" },
-  { code: "RU", name: "Russia", dial: "+7", flag: "🇷🇺" },
-  { code: "UZ", name: "Uzbekistan", dial: "+998", flag: "🇺🇿" },
-  { code: "KG", name: "Kyrgyzstan", dial: "+996", flag: "🇰🇬" },
-  { code: "AE", name: "UAE", dial: "+971", flag: "🇦🇪" },
-  { code: "TR", name: "Turkey", dial: "+90", flag: "🇹🇷" },
-  { code: "DE", name: "Germany", dial: "+49", flag: "🇩🇪" },
-  { code: "US", name: "USA", dial: "+1", flag: "🇺🇸" },
+  { code: "KZ", name: "Казахстан", dial: "+7", flag: "🇰🇿" },
+  { code: "RU", name: "Россия", dial: "+7", flag: "🇷🇺" },
+  { code: "UZ", name: "Узбекистан", dial: "+998", flag: "🇺🇿" },
+  { code: "KG", name: "Киргизия", dial: "+996", flag: "🇰🇬" },
+  { code: "AE", name: "ОАЭ", dial: "+971", flag: "🇦🇪" },
+  { code: "TR", name: "Турция", dial: "+90", flag: "🇹🇷" },
+  { code: "DE", name: "Германия", dial: "+49", flag: "🇩🇪" },
+  { code: "US", name: "США", dial: "+1", flag: "🇺🇸" },
 ] as const;
 
 const DEFAULT_COUNTRY = COUNTRIES[0];

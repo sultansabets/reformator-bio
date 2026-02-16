@@ -48,7 +48,7 @@ interface MockAnalysis {
 const MOCK_ANALYSES: MockAnalysis[] = [
   {
     id: "vitamin-d",
-    name: "Vitamin D",
+    name: "Витамин D",
     value: 22,
     unit: "ng/mL",
     refMin: 30,
