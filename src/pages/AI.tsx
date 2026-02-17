@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Send, Sparkles, User, Paperclip } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,18 +26,9 @@ const DEFAULT_MOCK = "Принял. Это демо-режим: полный о�
 type Message = { role: "user" | "assistant"; text: string };
 
 export default function AI() {
-  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [greetingShown, setGreetingShown] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isDark = theme === "dark";
-
-  useEffect(() => {
-    if (messages.length === 0 && !greetingShown) {
-      setGreetingShown(true);
-    }
-  }, [messages.length, greetingShown]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -62,89 +52,89 @@ export default function AI() {
     send(input);
   };
 
+  const showQuickPrompts = messages.length === 0;
+
   return (
-    <div
-      className={`flex h-[calc(100vh-3.5rem)] flex-col bg-gradient-to-b ${
-        isDark ? "from-indigo-950 to-slate-900" : "from-indigo-50 to-white"
-      }`}
-    >
+    <div className="flex min-h-screen flex-col bg-background">
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-28"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-24"
       >
-        {messages.length === 0 ? (
+        {showQuickPrompts ? (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center pt-16 text-center"
+            className="flex flex-col items-center justify-center pt-12 text-center"
           >
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600/20">
-              <Sparkles className="h-7 w-7 text-indigo-500" />
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Sparkles className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="text-lg font-medium text-foreground">
+            <p className="text-base font-medium text-foreground">
               Здравствуйте. Я Dr.AI. Чем могу помочь?
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Выберите подсказку или напишите вопрос
             </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {AI_QUICK_PROMPTS.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => send(chip)}
+                  className="rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </motion.div>
         ) : (
-          <ul className="space-y-4">
-            {messages.map((m, i) => (
-              <li
-                key={i}
-                className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+          <>
+            <div className="mb-2 flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => setMessages([])}
               >
-                {m.role === "assistant" ? (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600/20">
-                    <Sparkles className="h-4 w-4 text-indigo-500" />
-                  </div>
-                ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-                <Card
-                  className={`max-w-[85%] border ${
-                    m.role === "user"
-                      ? "border-border bg-muted text-foreground"
-                      : "border-indigo-500/30 bg-indigo-600/10"
-                  }`}
+                Новый диалог
+              </Button>
+            </div>
+            <ul className="space-y-4">
+              {messages.map((m, i) => (
+                <li
+                  key={i}
+                  className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
                 >
-                  <CardContent
-                    className={`p-3 text-sm ${
-                      m.role === "assistant"
-                        ? isDark
-                          ? "text-indigo-400"
-                          : "text-indigo-600"
-                        : "text-foreground"
+                  {m.role === "assistant" ? (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <Card
+                    className={`max-w-[85%] border border-border ${
+                      m.role === "user" ? "bg-muted" : "bg-card"
                     }`}
                   >
-                    {m.text}
-                  </CardContent>
-                </Card>
-              </li>
-            ))}
-          </ul>
+                    <CardContent className="p-3 text-sm text-foreground">
+                      {m.text}
+                    </CardContent>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
-
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          {AI_QUICK_PROMPTS.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => send(chip)}
-              className="rounded-full border border-indigo-500/30 bg-indigo-600/10 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-indigo-600/20"
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="sticky bottom-0 left-0 right-0 border-t border-border bg-background px-4 py-3 pb-[env(safe-area-inset-bottom)]"
+        className="sticky bottom-0 left-0 right-0 z-10 flex-shrink-0 border-t border-border bg-background px-4 py-3 pb-24"
       >
         <div className="flex gap-2">
           <button

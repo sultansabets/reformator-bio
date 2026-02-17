@@ -228,10 +228,10 @@ function SubscriptionsTab() {
 type Medication = {
   id: string;
   name: string;
-  dosage: string;
-  times: string[];
+  time: string;
+  quantity: number;
+  frequency: "daily" | "weekly" | "once";
   startDate: string;
-  endDate: string;
 };
 
 type MedicationsData = {
@@ -251,8 +251,17 @@ function loadMedicationsData(userId: string): MedicationsData {
     const raw = localStorage.getItem(getMedicationsStorageKey(userId));
     if (!raw) return { medications: [], taken: {} };
     const parsed = JSON.parse(raw) as MedicationsData;
+    const meds = Array.isArray(parsed.medications) ? parsed.medications : [];
+    const migrated = meds.map((m: Record<string, unknown>) => ({
+      id: m.id,
+      name: m.name,
+      time: typeof m.time === "string" ? m.time : "08:00",
+      quantity: typeof m.quantity === "number" ? m.quantity : 1,
+      frequency: m.frequency === "daily" || m.frequency === "weekly" || m.frequency === "once" ? m.frequency : "daily",
+      startDate: m.startDate,
+    })) as Medication[];
     return {
-      medications: Array.isArray(parsed.medications) ? parsed.medications : [],
+      medications: migrated,
       taken: parsed.taken && typeof parsed.taken === "object" ? parsed.taken : {},
     };
   } catch {
@@ -269,22 +278,6 @@ function saveMedicationsData(userId: string, data: MedicationsData): void {
   }
 }
 
-function isMedicationActiveOnDate(med: Medication, dateStr: string): boolean {
-  return dateStr >= med.startDate && dateStr <= med.endDate;
-}
-
-function getIntakesForDay(medications: Medication[], dateStr: string): { med: Medication; time: string; intakeKey: string }[] {
-  const out: { med: Medication; time: string; intakeKey: string }[] = [];
-  for (const med of medications) {
-    if (!isMedicationActiveOnDate(med, dateStr)) continue;
-    for (const time of med.times) {
-      if (!time?.trim()) continue;
-      out.push({ med, time: time.trim(), intakeKey: `${med.id}_${time.trim()}` });
-    }
-  }
-  return out.sort((a, b) => a.time.localeCompare(b.time));
-}
-
 function toDateStr(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -292,7 +285,41 @@ function toDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function isIntakeOnDate(med: Medication, dateStr: string, windowStart: string, windowEnd: string): boolean {
+  if (dateStr < med.startDate) return false;
+  if (dateStr < windowStart || dateStr > windowEnd) return false;
+  if (med.frequency === "once") return dateStr === med.startDate;
+  if (med.frequency === "daily") return true;
+  if (med.frequency === "weekly") {
+    const dStart = new Date(med.startDate + "T12:00:00").getDay();
+    const dCur = new Date(dateStr + "T12:00:00").getDay();
+    return dStart === dCur;
+  }
+  return false;
+}
+
+function getIntakesForDay(
+  medications: Medication[],
+  dateStr: string,
+  windowStart: string,
+  windowEnd: string
+): { med: Medication; intakeKey: string }[] {
+  const out: { med: Medication; intakeKey: string }[] = [];
+  for (const med of medications) {
+    if (!isIntakeOnDate(med, dateStr, windowStart, windowEnd)) continue;
+    const intakeKey = `${med.id}_${med.time}`;
+    out.push({ med, intakeKey });
+  }
+  return out.sort((a, b) => a.med.time.localeCompare(b.med.time));
+}
+
 const DAY_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+
+const FREQUENCY_OPTIONS = [
+  { value: "daily" as const, label: "Каждый день" },
+  { value: "weekly" as const, label: "Раз в неделю" },
+  { value: "once" as const, label: "Разово" },
+];
 
 function MedicationsTab({ userId }: { userId: string }) {
   const [data, setData] = useState<MedicationsData>(() => loadMedicationsData(userId));
@@ -318,15 +345,18 @@ function MedicationsTab({ userId }: { userId: string }) {
 
   const todayStr = toDateStr(new Date());
   const days: string[] = [];
-  const start = new Date(todayStr);
-  for (let i = 0; i < 7; i++) {
+  const start = new Date(todayStr + "T12:00:00");
+  for (let i = 0; i < 14; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     days.push(toDateStr(d));
   }
+  const windowStart = days[0];
+  const windowEnd = days[13];
 
-  const intakes = getIntakesForDay(data.medications, selectedDate);
-  const hasIntakesOnDay = (dateStr: string) => getIntakesForDay(data.medications, dateStr).length > 0;
+  const intakes = getIntakesForDay(data.medications, selectedDate, windowStart, windowEnd);
+  const hasIntakesOnDay = (dateStr: string) =>
+    getIntakesForDay(data.medications, dateStr, windowStart, windowEnd).length > 0;
 
   const toggleTaken = (dateStr: string, intakeKey: string) => {
     setData((prev) => ({
@@ -345,25 +375,12 @@ function MedicationsTab({ userId }: { userId: string }) {
 
   if (!userId) return null;
 
-  const emptyState = data.medications.length === 0;
-
   return (
-    <div className="pb-24">
-      {/* 7-day horizontal calendar */}
-      <motion.div
-        className="flex gap-2 overflow-x-auto scrollbar-hide py-2"
+    <div className="min-h-0">
+      {/* 14-day horizontal scroll */}
+      <div
+        className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide touch-pan-x"
         style={{ WebkitOverflowScrolling: "touch" }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={(_, info) => {
-          const threshold = 40;
-          if (info.offset.x < -threshold && days.indexOf(selectedDate) < 6) {
-            setSelectedDate(days[days.indexOf(selectedDate) + 1]);
-          } else if (info.offset.x > threshold && days.indexOf(selectedDate) > 0) {
-            setSelectedDate(days[days.indexOf(selectedDate) - 1]);
-          }
-        }}
       >
         {days.map((dateStr) => {
           const d = new Date(dateStr + "T12:00:00");
@@ -376,7 +393,7 @@ function MedicationsTab({ userId }: { userId: string }) {
               key={dateStr}
               type="button"
               onClick={() => setSelectedDate(dateStr)}
-              className={`flex shrink-0 flex-col items-center rounded-xl border-2 px-3 py-2.5 transition-all ${
+              className={`flex h-[88px] w-16 shrink-0 flex-col items-center justify-center rounded-xl border-2 transition-all ${
                 active
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border bg-card text-muted-foreground"
@@ -385,88 +402,66 @@ function MedicationsTab({ userId }: { userId: string }) {
               <span className="text-[10px] font-medium">{dayLabel}</span>
               <span className="text-base font-semibold">{dayNum}</span>
               {hasIntake && (
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-status-green" aria-hidden />
               )}
             </button>
           );
         })}
-      </motion.div>
+      </div>
 
-      {emptyState ? (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-8 flex flex-col items-center justify-center py-12 text-center"
-          >
-            <Pill className="h-12 w-12 text-muted-foreground/60" strokeWidth={1.5} />
-            <h3 className="mt-4 text-sm font-semibold text-foreground">Нет курсов лекарств</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Добавьте ваше первое лекарство</p>
-          </motion.div>
-          <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background p-4 safe-area-pb">
-            <Button className="w-full" onClick={() => setAddModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={selectedDate}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="mt-4 space-y-2"
-            >
-              <p className="text-xs font-medium text-muted-foreground">
-                Приёмы на {new Date(selectedDate + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
-              </p>
-              {intakes.length === 0 ? (
-                <p className="py-4 text-center text-xs text-muted-foreground">Нет приёмов на этот день</p>
-              ) : (
-                intakes.map(({ med, time, intakeKey }) => (
-                  <Card key={intakeKey} className="border border-border">
-                    <CardContent className="p-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleTaken(selectedDate, intakeKey)}
-                        className="flex w-full items-center justify-between px-4 py-3 text-left"
-                      >
-                        <div>
-                          <div className="text-sm font-semibold text-foreground">{med.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {med.dosage} • {time}
-                          </div>
-                        </div>
-                        <span
-                          className={`text-xs font-medium ${
-                            isTaken(selectedDate, intakeKey) ? "text-status-green" : "text-muted-foreground"
-                          }`}
-                        >
-                          {isTaken(selectedDate, intakeKey) ? "Принято" : "Отметить"}
-                        </span>
-                      </button>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </motion.div>
-          </AnimatePresence>
-          <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background p-4 safe-area-pb">
-            <Button className="w-full" onClick={() => setAddModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить
-            </Button>
-          </div>
-        </>
-      )}
+      {/* List for selected date */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedDate}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="mt-4 space-y-2 px-1"
+        >
+          {intakes.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Нет приёмов на выбранную дату
+            </p>
+          ) : (
+            intakes.map(({ med, intakeKey }) => (
+              <Card key={intakeKey} className="border border-border">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold text-foreground">{med.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {med.time} • кол-во: {med.quantity}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={isTaken(selectedDate, intakeKey) ? "secondary" : "outline"}
+                      className="shrink-0"
+                      onClick={() => toggleTaken(selectedDate, intakeKey)}
+                    >
+                      {isTaken(selectedDate, intakeKey) ? "Принято" : "Принял"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Sticky add button above bottom nav */}
+      <div className="sticky bottom-20 px-4 pb-6 pt-4">
+        <Button className="w-full rounded-full" onClick={() => setAddModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Добавить приём
+        </Button>
+      </div>
 
       <AddMedicationModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
+        selectedDate={selectedDate}
         onSave={(med) => {
           setData((prev) => ({
             ...prev,
@@ -482,49 +477,40 @@ function MedicationsTab({ userId }: { userId: string }) {
 function AddMedicationModal({
   open,
   onClose,
+  selectedDate,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
+  selectedDate: string;
   onSave: (med: Omit<Medication, "id">) => void;
 }) {
   const [name, setName] = useState("");
-  const [dosage, setDosage] = useState("");
-  const [times, setTimes] = useState<string[]>(["08:00"]);
+  const [time, setTime] = useState("08:00");
+  const [quantity, setQuantity] = useState(1);
+  const [frequency, setFrequency] = useState<"daily" | "weekly" | "once">("daily");
   const [startDate, setStartDate] = useState(() => toDateStr(new Date()));
-  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     if (open) {
       setName("");
-      setDosage("");
-      setTimes(["08:00"]);
-      setStartDate(toDateStr(new Date()));
-      setEndDate("");
+      setTime("08:00");
+      setQuantity(1);
+      setFrequency("daily");
+      setStartDate(selectedDate);
     }
-  }, [open]);
-
-  const addTime = () => setTimes((t) => [...t, "12:00"]);
-  const removeTime = (i: number) => setTimes((t) => t.filter((_, idx) => idx !== i));
-  const setTime = (i: number, v: string) => setTimes((t) => t.map((val, idx) => (idx === i ? v : val)));
+  }, [open, selectedDate]);
 
   const handleSave = () => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
-    const trimmedTimes = times.map((t) => t.trim()).filter(Boolean);
-    if (trimmedTimes.length === 0) return;
-    const end = endDate.trim();
-    const endDateValue = end || (() => {
-      const d = new Date(startDate + "T12:00:00");
-      d.setFullYear(d.getFullYear() + 10);
-      return toDateStr(d);
-    })();
+    const dateToUse = frequency === "once" ? selectedDate : startDate;
     onSave({
       name: trimmedName,
-      dosage: dosage.trim(),
-      times: trimmedTimes,
-      startDate,
-      endDate: endDateValue,
+      time: time.trim() || "08:00",
+      quantity: Number(quantity) || 1,
+      frequency,
+      startDate: dateToUse,
     });
   };
 
@@ -539,44 +525,71 @@ function AddMedicationModal({
         className="fixed inset-0 z-[9999] flex flex-col overflow-x-hidden bg-background"
       >
         <div className="flex items-center justify-between border-b border-border p-4">
-          <h2 className="text-lg font-semibold text-foreground">Добавить лекарство</h2>
-          <button type="button" onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted" aria-label="Закрыть">
+          <h2 className="text-lg font-semibold text-foreground">Добавить приём</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Закрыть"
+          >
             ✕
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-2">
-            <Label>Название</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Например: Витамин D" className="h-11 border-border" />
-          </div>
-          <div className="space-y-2">
-            <Label>Дозировка</Label>
-            <Input value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="Например: 2000 МЕ" className="h-11 border-border" />
+            <Label>Название лекарства</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Например: Витамин D"
+              className="h-11 border-border"
+            />
           </div>
           <div className="space-y-2">
             <Label>Время приёма</Label>
-            {times.map((t, i) => (
-              <div key={i} className="flex gap-2">
-                <Input type="time" value={t} onChange={(e) => setTime(i, e.target.value)} className="h-11 border-border flex-1" />
-                {times.length > 1 ? (
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeTime(i)} className="shrink-0" aria-label="Удалить время">
-                    —
-                  </Button>
-                ) : null}
-              </div>
-            ))}
-            <Button type="button" variant="outline" size="sm" onClick={addTime} className="w-full">
-              + Добавить время
-            </Button>
+            <Input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="h-11 border-border"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Дата начала</Label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-11 border-border" />
+            <Label>Количество</Label>
+            <Input
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+              className="h-11 border-border"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Дата окончания</Label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="Не ограничено" className="h-11 border-border" />
+            <Label>Частота</Label>
+            <Select value={frequency} onValueChange={(v) => setFrequency(v as "daily" | "weekly" | "once")}>
+              <SelectTrigger className="h-11 border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FREQUENCY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {frequency !== "once" && (
+            <div className="space-y-2">
+              <Label>Дата начала</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-11 border-border"
+              />
+            </div>
+          )}
         </div>
         <div className="border-t border-border p-4">
           <Button className="w-full" onClick={handleSave}>

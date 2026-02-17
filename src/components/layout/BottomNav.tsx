@@ -63,15 +63,13 @@ const BottomNav = () => {
         <button
           onClick={handleAIClick}
           className={cn(
-            "flex h-16 w-16 -translate-y-5 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95",
-            "bg-indigo-600 dark:bg-indigo-500 text-white",
-            "shadow-lg shadow-indigo-500/25 dark:shadow-indigo-400/20",
-            "ring-4 ring-background/80",
-            "animate-[pulse_2.5s_ease-in-out_infinite] hover:animate-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-background"
+            "flex h-14 w-14 -translate-y-2 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
+            "bg-neutral-900 dark:bg-neutral-800 text-white",
+            "shadow-sm focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
           )}
           aria-label="ИИ"
         >
-          <Sparkles className="h-7 w-7" strokeWidth={2} />
+          <Sparkles className="h-[22px] w-[22px]" strokeWidth={2} />
         </button>
 
         {RIGHT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
