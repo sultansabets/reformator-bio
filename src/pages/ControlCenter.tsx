@@ -17,12 +17,9 @@ import { getGreetingByTime } from "@/lib/greeting";
 import { getRecommendedKcal } from "@/lib/health";
 import { computeHealthMetrics } from "@/lib/healthEngine";
 import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
+import { getStorageKey } from "@/lib/userStorage";
 import ReadinessRing from "@/components/control/ReadinessRing";
 import { Card, CardContent } from "@/components/ui/card";
-
-const NUTRITION_KEY = "reformator_bio_nutrition";
-const WATER_KEY = "reformator_bio_water";
-const WORKOUT_HISTORY_KEY = "reformator_bio_workout_history";
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -35,9 +32,9 @@ function getDateDaysAgo(days: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function readTodayKcal(): number {
+function readTodayKcal(nutritionKey: string): number {
   try {
-    const raw = localStorage.getItem(NUTRITION_KEY);
+    const raw = localStorage.getItem(nutritionKey);
     if (!raw) return 0;
     const parsed = JSON.parse(raw);
     if (parsed.date !== getTodayDateString()) return 0;
@@ -53,14 +50,14 @@ function readTodayKcal(): number {
   }
 }
 
-function readKcalLast3Days(): { date: string; kcal: number }[] {
+function readKcalLast3Days(nutritionKey: string): { date: string; kcal: number }[] {
   const today = getTodayDateString();
-  const todayKcal = readTodayKcal();
+  const todayKcal = readTodayKcal(nutritionKey);
   const result: { date: string; kcal: number }[] = [{ date: today, kcal: todayKcal }];
   for (let i = 1; i <= 2; i++) {
     const d = getDateDaysAgo(i);
     try {
-      const raw = localStorage.getItem(NUTRITION_KEY);
+      const raw = localStorage.getItem(nutritionKey);
       if (!raw) {
         result.push({ date: d, kcal: 0 });
         continue;
@@ -86,9 +83,9 @@ function readKcalLast3Days(): { date: string; kcal: number }[] {
   return result;
 }
 
-function readTodayWater(): { current: number; goal: number } {
+function readTodayWater(waterKey: string): { current: number; goal: number } {
   try {
-    const raw = localStorage.getItem(WATER_KEY);
+    const raw = localStorage.getItem(waterKey);
     const today = getTodayDateString();
     if (!raw) return { current: 0, goal: 2500 };
     const parsed = JSON.parse(raw);
@@ -107,9 +104,9 @@ interface WorkoutEntry {
   startedAt: number;
 }
 
-function readWorkoutHistoryLast3Days(): WorkoutEntry[] {
+function readWorkoutHistoryLast3Days(workoutHistoryKey: string): WorkoutEntry[] {
   try {
-    const raw = localStorage.getItem(WORKOUT_HISTORY_KEY);
+    const raw = localStorage.getItem(workoutHistoryKey);
     if (!raw) return [];
     const list = JSON.parse(raw) as WorkoutEntry[];
     if (!Array.isArray(list)) return [];
@@ -123,9 +120,9 @@ function readWorkoutHistoryLast3Days(): WorkoutEntry[] {
   }
 }
 
-function readTodayWorkout(): { durationSec: number; caloriesBurned: number } {
+function readTodayWorkout(workoutHistoryKey: string): { durationSec: number; caloriesBurned: number } {
   try {
-    const raw = localStorage.getItem(WORKOUT_HISTORY_KEY);
+    const raw = localStorage.getItem(workoutHistoryKey);
     if (!raw) return { durationSec: 0, caloriesBurned: 0 };
     const list = JSON.parse(raw);
     const today = getTodayDateString();
@@ -199,16 +196,32 @@ const ControlCenter = () => {
   const displayName = user?.fullName?.trim() || "Пользователь";
   const [expandedFactor, setExpandedFactor] = useState<string | null>(null);
 
+  const storageKeys = useMemo(() => {
+    if (!user?.id) return null;
+    return {
+      nutrition: getStorageKey(user.id, "nutrition"),
+      water: getStorageKey(user.id, "water"),
+      workout_history: getStorageKey(user.id, "workout_history"),
+      labs: getStorageKey(user.id, "labs"),
+    };
+  }, [user?.id]);
+
   const { metrics, latestLab, todayKcal, kcalLast3, workoutLast3, todayWorkout } = useMemo(() => {
-    const water = readTodayWater();
-    const workout = readTodayWorkout();
+    const keys = storageKeys ?? {
+      nutrition: "reformator_bio_nutrition",
+      water: "reformator_bio_water",
+      workout_history: "reformator_bio_workout_history",
+      labs: "reformator_bio_labs",
+    };
+    const water = readTodayWater(keys.water);
+    const workout = readTodayWorkout(keys.workout_history);
     const recommended = user?.height && user?.weight ? getRecommendedKcal(user.weight, user.height) : null;
     const targetKcal = recommended?.target ?? 2000;
-    const lab = getLatestLab();
+    const lab = getLatestLab(keys.labs);
     const testosteroneNmolL = lab?.testosterone != null ? testosteroneNgDlToNmolL(lab.testosterone) : undefined;
     const input = {
       sleepHours: 7.5,
-      caloriesConsumed: readTodayKcal(),
+      caloriesConsumed: readTodayKcal(keys.nutrition),
       caloriesTarget: targetKcal,
       workoutIntensity: workoutIntensityFromToday(workout.durationSec, workout.caloriesBurned),
       waterMl: water.current,
@@ -226,12 +239,12 @@ const ControlCenter = () => {
     return {
       metrics: healthMetrics,
       latestLab: lab,
-      todayKcal: readTodayKcal(),
-      kcalLast3: readKcalLast3Days(),
-      workoutLast3: readWorkoutHistoryLast3Days(),
-      todayWorkout: readTodayWorkout(),
+      todayKcal: readTodayKcal(keys.nutrition),
+      kcalLast3: readKcalLast3Days(keys.nutrition),
+      workoutLast3: readWorkoutHistoryLast3Days(keys.workout_history),
+      todayWorkout: readTodayWorkout(keys.workout_history),
     };
-  }, [user?.height, user?.weight]);
+  }, [user?.height, user?.weight, storageKeys]);
 
   const energyScore = metrics.energyScore;
   const stressScore = metrics.stressScore;

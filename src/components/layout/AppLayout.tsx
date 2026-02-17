@@ -12,20 +12,20 @@ import logoDark from "@/assets/logo-dark.png";
 
 const LANG_OPTIONS = [
   { id: "ru", label: "Русский" },
-  { id: "kk", label: "Казахский" },
-  { id: "en", label: "Английский" },
+  { id: "kk", label: "Қазақша" },
+  { id: "en", label: "English" },
 ] as const;
 
 const AppLayout = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [lang, setLang] = useState<string>("ru");
 
   useEffect(() => {
-    ensureDailyReset();
-  }, []);
+    ensureDailyReset(user?.id);
+  }, [user?.id]);
 
   const handleLogout = () => {
     setSettingsOpen(false);
@@ -71,16 +71,6 @@ const AppLayout = () => {
         >
           <div className="pt-2 pb-6">
             <h2 className="text-lg font-semibold text-foreground">Настройки</h2>
-            <button
-              type="button"
-              onClick={() => {
-                setSettingsOpen(false);
-                navigate("/profile");
-              }}
-              className="mt-4 flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              Профиль
-            </button>
             <div className="mt-4 space-y-1 rounded-lg border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">

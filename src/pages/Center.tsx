@@ -12,7 +12,6 @@ import {
   Flame,
   Droplets,
   Mic,
-  FlaskConical,
   ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -41,11 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-
-const NUTRITION_KEY = "reformator_bio_nutrition";
-const WORKOUT_KEY = "reformator_bio_workout";
-const WATER_KEY = "reformator_bio_water";
-const WORKOUT_HISTORY_KEY = "reformator_bio_workout_history";
+import { getStorageKey } from "@/lib/userStorage";
 
 const WATER_GOAL_ML = 2500;
 
@@ -117,10 +112,10 @@ interface WaterState {
   lastUpdatedDate: string;
 }
 
-function loadWaterState(): WaterState {
+function loadWaterState(waterKey: string): WaterState {
   const today = getTodayDateString();
   try {
-    const raw = localStorage.getItem(WATER_KEY);
+    const raw = localStorage.getItem(waterKey);
     if (!raw) return { current: 0, goal: WATER_GOAL_ML, lastUpdatedDate: today };
     const parsed = JSON.parse(raw);
     const state = {
@@ -135,9 +130,9 @@ function loadWaterState(): WaterState {
   }
 }
 
-function saveWaterState(state: WaterState): void {
+function saveWaterState(waterKey: string, state: WaterState): void {
   try {
-    localStorage.setItem(WATER_KEY, JSON.stringify(state));
+    localStorage.setItem(waterKey, JSON.stringify(state));
   } catch {
     // ignore
   }
@@ -151,10 +146,10 @@ export interface NutritionDay {
   snacks: NutritionItem[];
 }
 
-function loadNutrition(): NutritionDay {
+function loadNutrition(nutritionKey: string): NutritionDay {
   const today = getTodayDateString();
   try {
-    const raw = localStorage.getItem(NUTRITION_KEY);
+    const raw = localStorage.getItem(nutritionKey);
     if (!raw) return { date: today, breakfast: [], lunch: [], dinner: [], snacks: [] };
     const parsed = JSON.parse(raw) as NutritionDay;
     if (parsed.date !== today) {
@@ -172,9 +167,9 @@ function loadNutrition(): NutritionDay {
   }
 }
 
-function saveNutrition(data: NutritionDay): void {
+function saveNutrition(nutritionKey: string, data: NutritionDay): void {
   try {
-    localStorage.setItem(NUTRITION_KEY, JSON.stringify(data));
+    localStorage.setItem(nutritionKey, JSON.stringify(data));
   } catch {
     // ignore
   }
@@ -196,9 +191,9 @@ interface WorkoutHistoryEntry {
   startedAt: number;
 }
 
-function loadWorkoutHistory(): WorkoutHistoryEntry[] {
+function loadWorkoutHistory(workoutHistoryKey: string): WorkoutHistoryEntry[] {
   try {
-    const raw = localStorage.getItem(WORKOUT_HISTORY_KEY);
+    const raw = localStorage.getItem(workoutHistoryKey);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -207,20 +202,43 @@ function loadWorkoutHistory(): WorkoutHistoryEntry[] {
   }
 }
 
-function saveWorkoutHistory(entries: WorkoutHistoryEntry[]): void {
+function saveWorkoutHistory(workoutHistoryKey: string, entries: WorkoutHistoryEntry[]): void {
   try {
-    localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(entries.slice(-50)));
+    localStorage.setItem(workoutHistoryKey, JSON.stringify(entries.slice(-50)));
   } catch {
     // ignore
   }
 }
 
+const defaultNutrition = (): NutritionDay => ({
+  date: getTodayDateString(),
+  breakfast: [],
+  lunch: [],
+  dinner: [],
+  snacks: [],
+});
+const defaultWater = (): WaterState => ({
+  current: 0,
+  goal: WATER_GOAL_ML,
+  lastUpdatedDate: getTodayDateString(),
+});
+
 export default function Center() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const storageKeys = useMemo(() => {
+    if (!user?.id) return null;
+    return {
+      nutrition: getStorageKey(user.id, "nutrition"),
+      water: getStorageKey(user.id, "water"),
+      workout_history: getStorageKey(user.id, "workout_history"),
+      workouts: getStorageKey(user.id, "workouts"),
+    };
+  }, [user?.id]);
+
   const [centerTab, setCenterTab] = useState<CenterTab>("Обзор");
   const [analyticsPeriod, setAnalyticsPeriod] = useState<(typeof analyticsPeriods)[number]>("Неделя");
-  const [nutrition, setNutrition] = useState<NutritionDay>(loadNutrition);
+  const [nutrition, setNutrition] = useState<NutritionDay>(defaultNutrition);
   const [addModal, setAddModal] = useState<{ meal: (typeof MEAL_KEYS)[number] } | null>(null);
   const [newName, setNewName] = useState("");
   const [newGrams, setNewGrams] = useState("");
@@ -230,12 +248,12 @@ export default function Center() {
   const [newFat, setNewFat] = useState("");
   const [newCarbs, setNewCarbs] = useState("");
 
-  const [water, setWater] = useState<WaterState>(loadWaterState);
+  const [water, setWater] = useState<WaterState>(defaultWater);
   const [waterModalOpen, setWaterModalOpen] = useState(false);
   const [waterInputMl, setWaterInputMl] = useState("");
 
   const [workoutType, setWorkoutType] = useState<string>(WORKOUT_TYPES[0].id);
-  const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>(loadWorkoutHistory);
+  const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
   const [workoutActive, setWorkoutActive] = useState(false);
   const [workoutPaused, setWorkoutPaused] = useState(false);
   const [workoutStartTime, setWorkoutStartTime] = useState<number | null>(null);
@@ -248,18 +266,19 @@ export default function Center() {
   const [voiceListening, setVoiceListening] = useState(false);
 
   useEffect(() => {
-    setNutrition(loadNutrition());
-    setWater(loadWaterState());
-    setWorkoutHistory(loadWorkoutHistory());
-  }, []);
+    if (!storageKeys) return;
+    setNutrition(loadNutrition(storageKeys.nutrition));
+    setWater(loadWaterState(storageKeys.water));
+    setWorkoutHistory(loadWorkoutHistory(storageKeys.workout_history));
+  }, [storageKeys]);
 
   useEffect(() => {
-    saveNutrition(nutrition);
-  }, [nutrition]);
+    if (storageKeys) saveNutrition(storageKeys.nutrition, nutrition);
+  }, [nutrition, storageKeys]);
 
   useEffect(() => {
-    saveWaterState(water);
-  }, [water]);
+    if (storageKeys) saveWaterState(storageKeys.water, water);
+  }, [water, storageKeys]);
 
   const totalKcal =
     nutrition.breakfast.reduce((s, i) => s + itemKcal(i), 0) +
@@ -401,9 +420,10 @@ export default function Center() {
     };
     const nextHistory = [entry, ...workoutHistory];
     setWorkoutHistory(nextHistory);
-    saveWorkoutHistory(nextHistory);
+    if (storageKeys) saveWorkoutHistory(storageKeys.workout_history, nextHistory);
     try {
-      const raw = localStorage.getItem(WORKOUT_KEY);
+      const workoutKey = storageKeys?.workouts ?? "reformator_bio_workout";
+      const raw = localStorage.getItem(workoutKey);
       const data = raw ? JSON.parse(raw) : { sessions: [] };
       const sessions = Array.isArray(data.sessions) ? data.sessions : [];
       sessions.push({
@@ -413,7 +433,7 @@ export default function Center() {
         durationSec,
         caloriesBurned: calories,
       });
-      localStorage.setItem(WORKOUT_KEY, JSON.stringify({ ...data, sessions }));
+      localStorage.setItem(workoutKey, JSON.stringify({ ...data, sessions }));
     } catch {
       // ignore
     }
@@ -633,20 +653,6 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
                   <Area type="monotone" dataKey="score" stroke="hsl(var(--status-green))" strokeWidth={2} fill="url(#recoveryGradCenter)" />
                 </AreaChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer border border-border shadow-sm transition-shadow hover:shadow-md" onClick={() => navigate("/data")}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                  <FlaskConical className="h-4 w-4 text-accent-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Анализы</p>
-                  <p className="text-xs text-muted-foreground">Лаб. показатели и история</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </CardContent>
           </Card>
         </motion.section>

@@ -93,11 +93,15 @@ const Register = () => {
       setError("Пароль не менее 6 символов");
       return;
     }
-    register({
+    const result = register({
       phone: fullPhone,
       password,
       nickname: nickname.trim(),
     });
+    if (!result.success) {
+      setError(result.error ?? "Ошибка регистрации");
+      return;
+    }
     navigate("/control", { replace: true });
   };
 

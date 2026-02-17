@@ -18,18 +18,18 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   }
 }
 
-export function getLabs(): LabEntry[] {
-  const raw = localStorage.getItem(LABS_STORAGE_KEY);
+export function getLabs(storageKey: string = LABS_STORAGE_KEY): LabEntry[] {
+  const raw = localStorage.getItem(storageKey);
   const list = safeParse<LabEntry[]>(raw, []);
   return Array.isArray(list) ? list : [];
 }
 
-export function setLabs(entries: LabEntry[]): void {
-  localStorage.setItem(LABS_STORAGE_KEY, JSON.stringify(entries));
+export function setLabs(entries: LabEntry[], storageKey: string = LABS_STORAGE_KEY): void {
+  localStorage.setItem(storageKey, JSON.stringify(entries));
 }
 
-export function getLatestLab(): LabEntry | null {
-  const labs = getLabs();
+export function getLatestLab(storageKey: string = LABS_STORAGE_KEY): LabEntry | null {
+  const labs = getLabs(storageKey);
   if (labs.length === 0) return null;
   const sorted = [...labs].sort((a, b) => (b.date > a.date ? 1 : -1));
   return sorted[0] ?? null;

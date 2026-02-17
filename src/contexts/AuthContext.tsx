@@ -1,7 +1,57 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import {
+  getUsersData,
+  setCurrentUserId,
+  setUsersData,
+  addUser as addAppUser,
+  findUserByPhoneAndPassword,
+  updateAppUser,
+  getAppUserById,
+  getStorageKey,
+  type AppUser,
+} from "@/lib/userStorage";
 
-const AUTH_KEY = "reformator_bio_auth";
-const USER_KEY = "reformator_bio_user";
+const LEGACY_USER_KEY = "reformator_bio_user";
+
+function migrateLegacyUserIfNeeded(): void {
+  const data = getUsersData();
+  if (data.users.length > 0) return;
+  try {
+    const raw = localStorage.getItem(LEGACY_USER_KEY);
+    if (!raw) return;
+    const legacy = JSON.parse(raw) as Record<string, unknown>;
+    const id = typeof legacy.id === "string" ? legacy.id : `legacy_${Date.now()}`;
+    const user: AppUser = {
+      id,
+      phone: String(legacy.phone ?? ""),
+      nickname: String(legacy.nickname ?? legacy.firstName ?? ""),
+      password: String(legacy.password ?? ""),
+      createdAt: Date.now(),
+      firstName: legacy.firstName as string | undefined,
+      lastName: legacy.lastName as string | undefined,
+      email: legacy.email as string | undefined,
+      avatar: legacy.avatar as string | undefined,
+      dob: legacy.dob as string | undefined,
+      activityLevel: legacy.activityLevel as string | undefined,
+      wearable: legacy.wearable as string | undefined,
+      height: legacy.height as number | undefined,
+      weight: legacy.weight as number | undefined,
+      goal: legacy.goal as AppUser["goal"],
+    };
+    if (!user.phone || !user.password) return;
+    setUsersData({ currentUserId: id, users: [user] });
+    const nutRaw = localStorage.getItem("reformator_bio_nutrition");
+    if (nutRaw) localStorage.setItem(getStorageKey(id, "nutrition"), nutRaw);
+    const waterRaw = localStorage.getItem("reformator_bio_water");
+    if (waterRaw) localStorage.setItem(getStorageKey(id, "water"), waterRaw);
+    const workoutRaw = localStorage.getItem("reformator_bio_workout_history");
+    if (workoutRaw) localStorage.setItem(getStorageKey(id, "workout_history"), workoutRaw);
+    const labsRaw = localStorage.getItem("reformator_bio_labs");
+    if (labsRaw) localStorage.setItem(getStorageKey(id, "labs"), labsRaw);
+  } catch {
+    // ignore
+  }
+}
 
 export interface StoredUser {
   firstName?: string;
@@ -20,12 +70,17 @@ export interface StoredUser {
 }
 
 export type ProfileUpdates = Partial<
-  Pick<StoredUser, "firstName" | "lastName" | "nickname" | "email" | "avatar" | "dob" | "activityLevel" | "height" | "weight" | "goal" | "wearable">
+  Pick<
+    StoredUser,
+    "firstName" | "lastName" | "nickname" | "email" | "avatar" | "dob" | "activityLevel" | "height" | "weight" | "goal" | "wearable"
+  >
 >;
+
+export type UserWithFullName = StoredUser & { fullName: string; id: string };
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: (StoredUser & { fullName: string }) | null;
+  user: UserWithFullName | null;
   login: (loginId: string, password: string) => { success: boolean; error?: string };
   register: (data: {
     phone: string;
@@ -34,75 +89,55 @@ interface AuthContextType {
     firstName?: string;
     lastName?: string;
     email?: string;
-  }) => void;
+  }) => { success: boolean; error?: string };
   logout: () => void;
   hasUser: () => boolean;
   updateUser: (updates: ProfileUpdates) => void;
 }
 
-function getStoredUser(): StoredUser | null {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as StoredUser) : null;
-  } catch {
-    return null;
-  }
+function appUserToStored(app: AppUser): StoredUser {
+  const { id, createdAt, ...rest } = app;
+  return rest;
 }
 
-function withFullName(stored: StoredUser): StoredUser & { fullName: string } {
+function withFullName(app: AppUser): UserWithFullName {
   const fullName =
-    stored.nickname?.trim() ||
-    [stored.firstName, stored.lastName].filter(Boolean).join(" ").trim() ||
+    app.nickname?.trim() ||
+    [app.firstName, app.lastName].filter(Boolean).join(" ").trim() ||
     "Пользователь";
-  return { ...stored, fullName };
+  return { ...appUserToStored(app), fullName, id: app.id };
+}
+
+function getCurrentStoredUser(): UserWithFullName | null {
+  const { currentUserId, users } = getUsersData();
+  if (!currentUserId) return null;
+  const app = users.find((u) => u.id === currentUserId) ?? getAppUserById(currentUserId);
+  return app ? withFullName(app) : null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(AUTH_KEY) === "true";
-    } catch {
-      return false;
-    }
+  const [user, setUser] = useState<UserWithFullName | null>(() => {
+    migrateLegacyUserIfNeeded();
+    return getCurrentStoredUser();
   });
-  const [user, setUser] = useState<(StoredUser & { fullName: string }) | null>(() => {
-    if (typeof localStorage === "undefined" || localStorage.getItem(AUTH_KEY) !== "true") return null;
-    const stored = getStoredUser();
-    return stored ? withFullName(stored) : null;
-  });
+  const isAuthenticated = !!user?.id;
 
   useEffect(() => {
-    try {
-      localStorage.setItem(AUTH_KEY, String(isAuthenticated));
-    } catch {
-      // ignore
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const stored = getStoredUser();
-      setUser(stored ? withFullName(stored) : null);
-    } else {
-      setUser(null);
-    }
-  }, [isAuthenticated]);
-
-  const updateUser = useCallback((updates: ProfileUpdates) => {
-    const current = getStoredUser();
-    if (!current) return;
-    const updated: StoredUser = { ...current, ...updates };
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(updated));
-      setUser(withFullName(updated));
-    } catch {
-      // ignore
-    }
+    const current = getCurrentStoredUser();
+    setUser(current);
   }, []);
 
-  const hasUser = useCallback(() => !!getStoredUser(), []);
+  const updateUser = useCallback((updates: ProfileUpdates) => {
+    const current = getCurrentStoredUser();
+    if (!current) return;
+    updateAppUser(current.id, updates);
+    const next = getCurrentStoredUser();
+    setUser(next);
+  }, []);
+
+  const hasUser = useCallback(() => !!getCurrentStoredUser(), []);
 
   const register = useCallback(
     (data: {
@@ -112,44 +147,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       firstName?: string;
       lastName?: string;
       email?: string;
-    }) => {
-      const newUser: StoredUser = {
+    }): { success: boolean; error?: string } => {
+      const result = addAppUser({
         phone: data.phone.trim(),
         password: data.password,
         nickname: data.nickname.trim(),
         firstName: data.firstName?.trim(),
         lastName: data.lastName?.trim(),
         email: data.email?.trim() || undefined,
-      };
-      try {
-        localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-        setUser(withFullName(newUser));
-        setIsAuthenticated(true);
-      } catch {
-        // ignore
+      });
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
+      setCurrentUserId(result.user.id);
+      setUser(withFullName(result.user));
+      return { success: true };
     },
     []
   );
 
   const login = useCallback((loginId: string, password: string): { success: boolean; error?: string } => {
-    const stored = getStoredUser();
-    if (!stored) {
+    const found = findUserByPhoneAndPassword(loginId.trim(), password);
+    if (!found) {
       return { success: false, error: "Неверный логин или пароль." };
     }
-    const id = loginId.trim();
-    const match =
-      (stored.phone === id || stored.email === id) && stored.password === password;
-    if (!match) {
-      return { success: false, error: "Неверный логин или пароль." };
-    }
-    setUser(withFullName(stored));
-    setIsAuthenticated(true);
+    setCurrentUserId(found.id);
+    setUser(withFullName(found));
     return { success: true };
   }, []);
 
   const logout = useCallback(() => {
-    setIsAuthenticated(false);
+    setCurrentUserId(null);
     setUser(null);
   }, []);
 
