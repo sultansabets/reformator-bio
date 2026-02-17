@@ -11,15 +11,6 @@ import { getNotifications, setNotifications, seedMockIfEmpty, type Notification 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,26 +29,6 @@ const LANG_OPTIONS = [
   { id: "ru", label: "Русский" },
   { id: "kk", label: "Қазақша" },
   { id: "en", label: "English" },
-] as const;
-
-const KZ_CITIES = [
-  "Алматы",
-  "Астана",
-  "Шымкент",
-  "Караганда",
-  "Актобе",
-  "Тараз",
-  "Павлодар",
-  "Усть-Каменогорск",
-  "Семей",
-  "Атырау",
-  "Костанай",
-  "Кызылорда",
-  "Актау",
-  "Петропавловск",
-  "Уральск",
-  "Талдыкорган",
-  "Туркестан",
 ] as const;
 
 const SETTINGS_DEVICE_IDS = ["apple", "reformator-band"] as const;
@@ -84,32 +55,13 @@ const AppLayout = () => {
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationList, setNotificationList] = useState<Notification[]>(() => getNotifications());
-  const [personalOpen, setPersonalOpen] = useState(true);
   const [devicesOpen, setDevicesOpen] = useState(false);
   const [deviceModal, setDeviceModal] = useState<{ id: string; name: string; connected: boolean; lastSync: string; battery: string } | null>(null);
   const settingsDevices = useMemo(() => buildSettingsDevices(user?.wearable), [user?.wearable]);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [dob, setDob] = useState("");
-  const [height, setHeight] = useState("");
-  const [weight, setWeight] = useState("");
-  const [city, setCity] = useState("");
 
   useEffect(() => {
     ensureDailyReset(user?.id);
   }, [user?.id]);
-
-  useEffect(() => {
-    if (!user) return;
-    setFirstName(user.firstName ?? "");
-    setLastName(user.lastName ?? "");
-    setNickname(user.nickname ?? "");
-    setDob(user.dob ?? "");
-    setHeight(user.height != null ? String(user.height) : "");
-    setWeight(user.weight != null ? String(user.weight) : "");
-    setCity(user.city ?? "");
-  }, [user]);
 
   useEffect(() => {
     setNotificationsEnabledState(getNotificationsEnabled());
@@ -132,19 +84,6 @@ const AppLayout = () => {
     logout();
     navigate("/login", { replace: true });
   };
-
-  const age = useMemo(() => {
-    if (!dob) return "";
-    const d = new Date(dob);
-    if (Number.isNaN(d.getTime())) return "";
-    const now = new Date();
-    let years = now.getFullYear() - d.getFullYear();
-    const m = now.getMonth() - d.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) {
-      years -= 1;
-    }
-    return years >= 0 ? String(years) : "";
-  }, [dob]);
 
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background transition-colors duration-300">
@@ -231,156 +170,6 @@ const AppLayout = () => {
                 </div>
               </div>
             </div>
-            {/* Личные данные */}
-            <div className="mt-4">
-              <Collapsible open={personalOpen} onOpenChange={setPersonalOpen}>
-                <Card className="border border-border bg-card">
-                  <CollapsibleTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                    >
-                      <span>Личные данные</span>
-                      <ChevronDown
-                        className={`h-4 w-4 text-muted-foreground transition-transform ${personalOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="space-y-4 pt-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">Имя</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setFirstName(v);
-                            updateUser({ firstName: v });
-                          }}
-                          className="h-11 mt-1 border-border bg-background"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Фамилия</Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setLastName(v);
-                            updateUser({ lastName: v });
-                          }}
-                          className="h-11 mt-1 border-border bg-background"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="nickname">Никнейм</Label>
-                        <Input
-                          id="nickname"
-                          value={nickname}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            const sanitized = raw.toLowerCase().replace(/[^a-z0-9_.]/g, "");
-                            setNickname(sanitized);
-                            updateUser({ nickname: sanitized });
-                          }}
-                          className="h-11 mt-1 border-border bg-background"
-                          placeholder="username"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dob">Дата рождения</Label>
-                        <Input
-                          id="dob"
-                          type="date"
-                          value={dob}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setDob(v);
-                            updateUser({ dob: v });
-                          }}
-                          className="h-11 mt-1 border-border bg-background"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="age">Возраст</Label>
-                        <Input
-                          id="age"
-                          value={age}
-                          readOnly
-                          className="h-9 mt-1 border-border bg-background text-muted-foreground"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="height">Рост (см)</Label>
-                          <Input
-                            id="height"
-                            type="number"
-                            min={120}
-                            max={220}
-                            value={height}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setHeight(v);
-                              const n = Number(v);
-                              if (!Number.isNaN(n)) {
-                                updateUser({ height: n });
-                              }
-                            }}
-                            className="h-11 mt-1 border-border bg-background"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="weight">Вес (кг)</Label>
-                          <Input
-                            id="weight"
-                            type="number"
-                            min={40}
-                            max={200}
-                            value={weight}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setWeight(v);
-                              const n = Number(v);
-                              if (!Number.isNaN(n)) {
-                                updateUser({ weight: n });
-                              }
-                            }}
-                            className="h-11 mt-1 border-border bg-background"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city">Город</Label>
-                        <Select
-                          value={city}
-                          onValueChange={(v) => {
-                            setCity(v);
-                            updateUser({ city: v });
-                          }}
-                        >
-                          <SelectTrigger
-                            id="city"
-                            className="h-11 mt-1 border-border bg-background"
-                          >
-                            <SelectValue placeholder="Выберите город" />
-                          </SelectTrigger>
-                          <SelectContent className="border-border bg-popover">
-                            {KZ_CITIES.map((c) => (
-                              <SelectItem key={c} value={c}>
-                                {c}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            </div>
             {/* Подключенные устройства */}
             <div className="mt-4">
               <Collapsible open={devicesOpen} onOpenChange={setDevicesOpen}>
@@ -429,20 +218,6 @@ const AppLayout = () => {
                   </CollapsibleContent>
                 </Card>
               </Collapsible>
-            </div>
-            {/* Купить тариф */}
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium text-foreground">Купить тариф</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-border bg-card px-3 py-3">
-                  <p className="text-sm font-semibold text-foreground">Starter</p>
-                  <p className="mt-1 text-xs text-muted-foreground">$9 / месяц</p>
-                </div>
-                <div className="rounded-lg border border-border bg-card px-3 py-3">
-                  <p className="text-sm font-semibold text-foreground">Pro</p>
-                  <p className="mt-1 text-xs text-muted-foreground">$29 / месяц</p>
-                </div>
-              </div>
             </div>
             <div className="mt-4 space-y-1">
               <button

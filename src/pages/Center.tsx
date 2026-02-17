@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { getStorageKey } from "@/lib/userStorage";
-import NotificationBottomSheet from "@/components/notifications/NotificationBottomSheet";
+import StoriesViewer, { type StoryItem } from "@/components/stories/StoriesViewer";
 
 const WATER_GOAL_ML = 2500;
 
@@ -84,6 +84,13 @@ const HIGHLIGHTS = [
   { id: "hormones", label: "Тестостерон", emoji: "🧬", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
   { id: "stress", label: "Стресс", emoji: "🧠", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
 ] as const;
+
+const HIGHLIGHT_STORIES: StoryItem[] = HIGHLIGHTS.map((h) => ({
+  id: h.id,
+  title: h.label,
+  videoUrl: "/videos/highlight-preview.mp4",
+  youtubeUrl: h.youtubeUrl,
+}));
 
 const WORKOUT_TYPES = [
   { id: "gym", label: "Тренировка в зале", emoji: "🏋" },
@@ -274,7 +281,8 @@ export default function Center() {
   const [workoutCalories, setWorkoutCalories] = useState(0);
 
   const [voiceListening, setVoiceListening] = useState(false);
-  const [activeHighlight, setActiveHighlight] = useState<(typeof HIGHLIGHTS)[number] | null>(null);
+  const [storiesOpen, setStoriesOpen] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(0);
 
   useEffect(() => {
     if (!storageKeys) return;
@@ -573,11 +581,14 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
         <>
           {/* Highlights row */}
           <motion.div variants={itemAnim} className="mb-4 flex gap-4 overflow-x-auto scrollbar-hide pb-1">
-            {HIGHLIGHTS.map((h) => (
+            {HIGHLIGHTS.map((h, index) => (
               <button
                 key={h.id}
                 type="button"
-                onClick={() => setActiveHighlight(h)}
+                onClick={() => {
+                  setStoryIndex(index);
+                  setStoriesOpen(true);
+                }}
                 className="flex flex-col items-center gap-1 text-center"
               >
                 <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card text-xl">
@@ -1060,37 +1071,14 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
         </DialogContent>
       </Dialog>
 
-      {/* Highlight video modal */}
-      <AnimatePresence>
-        {activeHighlight && (
-          <NotificationBottomSheet open={!!activeHighlight} onClose={() => setActiveHighlight(null)}>
-            <div className="flex min-h-0 flex-1 flex-col bg-background">
-              <header className="flex items-center justify-between px-4 pt-4 pb-2">
-                <h2 className="text-lg font-semibold text-foreground">{activeHighlight.label}</h2>
-              </header>
-              <div className="flex flex-1 items-center justify-center px-4 pb-4">
-                <div className="w-full max-w-md aspect-video rounded-2xl overflow-hidden bg-muted">
-                  <video
-                    className="h-full w-full object-cover"
-                    src="/videos/highlight-preview.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  />
-                </div>
-              </div>
-              <div className="px-4 pb-6">
-                <Button asChild className="w-full">
-                  <a href={activeHighlight.youtubeUrl} target="_blank" rel="noreferrer">
-                    Смотреть полностью
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </NotificationBottomSheet>
-        )}
-      </AnimatePresence>
+      {/* Stories viewer (full-screen) */}
+      {storiesOpen && (
+        <StoriesViewer
+          stories={HIGHLIGHT_STORIES}
+          initialIndex={storyIndex}
+          onClose={() => setStoriesOpen(false)}
+        />
+      )}
     </motion.div>
   );
 }

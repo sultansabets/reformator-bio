@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
   Mail,
@@ -8,7 +8,6 @@ import {
   Activity,
   ChevronRight,
   ChevronDown,
-  FlaskConical,
   Ruler,
   Scale,
   Target,
@@ -19,6 +18,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -26,13 +33,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
 import { NUTRITION_GOAL_LABELS, type NutritionGoal } from "@/lib/health";
+
+function calculateAge(dob: string): number {
+  const d = new Date(dob);
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
 
 function getInitials(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -53,6 +64,26 @@ function validateEmail(value: string): string | null {
   return null;
 }
 
+const KZ_CITIES = [
+  "Алматы",
+  "Астана",
+  "Шымкент",
+  "Караганда",
+  "Актобе",
+  "Тараз",
+  "Павлодар",
+  "Усть-Каменогорск",
+  "Семей",
+  "Атырау",
+  "Костанай",
+  "Кызылорда",
+  "Актау",
+  "Петропавловск",
+  "Уральск",
+  "Талдыкорган",
+  "Туркестан",
+] as const;
+
 const LAB_RESULT_ITEMS = [
   "Результаты анализов",
   "УЗИ",
@@ -63,6 +94,192 @@ const LAB_RESULT_ITEMS = [
   "Реабилитолог",
   "Психотерапевт",
 ] as const;
+
+const MOCK_HISTORY = [
+  {
+    service: "IV-терапия Майерс",
+    doctor: "Др. Ахметов",
+    date: "15 февр. 2026",
+    status: "пришел",
+  },
+  {
+    service: "Консультация уролога",
+    doctor: "Др. Сабиров",
+    date: "22 февр. 2026",
+    status: "планируется",
+  },
+];
+
+const MOCK_SUBSCRIPTIONS = [
+  {
+    name: "IV-терапия PRO",
+    expires: "до 30.06.2026",
+    services: [
+      { name: "IV Майерс", count: 5 },
+      { name: "After Sport", count: 3 },
+    ],
+  },
+];
+
+function MedicalTab() {
+  return (
+    <Card className="border border-border">
+      <CardContent className="divide-y divide-border p-0">
+        {LAB_RESULT_ITEMS.map((label) => (
+          <div
+            key={label}
+            className="flex items-center justify-between px-4 py-3"
+          >
+            <span className="text-sm font-medium text-foreground">{label}</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function HistoryTab() {
+  return (
+    <div className="space-y-3">
+      {MOCK_HISTORY.map((item, i) => (
+        <Card key={i} className="border border-border">
+          <CardContent className="p-4 space-y-1">
+            <div className="text-sm font-semibold text-foreground">{item.service}</div>
+            <div className="text-xs text-muted-foreground">
+              {item.date}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Лечащий врач: {item.doctor}
+            </div>
+            <div
+              className={`text-xs font-medium ${
+                item.status === "пришел"
+                  ? "text-green-500"
+                  : item.status === "планируется"
+                  ? "text-blue-500"
+                  : item.status === "не пришел"
+                  ? "text-red-500"
+                  : "text-yellow-500"
+              }`}
+            >
+              {item.status}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function SubscriptionsTab() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <div className="space-y-3">
+      {MOCK_SUBSCRIPTIONS.map((sub, index) => (
+        <Card key={index} className="border border-border">
+          <CardContent className="p-0">
+            <button
+              type="button"
+              onClick={() =>
+                setOpenIndex(openIndex === index ? null : index)
+              }
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+            >
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  {sub.name}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {sub.expires}
+                </div>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform ${
+                  openIndex === index ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {openIndex === index && (
+              <div className="border-t border-border px-4 py-3 space-y-2">
+                {sub.services.map((service, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between text-sm text-foreground"
+                  >
+                    <span>{service.name}</span>
+                    <span>x{service.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function TariffsTab() {
+  const MOCK_TARIFFS = [
+    {
+      name: "Basic",
+      price: "9$ / месяц",
+      features: [
+        "Доступ к аналитике",
+        "История посещений",
+        "Базовые рекомендации",
+      ],
+    },
+    {
+      name: "Premium",
+      price: "29$ / месяц",
+      features: [
+        "Все из Basic",
+        "AI анализ здоровья",
+        "Приоритетная запись",
+        "Расширенная медкарта",
+      ],
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {MOCK_TARIFFS.map((tariff, index) => (
+        <Card key={index} className="border border-border">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-base font-semibold text-foreground">
+                  {tariff.name}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {tariff.price}
+                </div>
+              </div>
+              <Button size="sm">
+                Выбрать
+              </Button>
+            </div>
+
+            <div className="space-y-1">
+              {tariff.features.map((feature, i) => (
+                <div
+                  key={i}
+                  className="text-xs text-muted-foreground"
+                >
+                  • {feature}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 const container = {
   hidden: {},
@@ -94,7 +311,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [modal, setModal] = useState<ModalType>(null);
-  const [labOpen, setLabOpen] = useState(false);
   const [modalPayload, setModalPayload] = useState<{
     labItem?: string;
     settingLabel?: string;
@@ -102,6 +318,18 @@ const Profile = () => {
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [profileTab, setProfileTab] = useState<
+    "medical" | "history" | "subscriptions" | "tariffs"
+  >("medical");
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editNickname, setEditNickname] = useState("");
+  const [editDob, setEditDob] = useState("");
+  const [editHeight, setEditHeight] = useState("");
+  const [editWeight, setEditWeight] = useState("");
+  const [editCity, setEditCity] = useState("");
 
   const profileDisplay = {
     fullName: user?.fullName?.trim() ?? "",
@@ -118,6 +346,26 @@ const Profile = () => {
     mentalHealthStatus: user?.mentalHealthStatus,
   };
 
+  useEffect(() => {
+    if (editOpen && user) {
+      setEditFirstName(user.firstName ?? "");
+      setEditLastName(user.lastName ?? "");
+      setEditNickname(user.nickname ?? "");
+      setEditDob(user.dob ?? "");
+      setEditHeight(user.height != null ? String(user.height) : "");
+      setEditWeight(user.weight != null ? String(user.weight) : "");
+      setEditCity(user.city ?? "");
+    }
+  }, [editOpen, user]);
+
+  useEffect(() => {
+    if (editOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [editOpen]);
+
   const openModal = (
     type: ModalType,
     payload?: { labItem?: string; settingLabel?: string }
@@ -125,6 +373,18 @@ const Profile = () => {
     setModal(type);
     setModalPayload(payload ?? null);
   };
+
+  const editAge = editDob
+    ? (() => {
+        const d = new Date(editDob);
+        if (Number.isNaN(d.getTime())) return "";
+        const now = new Date();
+        let years = now.getFullYear() - d.getFullYear();
+        const m = now.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < d.getDate())) years--;
+        return years >= 0 ? String(years) : "";
+      })()
+    : "";
 
   const startEdit = (field: EditableField) => {
     setEditingField(field);
@@ -232,11 +492,24 @@ const Profile = () => {
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {user?.nickname
               ? `@${user.nickname.replace(/[^a-zA-Z0-9_.]/g, "") || "user"}`
               : "@nickname"}
           </p>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {user?.dob && (
+              <span>
+                {calculateAge(user.dob)} лет
+              </span>
+            )}
+            {user?.city && (
+              <span>
+                {" • "}
+                {user.city}
+              </span>
+            )}
+          </div>
         </div>
       </motion.div>
 
@@ -313,49 +586,54 @@ const Profile = () => {
         </Card>
       </motion.div>
 
-      {/* Мед карта */}
-      <motion.div variants={item}>
-        <Collapsible open={labOpen} onOpenChange={setLabOpen}>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Мед карта
-          </h2>
-          <Card className="mb-5 border border-border shadow-sm overflow-hidden">
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-200 hover:bg-muted/40"
-              >
-                <div className="flex items-center gap-3">
-                  <FlaskConical className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">
-                    Мед карта
-                  </span>
-                </div>
-                <motion.span
-                  animate={{ rotate: labOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </motion.span>
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="divide-y divide-border border-t border-border">
-                {LAB_RESULT_ITEMS.map((label) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => openModal("lab", { labItem: label })}
-                    className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors duration-200 hover:bg-muted/40"
-                  >
-                    <span className="text-sm font-medium text-foreground">{label}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+      {/* Action buttons */}
+      <motion.div variants={item} className="mt-4 flex flex-col gap-3">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setEditOpen(true)}
+        >
+          Редактировать профиль
+        </Button>
+        <Button
+          className="w-full"
+          onClick={() => setBookingOpen(true)}
+        >
+          Записаться
+        </Button>
+      </motion.div>
+
+      {/* Tabs: Медкарта | История записи | Абонементы | Тарифы */}
+      <motion.div variants={item} className="mt-6 border-b border-border">
+        <div className="flex">
+          {[
+            { key: "medical" as const, label: "Медкарта" },
+            { key: "history" as const, label: "История записи" },
+            { key: "subscriptions" as const, label: "Абонементы" },
+            { key: "tariffs" as const, label: "Тарифы" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setProfileTab(tab.key)}
+              className={`flex-1 pb-3 text-sm font-medium transition-colors ${
+                profileTab === tab.key
+                  ? "text-foreground border-b-2 border-foreground"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Tab content */}
+      <motion.div variants={item} className="mt-4 space-y-4">
+        {profileTab === "medical" && <MedicalTab />}
+        {profileTab === "history" && <HistoryTab />}
+        {profileTab === "subscriptions" && <SubscriptionsTab />}
+        {profileTab === "tariffs" && <TariffsTab />}
       </motion.div>
 
       {/* Detail modal */}
@@ -381,6 +659,180 @@ const Profile = () => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
+
+      {/* Booking popup */}
+      <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+        <DialogContent className="border border-border bg-card">
+          <DialogHeader>
+            <DialogTitle>Запись в клинику</DialogTitle>
+            <DialogDescription>
+              В ближайшее время здесь будет возможность записаться в клинику.
+              Сейчас это демо-версия.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      {/* Full-screen edit profile panel */}
+      <AnimatePresence>
+        {editOpen && (
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[9999] bg-background flex flex-col"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Редактировать профиль</h2>
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors"
+                aria-label="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-firstName">Имя</Label>
+                <Input
+                  id="edit-firstName"
+                  value={editFirstName}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEditFirstName(v);
+                    updateUser({ firstName: v });
+                  }}
+                  className="h-11 mt-1 border-border bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-lastName">Фамилия</Label>
+                <Input
+                  id="edit-lastName"
+                  value={editLastName}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEditLastName(v);
+                    updateUser({ lastName: v });
+                  }}
+                  className="h-11 mt-1 border-border bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-nickname">Никнейм</Label>
+                <Input
+                  id="edit-nickname"
+                  value={editNickname}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const sanitized = raw.toLowerCase().replace(/[^a-z0-9_.]/g, "");
+                    setEditNickname(sanitized);
+                    updateUser({ nickname: sanitized });
+                  }}
+                  className="h-11 mt-1 border-border bg-background"
+                  placeholder="username"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-dob">Дата рождения</Label>
+                <Input
+                  id="edit-dob"
+                  type="date"
+                  value={editDob}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setEditDob(v);
+                    updateUser({ dob: v });
+                  }}
+                  className="h-11 mt-1 border-border bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-age">Возраст</Label>
+                <Input
+                  id="edit-age"
+                  value={editAge}
+                  readOnly
+                  className="h-9 mt-1 border-border bg-background text-muted-foreground"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-height">Рост (см)</Label>
+                  <Input
+                    id="edit-height"
+                    type="number"
+                    min={120}
+                    max={220}
+                    value={editHeight}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEditHeight(v);
+                      const n = Number(v);
+                      if (!Number.isNaN(n)) updateUser({ height: n });
+                    }}
+                    className="h-11 mt-1 border-border bg-background"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-weight">Вес (кг)</Label>
+                  <Input
+                    id="edit-weight"
+                    type="number"
+                    min={40}
+                    max={200}
+                    value={editWeight}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEditWeight(v);
+                      const n = Number(v);
+                      if (!Number.isNaN(n)) updateUser({ weight: n });
+                    }}
+                    className="h-11 mt-1 border-border bg-background"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-city">Город</Label>
+                <Select
+                  value={editCity}
+                  onValueChange={(v) => {
+                    setEditCity(v);
+                    updateUser({ city: v });
+                  }}
+                >
+                  <SelectTrigger
+                    id="edit-city"
+                    className="h-11 mt-1 border-border bg-background"
+                  >
+                    <SelectValue placeholder="Выберите город" />
+                  </SelectTrigger>
+                  <SelectContent className="border-border bg-popover">
+                    {KZ_CITIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-border">
+              <Button
+                className="w-full"
+                onClick={() => setEditOpen(false)}
+              >
+                Сохранить
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
