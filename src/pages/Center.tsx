@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   UtensilsCrossed,
   Plus,
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { getStorageKey } from "@/lib/userStorage";
+import NotificationBottomSheet from "@/components/notifications/NotificationBottomSheet";
 
 const WATER_GOAL_ML = 2500;
 
@@ -74,6 +75,15 @@ const recoveryData = [
 const analyticsPeriods = ["День", "Неделя", "Месяц"] as const;
 const CENTER_TABS = ["Обзор", "Питание", "Тренировки"] as const;
 type CenterTab = (typeof CENTER_TABS)[number];
+
+const HIGHLIGHTS = [
+  { id: "sleep", label: "Сон", emoji: "😴", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+  { id: "recovery", label: "Восстановление", emoji: "💤", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+  { id: "training", label: "Тренировки", emoji: "🏋️", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+  { id: "nutrition", label: "Питание", emoji: "🥗", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+  { id: "hormones", label: "Тестостерон", emoji: "🧬", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+  { id: "stress", label: "Стресс", emoji: "🧠", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+] as const;
 
 const WORKOUT_TYPES = [
   { id: "gym", label: "Тренировка в зале", emoji: "🏋" },
@@ -264,6 +274,7 @@ export default function Center() {
   const [workoutCalories, setWorkoutCalories] = useState(0);
 
   const [voiceListening, setVoiceListening] = useState(false);
+  const [activeHighlight, setActiveHighlight] = useState<(typeof HIGHLIGHTS)[number] | null>(null);
 
   useEffect(() => {
     if (!storageKeys) return;
@@ -557,39 +568,44 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
         ))}
       </motion.div>
 
-      {/* Обзор: analytics by period */}
+      {/* Обзор: analytics + highlights */}
       {centerTab === "Обзор" && (
         <>
-        {/* Highlights row */}
-        <motion.div variants={itemAnim} className="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {["Сон", "Восстановление", "Тренировка", "Питание", "Гормоны", "Стресс"].map((label) => (
-            <button
-              key={label}
-              type="button"
-              className="shrink-0 rounded-full bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground border border-border hover:text-foreground"
-            >
-              {label}
-            </button>
-          ))}
-        </motion.div>
-        <motion.section variants={itemAnim} className="mb-8">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Аналитика
-          </h2>
-          <div className="mb-4 flex gap-1 rounded-xl bg-muted p-1">
-            {analyticsPeriods.map((p) => (
+          {/* Highlights row */}
+          <motion.div variants={itemAnim} className="mb-4 flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+            {HIGHLIGHTS.map((h) => (
               <button
-                key={p}
+                key={h.id}
                 type="button"
-                onClick={() => setAnalyticsPeriod(p)}
-                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
-                  analyticsPeriod === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
+                onClick={() => setActiveHighlight(h)}
+                className="flex flex-col items-center gap-1 text-center"
               >
-                {p}
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card text-xl">
+                  <span aria-hidden="true">{h.emoji}</span>
+                </div>
+                <span className="text-[11px] font-medium text-muted-foreground">{h.label}</span>
               </button>
             ))}
-          </div>
+          </motion.div>
+
+          <motion.section variants={itemAnim} className="mb-8">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Аналитика
+            </h2>
+            <div className="mb-4 flex gap-1 rounded-xl bg-muted p-1">
+              {analyticsPeriods.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setAnalyticsPeriod(p)}
+                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
+                    analyticsPeriod === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           <Card className="mb-4 border border-border shadow-sm">
             <CardContent className="p-4">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1043,6 +1059,38 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Highlight video modal */}
+      <AnimatePresence>
+        {activeHighlight && (
+          <NotificationBottomSheet open={!!activeHighlight} onClose={() => setActiveHighlight(null)}>
+            <div className="flex min-h-0 flex-1 flex-col bg-background">
+              <header className="flex items-center justify-between px-4 pt-4 pb-2">
+                <h2 className="text-lg font-semibold text-foreground">{activeHighlight.label}</h2>
+              </header>
+              <div className="flex flex-1 items-center justify-center px-4 pb-4">
+                <div className="w-full max-w-md aspect-video rounded-2xl overflow-hidden bg-muted">
+                  <video
+                    className="h-full w-full object-cover"
+                    src="/videos/highlight-preview.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                </div>
+              </div>
+              <div className="px-4 pb-6">
+                <Button asChild className="w-full">
+                  <a href={activeHighlight.youtubeUrl} target="_blank" rel="noreferrer">
+                    Смотреть полностью
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </NotificationBottomSheet>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
