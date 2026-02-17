@@ -317,7 +317,7 @@ export default function Center() {
   ].reduce((s, i) => s + (i.carbs ?? 0), 0);
 
   const recommended = user?.height && user?.weight
-    ? getRecommendedKcal(user.weight, user.height)
+    ? getRecommendedKcal(user.height, user.weight)
     : null;
   const macros =
     user?.weight && user?.goal && recommended

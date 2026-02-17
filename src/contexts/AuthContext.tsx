@@ -166,13 +166,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       lastName?: string;
       email?: string;
     }): { success: boolean; error?: string } => {
+      const baseNickname = data.nickname.trim();
       const result = addAppUser({
         phone: data.phone.trim(),
         password: data.password,
-        nickname: data.nickname.trim(),
-        firstName: data.firstName?.trim(),
-        lastName: data.lastName?.trim(),
-        email: data.email?.trim() || undefined,
+        nickname: baseNickname,
+        firstName: data.firstName?.trim() || "",
+        lastName: data.lastName?.trim() || "",
+        email: data.email?.trim() || "",
+        avatar: null as unknown as string | undefined,
+        dob: "",
+        activityLevel: "",
+        wearable: null as unknown as string | undefined,
+        height: null as unknown as number | undefined,
+        weight: null as unknown as number | undefined,
+        goal: null as unknown as AppUser["goal"],
+        isVerified: false,
+        city: "",
+        mentalHealthScore: null as unknown as number | undefined,
+        mentalHealthStatus: undefined,
       });
       if (!result.success) {
         return { success: false, error: result.error };

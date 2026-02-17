@@ -215,7 +215,7 @@ const ControlCenter = () => {
     };
     const water = readTodayWater(keys.water);
     const workout = readTodayWorkout(keys.workout_history);
-    const recommended = user?.height && user?.weight ? getRecommendedKcal(user.weight, user.height) : null;
+    const recommended = user?.height && user?.weight ? getRecommendedKcal(user.height, user.weight) : null;
     const targetKcal = recommended?.target ?? 2000;
     const lab = getLatestLab(keys.labs);
     const testosteroneNmolL = lab?.testosterone != null ? testosteroneNgDlToNmolL(lab.testosterone) : undefined;
