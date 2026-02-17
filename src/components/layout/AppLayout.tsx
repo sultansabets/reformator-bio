@@ -92,7 +92,7 @@ const AppLayout = () => {
           <img
             src={theme === "dark" ? logoDark : logoLight}
             alt="Reformator Bio Logo"
-            className="h-6 w-auto object-contain md:h-8"
+            className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
           />
         </div>
         <div className="flex items-center gap-2">
