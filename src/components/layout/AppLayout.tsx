@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
