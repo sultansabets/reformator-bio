@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,7 +62,7 @@ export default function AI() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col bg-background">
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col bg-gradient-to-b from-slate-900 to-slate-800">
       <div
         ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-28"
@@ -76,7 +76,9 @@ export default function AI() {
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
               <Bot className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-lg font-medium text-foreground">Чем могу помочь?</p>
+            <p className="text-lg font-medium text-foreground">
+              Здравствуйте, я Dr.AI. Чем могу помочь?
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Выберите подсказку или напишите вопрос
             </p>
@@ -128,6 +130,13 @@ export default function AI() {
         className="sticky bottom-0 left-0 right-0 border-t border-border bg-background px-4 py-3 pb-[env(safe-area-inset-bottom)]"
       >
         <div className="flex gap-2">
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Прикрепить файл"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

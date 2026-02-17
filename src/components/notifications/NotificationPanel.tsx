@@ -52,7 +52,7 @@ export default function NotificationPanel({
         )}
       >
         {sorted.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Нет уведомлений</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">Нет новых уведомлений</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {sorted.map((n) => (

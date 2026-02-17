@@ -4,6 +4,10 @@ import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut } from 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
+import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
+import NotificationBottomSheet from "@/components/notifications/NotificationBottomSheet";
+import NotificationPanel from "@/components/notifications/NotificationPanel";
+import { getNotifications, setNotifications, seedMockIfEmpty, type Notification } from "@/lib/notifications";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import BottomNav from "./BottomNav";
@@ -22,10 +26,29 @@ const AppLayout = () => {
   const { logout, user } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [lang, setLang] = useState<string>("ru");
+  const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationList, setNotificationList] = useState<Notification[]>(() => getNotifications());
 
   useEffect(() => {
     ensureDailyReset(user?.id);
   }, [user?.id]);
+
+  useEffect(() => {
+    setNotificationsEnabledState(getNotificationsEnabled());
+  }, []);
+
+  useEffect(() => {
+    // keep local list in sync (used for modal)
+    setNotificationList(getNotifications());
+  }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    // seed only when modal first opens and notifications are enabled
+    seedMockIfEmpty();
+    setNotificationList(getNotifications());
+  }, [notificationsOpen]);
 
   const handleLogout = () => {
     setSettingsOpen(false);
@@ -48,7 +71,7 @@ const AppLayout = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navigate("/notifications")}
+            onClick={() => setNotificationsOpen(true)}
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Уведомления"
           >
@@ -88,6 +111,14 @@ const AppLayout = () => {
                   <Bell className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">Уведомления</span>
                 </div>
+              <Switch
+                checked={notificationsEnabled}
+                onCheckedChange={(checked) => {
+                  setNotificationsEnabledState(checked);
+                  setNotificationsEnabled(checked);
+                }}
+                aria-label="Включить уведомления"
+              />
               </div>
               <div className="px-4 py-3 border-t border-border">
                 <div className="flex items-center gap-3 mb-2">
@@ -148,6 +179,27 @@ const AppLayout = () => {
         <Outlet />
       </main>
       <BottomNav />
+      <NotificationBottomSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)}>
+        <div className="flex min-h-0 flex-1 flex-col bg-background">
+          <header className="flex items-center justify-between px-4 pb-2">
+            <h1 className="text-lg font-semibold text-foreground">Уведомления</h1>
+          </header>
+          {!notificationsEnabled && (
+            <p className="px-4 pb-1 text-xs text-muted-foreground">Уведомления отключены</p>
+          )}
+          <NotificationPanel
+            notifications={notificationList}
+            onMarkRead={(id) => {
+              const next = notificationList.map((n) =>
+                n.id === id ? { ...n, read: true } : n
+              );
+              setNotificationList(next);
+              setNotifications(next);
+            }}
+            hideTitle
+          />
+        </div>
+      </NotificationBottomSheet>
     </div>
   );
 };

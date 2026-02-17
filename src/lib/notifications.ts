@@ -1,4 +1,5 @@
 export const NOTIFICATIONS_STORAGE_KEY = "reformator_bio_notifications";
+const NOTIFICATIONS_ENABLED_KEY = "notifications_enabled";
 
 export type NotificationType = "nutrition" | "ai" | "clinic" | "system";
 
@@ -28,6 +29,24 @@ export function getNotifications(): Notification[] {
 
 export function setNotifications(list: Notification[]): void {
   localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(list));
+}
+
+export function getNotificationsEnabled(): boolean {
+  try {
+    const raw = localStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
+    if (raw === null) return true;
+    return raw === "true";
+  } catch {
+    return true;
+  }
+}
+
+export function setNotificationsEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(NOTIFICATIONS_ENABLED_KEY, String(enabled));
+  } catch {
+    // ignore
+  }
 }
 
 export function getMockNotifications(): Notification[] {
@@ -70,6 +89,7 @@ export function getMockNotifications(): Notification[] {
 }
 
 export function seedMockIfEmpty(): void {
+  if (!getNotificationsEnabled()) return;
   const list = getNotifications();
   if (list.length === 0) {
     setNotifications(getMockNotifications());
