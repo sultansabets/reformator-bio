@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut } from "lucide-react";
+import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
@@ -21,6 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import BottomNav from "./BottomNav";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
@@ -51,6 +60,21 @@ const KZ_CITIES = [
   "Туркестан",
 ] as const;
 
+const SETTINGS_DEVICE_IDS = ["apple", "reformator-band"] as const;
+const SETTINGS_DEVICE_LABELS: Record<(typeof SETTINGS_DEVICE_IDS)[number], string> = {
+  apple: "Apple Watch",
+  "reformator-band": "Reformator Band",
+};
+function buildSettingsDevices(wearable?: string): { id: string; name: string; connected: boolean; lastSync: string; battery: string }[] {
+  return SETTINGS_DEVICE_IDS.map((id) => ({
+    id,
+    name: SETTINGS_DEVICE_LABELS[id],
+    connected: wearable === id,
+    lastSync: wearable === id ? "2 мин назад" : "—",
+    battery: wearable === id ? "85%" : "—",
+  }));
+}
+
 const AppLayout = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -61,6 +85,9 @@ const AppLayout = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationList, setNotificationList] = useState<Notification[]>(() => getNotifications());
   const [personalOpen, setPersonalOpen] = useState(true);
+  const [devicesOpen, setDevicesOpen] = useState(false);
+  const [deviceModal, setDeviceModal] = useState<{ id: string; name: string; connected: boolean; lastSync: string; battery: string } | null>(null);
+  const settingsDevices = useMemo(() => buildSettingsDevices(user?.wearable), [user?.wearable]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [nickname, setNickname] = useState("");
@@ -153,9 +180,9 @@ const AppLayout = () => {
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
         <SheetContent
           side="right"
-          className="flex w-full flex-col border-border bg-background sm:max-w-sm"
+          className="h-screen w-full flex flex-col border-border bg-background p-0 sm:max-w-sm"
         >
-          <div className="pt-2 pb-6">
+          <div className="flex-1 overflow-y-auto px-4 pb-24 pt-14">
             <h2 className="text-lg font-semibold text-foreground">Настройки</h2>
             <div className="mt-4 space-y-1 rounded-lg border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3">
@@ -174,14 +201,14 @@ const AppLayout = () => {
                   <Bell className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">Уведомления</span>
                 </div>
-              <Switch
-                checked={notificationsEnabled}
-                onCheckedChange={(checked) => {
-                  setNotificationsEnabledState(checked);
-                  setNotificationsEnabled(checked);
-                }}
-                aria-label="Включить уведомления"
-              />
+                <Switch
+                  checked={notificationsEnabled}
+                  onCheckedChange={(checked) => {
+                    setNotificationsEnabledState(checked);
+                    setNotificationsEnabled(checked);
+                  }}
+                  aria-label="Включить уведомления"
+                />
               </div>
               <div className="px-4 py-3 border-t border-border">
                 <div className="flex items-center gap-3 mb-2">
@@ -214,53 +241,40 @@ const AppLayout = () => {
                       className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
                     >
                       <span>Личные данные</span>
-                      <svg
+                      <ChevronDown
                         className={`h-4 w-4 text-muted-foreground transition-transform ${personalOpen ? "rotate-180" : ""}`}
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M5 7.5L10 12.5L15 7.5"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      />
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <CardContent className="space-y-3 pt-2">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="firstName">Имя</Label>
-                          <Input
-                            id="firstName"
-                            value={firstName}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setFirstName(v);
-                              updateUser({ firstName: v });
-                            }}
-                            className="mt-1 border-border bg-background"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="lastName">Фамилия</Label>
-                          <Input
-                            id="lastName"
-                            value={lastName}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setLastName(v);
-                              updateUser({ lastName: v });
-                            }}
-                            className="mt-1 border-border bg-background"
-                          />
-                        </div>
+                    <CardContent className="space-y-4 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">Имя</Label>
+                        <Input
+                          id="firstName"
+                          value={firstName}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setFirstName(v);
+                            updateUser({ firstName: v });
+                          }}
+                          className="h-11 mt-1 border-border bg-background"
+                        />
                       </div>
-                      <div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Фамилия</Label>
+                        <Input
+                          id="lastName"
+                          value={lastName}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLastName(v);
+                            updateUser({ lastName: v });
+                          }}
+                          className="h-11 mt-1 border-border bg-background"
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="nickname">Никнейм</Label>
                         <Input
                           id="nickname"
@@ -271,37 +285,35 @@ const AppLayout = () => {
                             setNickname(sanitized);
                             updateUser({ nickname: sanitized });
                           }}
-                          className="mt-1 border-border bg-background"
+                          className="h-11 mt-1 border-border bg-background"
                           placeholder="username"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="dob">Дата рождения</Label>
-                          <Input
-                            id="dob"
-                            type="date"
-                            value={dob}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setDob(v);
-                              updateUser({ dob: v });
-                            }}
-                            className="mt-1 border-border bg-background"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="age">Возраст</Label>
-                          <Input
-                            id="age"
-                            value={age}
-                            readOnly
-                            className="mt-1 border-border bg-background"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="dob">Дата рождения</Label>
+                        <Input
+                          id="dob"
+                          type="date"
+                          value={dob}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setDob(v);
+                            updateUser({ dob: v });
+                          }}
+                          className="h-11 mt-1 border-border bg-background"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="age">Возраст</Label>
+                        <Input
+                          id="age"
+                          value={age}
+                          readOnly
+                          className="h-9 mt-1 border-border bg-background text-muted-foreground"
+                        />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="height">Рост (см)</Label>
                           <Input
                             id="height"
@@ -317,10 +329,10 @@ const AppLayout = () => {
                                 updateUser({ height: n });
                               }
                             }}
-                            className="mt-1 border-border bg-background"
+                            className="h-11 mt-1 border-border bg-background"
                           />
                         </div>
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="weight">Вес (кг)</Label>
                           <Input
                             id="weight"
@@ -336,11 +348,11 @@ const AppLayout = () => {
                                 updateUser({ weight: n });
                               }
                             }}
-                            className="mt-1 border-border bg-background"
+                            className="h-11 mt-1 border-border bg-background"
                           />
                         </div>
                       </div>
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="city">Город</Label>
                         <Select
                           value={city}
@@ -351,7 +363,7 @@ const AppLayout = () => {
                         >
                           <SelectTrigger
                             id="city"
-                            className="mt-1 border-border bg-background"
+                            className="h-11 mt-1 border-border bg-background"
                           >
                             <SelectValue placeholder="Выберите город" />
                           </SelectTrigger>
@@ -363,6 +375,55 @@ const AppLayout = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            </div>
+            {/* Подключенные устройства */}
+            <div className="mt-4">
+              <Collapsible open={devicesOpen} onOpenChange={setDevicesOpen}>
+                <Card className="border border-border bg-card">
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Watch className="h-4 w-4 text-muted-foreground" />
+                        <span>Подключенные устройства</span>
+                      </div>
+                      <ChevronDown
+                        className={`h-4 w-4 text-muted-foreground transition-transform ${devicesOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="p-0 pt-1">
+                      <div className="space-y-1">
+                        {settingsDevices.map((d) => (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => setDeviceModal(d)}
+                            className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                          >
+                            <Watch className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <div className="min-w-0 flex-1">
+                              <span className="text-sm font-medium text-foreground">{d.name}</span>
+                              <span className="ml-2">
+                                <Badge
+                                  variant={d.connected ? "default" : "secondary"}
+                                  className="text-xs"
+                                >
+                                  {d.connected ? "Подключено" : "Не подключено"}
+                                </Badge>
+                              </span>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          </button>
+                        ))}
                       </div>
                     </CardContent>
                   </CollapsibleContent>
@@ -417,6 +478,45 @@ const AppLayout = () => {
           </div>
         </SheetContent>
       </Sheet>
+      <Dialog open={deviceModal !== null} onOpenChange={(open) => !open && setDeviceModal(null)}>
+        <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-foreground">
+              {deviceModal?.name}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {deviceModal && (
+                <span className="block pt-1">
+                  Статус: {deviceModal.connected ? "Подключено" : "Не подключено"}
+                  <br />
+                  Синхронизация: {deviceModal.lastSync}
+                  <br />
+                  Заряд: {deviceModal.battery}
+                  {deviceModal.id === "apple" && !deviceModal.connected && (
+                    <>
+                      <br />
+                      <Button
+                        className="mt-3 w-full"
+                        size="sm"
+                        onClick={() => {
+                          const grant = window.confirm("Разрешить доступ к данным Health? (демо)");
+                          if (grant) updateUser({ wearable: "apple" });
+                          setDeviceModal(null);
+                        }}
+                      >
+                        Подключить
+                      </Button>
+                    </>
+                  )}
+                  {deviceModal.id === "reformator-band" && !deviceModal.connected && (
+                    <p className="mt-2 text-xs">Подключение пока недоступно.</p>
+                  )}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
       <main className="pb-20 transition-colors duration-300">
         <Outlet />
       </main>

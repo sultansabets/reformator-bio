@@ -6,13 +6,9 @@ import {
   Mail,
   Calendar,
   Activity,
-  Watch,
   ChevronRight,
   ChevronDown,
   FlaskConical,
-  Pencil,
-  Check,
-  X,
   Ruler,
   Scale,
   Target,
@@ -57,21 +53,6 @@ function validateEmail(value: string): string | null {
   return null;
 }
 
-const DEVICE_IDS = ["apple", "reformator-band"] as const;
-const DEVICE_LABELS: Record<(typeof DEVICE_IDS)[number], string> = {
-  apple: "Apple Watch",
-  "reformator-band": "Reformator Band",
-};
-function buildDevices(wearable?: string): { id: string; name: string; connected: boolean; lastSync: string; battery: string }[] {
-  return DEVICE_IDS.map((id) => ({
-    id,
-    name: DEVICE_LABELS[id],
-    connected: wearable === id,
-    lastSync: wearable === id ? "2 мин назад" : "—",
-    battery: wearable === id ? "85%" : "—",
-  }));
-}
-
 const LAB_RESULT_ITEMS = [
   "Результаты анализов",
   "УЗИ",
@@ -92,7 +73,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
-type ModalType = "email" | "dob" | "activity" | "device" | "lab" | "setting" | null;
+type ModalType = "email" | "dob" | "activity" | "lab" | "setting" | null;
 
 function validateHeight(value: string): string | null {
   const n = Number(value);
@@ -114,9 +95,7 @@ const Profile = () => {
   const { user, updateUser } = useAuth();
   const [modal, setModal] = useState<ModalType>(null);
   const [labOpen, setLabOpen] = useState(false);
-  const devices = buildDevices(user?.wearable);
   const [modalPayload, setModalPayload] = useState<{
-    device?: (typeof devices)[number];
     labItem?: string;
     settingLabel?: string;
   } | null>(null);
@@ -141,7 +120,7 @@ const Profile = () => {
 
   const openModal = (
     type: ModalType,
-    payload?: { device?: { id: string; name: string; connected: boolean; lastSync: string; battery: string }; labItem?: string; settingLabel?: string }
+    payload?: { labItem?: string; settingLabel?: string }
   ) => {
     setModal(type);
     setModalPayload(payload ?? null);
@@ -334,46 +313,6 @@ const Profile = () => {
         </Card>
       </motion.div>
 
-      {/* Connected devices */}
-      <motion.div variants={item}>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Подключённые устройства
-        </h2>
-        <Card className="mb-5 border border-border shadow-sm">
-          <CardContent className="divide-y divide-border p-0">
-            {devices.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => openModal("device", { device: d })}
-                className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-200 hover:bg-muted/40"
-              >
-                <div className="flex items-center gap-3">
-                  <Watch className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-left">
-                    <span className="text-sm font-medium text-foreground">{d.name}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {d.connected ? "Подключено" : "Не подключено"}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{
-                      backgroundColor: d.connected
-                        ? "hsl(var(--status-green))"
-                        : "hsl(var(--muted-foreground))",
-                    }}
-                  />
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-      </motion.div>
-
       {/* Мед карта */}
       <motion.div variants={item}>
         <Collapsible open={labOpen} onOpenChange={setLabOpen}>
@@ -428,39 +367,10 @@ const Profile = () => {
               {modal === "email" && "Email"}
               {modal === "dob" && "Дата рождения"}
               {modal === "activity" && "Уровень активности"}
-              {modal === "device" && modalPayload?.device?.name}
               {modal === "lab" && modalPayload?.labItem}
               {modal === "setting" && modalPayload?.settingLabel}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              {modal === "device" && modalPayload?.device && (
-                <span className="block pt-1">
-                  Статус: {modalPayload.device.connected ? "Подключено" : "Не подключено"}
-                  <br />
-                  Синхронизация: {modalPayload.device.lastSync}
-                  <br />
-                  Заряд: {modalPayload.device.battery}
-                  {modalPayload.device.id === "apple" && !modalPayload.device.connected && (
-                    <>
-                      <br />
-                      <Button
-                        className="mt-3 w-full"
-                        size="sm"
-                        onClick={() => {
-                          const grant = window.confirm("Разрешить доступ к данным Health? (демо)");
-                          if (grant) updateUser({ wearable: "apple" });
-                          setModal(null);
-                        }}
-                      >
-                        Подключить
-                      </Button>
-                    </>
-                  )}
-                  {modalPayload.device.id === "reformator-band" && !modalPayload.device.connected && (
-                    <p className="mt-2 text-xs">Подключение пока недоступно.</p>
-                  )}
-                </span>
-              )}
               {modal === "lab" && (
                 <span className="block pt-1">Скоро будет доступно.</span>
               )}
