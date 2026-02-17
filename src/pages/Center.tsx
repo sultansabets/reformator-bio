@@ -72,7 +72,6 @@ const recoveryData = [
   { day: "Сб", score: 80 },
   { day: "Вс", score: 82 },
 ];
-const analyticsPeriods = ["День", "Неделя", "Месяц"] as const;
 const CENTER_TABS = ["Обзор", "Питание", "Тренировки"] as const;
 type CenterTab = (typeof CENTER_TABS)[number];
 
@@ -254,7 +253,8 @@ export default function Center() {
   }, [user?.id]);
 
   const [centerTab, setCenterTab] = useState<CenterTab>("Обзор");
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<(typeof analyticsPeriods)[number]>("Неделя");
+  const biologicalAge = user?.biologicalAge ?? "—";
+  const mentalHealthScore = user?.mentalHealthScore ?? null;
   const [nutrition, setNutrition] = useState<NutritionDay>(defaultNutrition);
   const [addModal, setAddModal] = useState<{ meal: (typeof MEAL_KEYS)[number] } | null>(null);
   const [newName, setNewName] = useState("");
@@ -599,54 +599,48 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
             ))}
           </motion.div>
 
-          {/* Метрики: Биометрический возраст + Ментальное здоровье */}
-          <motion.div variants={itemAnim} className="mb-6 grid grid-cols-2 gap-4">
-            <Card className="border border-emerald-500/40 bg-card">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase text-muted-foreground">
+          {/* Аналитика */}
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Аналитика
+          </h2>
+
+          <motion.div variants={itemAnim} className="mb-5">
+            <Card className="rounded-3xl border border-emerald-500/30 bg-card">
+              <CardContent className="p-6">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
                   Биометрический возраст
                 </p>
-                <p className="mt-2 text-3xl font-semibold text-foreground">
-                  {(user as { biologicalAge?: number } | null)?.biologicalAge != null
-                    ? String((user as { biologicalAge?: number }).biologicalAge)
-                    : "—"}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-card">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase text-muted-foreground">
-                  Ментальное здоровье
-                </p>
-                <Button
-                  className="mt-3 w-full"
-                  size="sm"
-                  onClick={() => navigate("/ai?mental=1")}
-                >
-                  {user?.mentalHealthScore != null ? String(user.mentalHealthScore) : "Узнать"}
-                </Button>
+                <div className="mt-4 flex items-end justify-between">
+                  <p className="text-5xl font-semibold text-foreground">
+                    {biologicalAge}
+                  </p>
+                  <span className="text-sm text-muted-foreground">лет</span>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.section variants={itemAnim} className="mb-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Аналитика
-            </h2>
-            <div className="mb-4 flex gap-1 rounded-xl bg-muted p-1">
-              {analyticsPeriods.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setAnalyticsPeriod(p)}
-                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
-                    analyticsPeriod === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+          <motion.div variants={itemAnim} className="mb-5">
+            <Card className="rounded-3xl border border-border bg-card">
+              <CardContent className="p-6">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Ментальное здоровье
+                </p>
+                <div className="mt-4">
+                  {mentalHealthScore != null ? (
+                    <p className="text-4xl font-semibold text-foreground">
+                      {mentalHealthScore}%
+                    </p>
+                  ) : (
+                    <Button onClick={() => navigate("/ai?mental=1")}>
+                      Пройти тест
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           <Card className="mb-4 border border-border shadow-sm">
             <CardContent className="p-4">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -725,7 +719,6 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </motion.section>
         </>
       )}
 
