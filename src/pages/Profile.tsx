@@ -35,6 +35,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
+import { NUTRITION_GOAL_LABELS, type NutritionGoal } from "@/lib/health";
 
 function getInitials(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -54,9 +56,6 @@ function validateEmail(value: string): string | null {
   if (!value.includes("@")) return "Email должен содержать @";
   return null;
 }
-
-import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
-import { NUTRITION_GOAL_LABELS, type NutritionGoal } from "@/lib/health";
 
 const DEVICE_IDS = ["apple", "reformator-band"] as const;
 const DEVICE_LABELS: Record<(typeof DEVICE_IDS)[number], string> = {
