@@ -86,7 +86,7 @@ const AppLayout = () => {
   };
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-background transition-colors duration-300">
+    <div className="mx-auto min-h-screen max-w-md overflow-x-hidden bg-background transition-colors duration-300">
       <header
         className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-4"
       >

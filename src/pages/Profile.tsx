@@ -222,65 +222,6 @@ function SubscriptionsTab() {
   );
 }
 
-function TariffsTab() {
-  const MOCK_TARIFFS = [
-    {
-      name: "Basic",
-      price: "9$ / месяц",
-      features: [
-        "Доступ к аналитике",
-        "История посещений",
-        "Базовые рекомендации",
-      ],
-    },
-    {
-      name: "Premium",
-      price: "29$ / месяц",
-      features: [
-        "Все из Basic",
-        "AI анализ здоровья",
-        "Приоритетная запись",
-        "Расширенная медкарта",
-      ],
-    },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {MOCK_TARIFFS.map((tariff, index) => (
-        <Card key={index} className="border border-border">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-base font-semibold text-foreground">
-                  {tariff.name}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {tariff.price}
-                </div>
-              </div>
-              <Button size="sm">
-                Выбрать
-              </Button>
-            </div>
-
-            <div className="space-y-1">
-              {tariff.features.map((feature, i) => (
-                <div
-                  key={i}
-                  className="text-xs text-muted-foreground"
-                >
-                  • {feature}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
@@ -320,9 +261,7 @@ const Profile = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [profileTab, setProfileTab] = useState<
-    "medical" | "history" | "subscriptions" | "tariffs"
-  >("medical");
+  const [profileTab, setProfileTab] = useState<"medical" | "history" | "subscriptions">("medical");
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editNickname, setEditNickname] = useState("");
@@ -364,6 +303,9 @@ const Profile = () => {
     } else {
       document.body.style.overflow = "";
     }
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [editOpen]);
 
   const openModal = (
@@ -448,7 +390,7 @@ const Profile = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-background px-5 pt-8 pb-6"
+      className="min-h-screen overflow-x-hidden bg-background px-5 pt-8 pb-6"
       variants={container}
       initial="hidden"
       animate="show"
@@ -586,37 +528,29 @@ const Profile = () => {
         </Card>
       </motion.div>
 
-      {/* Action buttons */}
-      <motion.div variants={item} className="mt-4 flex flex-col gap-3">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => setEditOpen(true)}
-        >
+      {/* Action buttons (one line, like Threads) */}
+      <motion.div variants={item} className="mt-4 flex gap-3">
+        <Button className="flex-1" onClick={() => setEditOpen(true)}>
           Редактировать профиль
         </Button>
-        <Button
-          className="w-full"
-          onClick={() => setBookingOpen(true)}
-        >
+        <Button variant="outline" className="flex-1" onClick={() => setBookingOpen(true)}>
           Записаться
         </Button>
       </motion.div>
 
-      {/* Tabs: Медкарта | История записи | Абонементы | Тарифы */}
+      {/* Tabs: Медкарта | Записи | Продукты */}
       <motion.div variants={item} className="mt-6 border-b border-border">
         <div className="flex">
           {[
             { key: "medical" as const, label: "Медкарта" },
-            { key: "history" as const, label: "История записи" },
-            { key: "subscriptions" as const, label: "Абонементы" },
-            { key: "tariffs" as const, label: "Тарифы" },
+            { key: "history" as const, label: "Записи" },
+            { key: "subscriptions" as const, label: "Продукты" },
           ].map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setProfileTab(tab.key)}
-              className={`flex-1 pb-3 text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 text-xs font-medium transition-colors ${
                 profileTab === tab.key
                   ? "text-foreground border-b-2 border-foreground"
                   : "text-muted-foreground"
@@ -633,7 +567,26 @@ const Profile = () => {
         {profileTab === "medical" && <MedicalTab />}
         {profileTab === "history" && <HistoryTab />}
         {profileTab === "subscriptions" && <SubscriptionsTab />}
-        {profileTab === "tariffs" && <TariffsTab />}
+      </motion.div>
+
+      {/* Тарифы — отдельная секция внизу */}
+      <motion.div variants={item} className="mt-8">
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Тарифы
+          </h2>
+          <Card className="border border-border">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-foreground">Premium</div>
+                  <div className="text-xs text-muted-foreground">29$ / месяц</div>
+                </div>
+                <Button size="sm">Подключить</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </motion.div>
 
       {/* Detail modal */}
@@ -681,7 +634,7 @@ const Profile = () => {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9999] bg-background flex flex-col"
+            className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-x-hidden"
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">Редактировать профиль</h2>
