@@ -24,6 +24,10 @@ export interface AppUser {
   height?: number;
   weight?: number;
   goal?: "gain" | "maintain" | "lose";
+  isVerified?: boolean;
+  city?: string;
+  mentalHealthScore?: number;
+  mentalHealthStatus?: string;
 }
 
 export interface UsersData {

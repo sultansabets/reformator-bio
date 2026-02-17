@@ -67,12 +67,30 @@ export interface StoredUser {
   height?: number;
   weight?: number;
   goal?: "gain" | "maintain" | "lose";
+  isVerified?: boolean;
+  city?: string;
+  mentalHealthScore?: number;
+  mentalHealthStatus?: string;
 }
 
 export type ProfileUpdates = Partial<
   Pick<
     StoredUser,
-    "firstName" | "lastName" | "nickname" | "email" | "avatar" | "dob" | "activityLevel" | "height" | "weight" | "goal" | "wearable"
+    | "firstName"
+    | "lastName"
+    | "nickname"
+    | "email"
+    | "avatar"
+    | "dob"
+    | "activityLevel"
+    | "height"
+    | "weight"
+    | "goal"
+    | "wearable"
+    | "isVerified"
+    | "city"
+    | "mentalHealthScore"
+    | "mentalHealthStatus"
   >
 >;
 

@@ -56,13 +56,7 @@ function validateEmail(value: string): string | null {
 }
 
 import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
-import {
-  calcBmi,
-  getBmiCategory,
-  BMI_CATEGORY_LABELS,
-  NUTRITION_GOAL_LABELS,
-  type NutritionGoal,
-} from "@/lib/health";
+import { NUTRITION_GOAL_LABELS, type NutritionGoal } from "@/lib/health";
 
 const DEVICE_IDS = ["apple", "reformator-band"] as const;
 const DEVICE_LABELS: Record<(typeof DEVICE_IDS)[number], string> = {
@@ -141,6 +135,9 @@ const Profile = () => {
     height: user?.height != null ? String(user.height) : "",
     weight: user?.weight != null ? String(user.weight) : "",
     goal: user?.goal ? NUTRITION_GOAL_LABELS[user.goal] : "",
+    city: user?.city?.trim() ?? "",
+    mentalHealthScore: user?.mentalHealthScore,
+    mentalHealthStatus: user?.mentalHealthStatus,
   };
 
   const openModal = (
@@ -219,7 +216,7 @@ const Profile = () => {
       animate="show"
     >
       {/* Profile header */}
-      <motion.div variants={item} className="mb-6 flex items-center gap-4">
+      <motion.div variants={item} className="mb-4 flex items-center gap-4">
         <label className="relative cursor-pointer">
           <input
             type="file"
@@ -237,41 +234,108 @@ const Profile = () => {
               e.target.value = "";
             }}
           />
-          <Avatar className="h-16 w-16 border-2 border-border cursor-pointer hover:opacity-90 transition-opacity">
+          <Avatar className="h-20 w-20 border-2 border-border cursor-pointer hover:opacity-90 transition-opacity">
             <AvatarImage src={user?.avatar} alt="" />
             <AvatarFallback className="bg-primary text-lg font-semibold text-primary-foreground">
-              {getInitials(profileDisplay.fullName || "Пользователь")}
+              {getInitials(profileDisplay.fullName || "Имя Фамилия")}
             </AvatarFallback>
           </Avatar>
         </label>
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            {profileDisplay.fullName || "Пользователь"}
-          </h1>
-          <Badge variant="secondary" className="mt-1.5 text-[10px] font-medium">
-            Пользователь
-          </Badge>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="truncate text-lg font-semibold tracking-tight text-foreground">
+              {(profileDisplay.firstName || profileDisplay.lastName)
+                ? `${profileDisplay.firstName || ""} ${profileDisplay.lastName || ""}`.trim()
+                : "Имя Фамилия"}
+            </span>
+            {user?.isVerified && (
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
+                <span className="text-[10px] font-bold text-white">✓</span>
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {user?.nickname
+              ? `@${user.nickname.replace(/[^a-zA-Z0-9_.]/g, "") || "user"}`
+              : "@nickname"}
+          </p>
         </div>
       </motion.div>
 
-      {/* Личные данные (expandable) */}
-      <motion.div variants={item}>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Личные данные
-        </h2>
-        <Collapsible defaultOpen>
-          <Card className="mb-5 border border-border bg-card shadow-sm overflow-hidden">
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-200 hover:bg-muted/40"
-              >
-                <span className="text-sm font-medium text-foreground">Личные данные</span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-          <CardContent className="divide-y divide-border p-0">
+      {/* Metrics under header */}
+      <motion.div variants={item} className="mb-5 grid grid-cols-2 gap-3">
+        {/* Биометрический возраст */}
+        {(() => {
+          const parseDob = profileDisplay.dob;
+          let realAge = 30;
+          if (parseDob) {
+            const d = new Date(parseDob);
+            if (!Number.isNaN(d.getTime())) {
+              const diff = Date.now() - d.getTime();
+              const years = diff / (1000 * 60 * 60 * 24 * 365.25);
+              realAge = Math.max(18, Math.min(90, Math.floor(years)));
+            }
+          }
+          const sleepScore = 80;
+          const activityScore = 70;
+          const stressScore = 40;
+          let bioAge =
+            realAge +
+            stressScore / 10 -
+            sleepScore / 15 -
+            activityScore / 20;
+          bioAge = Math.round(Math.max(18, Math.min(90, bioAge)));
+          let colorClass = "border-status-green text-status-green";
+          if (bioAge > realAge + 3) {
+            colorClass = "border-status-red text-status-red";
+          } else if (bioAge > realAge) {
+            colorClass = "border-status-amber text-status-amber";
+          }
+          return (
+            <Card className={`border ${colorClass} bg-card`}>
+              <CardContent className="p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Биометрический возраст
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {bioAge}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {/* Ментальное здоровье */}
+        <Card className="border border-border bg-card">
+          <CardContent className="p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Ментальное здоровье
+            </p>
+            {profileDisplay.mentalHealthScore == null ? (
+              <div className="mt-2">
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate("/ai?mental=1")}
+                >
+                  Узнать
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-1">
+                <p className="text-2xl font-semibold text-foreground">
+                  {profileDisplay.mentalHealthScore}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {profileDisplay.mentalHealthStatus || "Стабильное"}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* (Личные данные moved to Settings) */}
             {personalInfoRows.map((row) => {
               const isEditing = editingField === row.key;
               if (isEditing) {
@@ -386,30 +450,6 @@ const Profile = () => {
         </Collapsible>
       </motion.div>
 
-      {/* BMI card */}
-      {user?.height != null && user?.weight != null && user.height > 0 && user.weight > 0 && (
-        <motion.div variants={item} className="mb-5">
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="p-4">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                ИМТ
-              </h3>
-              {(() => {
-                const bmi = calcBmi(user.weight, user.height);
-                if (bmi == null) return null;
-                const category = getBmiCategory(bmi);
-                return (
-                  <>
-                    <p className="text-2xl font-semibold text-foreground">{bmi}</p>
-                    <p className="text-sm text-muted-foreground">{BMI_CATEGORY_LABELS[category]}</p>
-                  </>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
       {/* Connected devices */}
       <motion.div variants={item}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -450,11 +490,11 @@ const Profile = () => {
         </Card>
       </motion.div>
 
-      {/* Результаты анализов */}
+      {/* Мед карта */}
       <motion.div variants={item}>
         <Collapsible open={labOpen} onOpenChange={setLabOpen}>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Результаты анализов
+            Мед карта
           </h2>
           <Card className="mb-5 border border-border shadow-sm overflow-hidden">
             <CollapsibleTrigger asChild>
@@ -465,7 +505,7 @@ const Profile = () => {
                 <div className="flex items-center gap-3">
                   <FlaskConical className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">
-                    Результаты анализов
+                    Мед карта
                   </span>
                 </div>
                 <motion.span

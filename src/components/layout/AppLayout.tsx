@@ -141,6 +141,26 @@ const AppLayout = () => {
                 </div>
               </div>
             </div>
+            {/* Личные данные */}
+            <div className="mt-4 rounded-lg border border-border bg-card px-4 py-3">
+              <p className="mb-2 text-sm font-medium text-foreground">Личные данные</p>
+              {/* Simple form shell; hook into updateUser as needed */}
+              {/* Имя, Фамилия, Email, Дата рождения, Рост, Вес, Город */}
+            </div>
+            {/* Купить тариф */}
+            <div className="mt-4 space-y-2">
+              <p className="text-sm font-medium text-foreground">Купить тариф</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg border border-border bg-card px-3 py-3">
+                  <p className="text-sm font-semibold text-foreground">Starter</p>
+                  <p className="mt-1 text-xs text-muted-foreground">$9 / месяц</p>
+                </div>
+                <div className="rounded-lg border border-border bg-card px-3 py-3">
+                  <p className="text-sm font-semibold text-foreground">Pro</p>
+                  <p className="mt-1 text-xs text-muted-foreground">$29 / месяц</p>
+                </div>
+              </div>
+            </div>
             <div className="mt-4 space-y-1">
               <button
                 type="button"

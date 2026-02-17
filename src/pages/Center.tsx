@@ -559,6 +559,19 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
 
       {/* Обзор: analytics by period */}
       {centerTab === "Обзор" && (
+        <>
+        {/* Highlights row */}
+        <motion.div variants={itemAnim} className="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {["Сон", "Восстановление", "Тренировка", "Питание", "Гормоны", "Стресс"].map((label) => (
+            <button
+              key={label}
+              type="button"
+              className="shrink-0 rounded-full bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground border border-border hover:text-foreground"
+            >
+              {label}
+            </button>
+          ))}
+        </motion.div>
         <motion.section variants={itemAnim} className="mb-8">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Аналитика
@@ -656,6 +669,7 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
             </CardContent>
           </Card>
         </motion.section>
+        </>
       )}
 
       {/* Питание */}
