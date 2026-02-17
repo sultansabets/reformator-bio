@@ -1,26 +1,25 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Bot, User, Paperclip } from "lucide-react";
+import { Send, Sparkles, User, Paperclip } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-
-const CHIPS = [
-  "Рассчитай ккал",
-  "Как улучшить сон?",
-  "План тренировок",
-  "Анализ состояния",
-];
+import { AI_QUICK_PROMPTS } from "@/constants/aiPrompts";
 
 const MOCK_RESPONSES: Record<string, string> = {
-  "Рассчитай ккал":
-    "Для расчёта суточной нормы калорий нужны рост, вес, возраст и уровень активности. В среднем для поддержания веса: около 2000 ккал для женщин и 2500 для мужчин. Точнее можно в разделе Центр → Питание.",
-  "Как улучшить сон?":
-    "Рекомендации: ложитесь в одно время, избегайте кофеина за 6 часов до сна, затемните комнату и снизьте температуру. В приложении отслеживайте метрики сна в блоке Факторы влияния.",
-  "План тренировок":
-    "Можно начать с 3 силовых в неделю и 2 кардио. В разделе Центр → Тренировки выберите тип, засекайте время и сохраняйте — данные появятся на главной.",
-  "Анализ состояния":
-    "По вашим данным: сон в норме, нагрузка умеренная. Обратите внимание на калории и восстановление. Детали смотрите в блоке Факторы влияния на главной.",
+  "Как улучшить восстановление?":
+    "Восстановление улучшают сон 7–9 ч, питание с достаточным белком, гидратация и дни отдыха. В приложении смотрите блок Факторы влияния и метрики нагрузки.",
+  "Что влияет на тестостерон?":
+    "На уровень тестостерона влияют сон, силовые тренировки, жиры в рационе, витамин D и стресс. Рекомендую раздел Центр → Аналитика для отслеживания трендов.",
+  "Как снизить кортизол?":
+    "Снижению кортизола помогают регулярный сон, умеренные нагрузки, дыхательные практики и снижение кофеина. Отслеживайте стресс в блоке ментального здоровья.",
+  "Как повысить энергию?":
+    "Энергию поддерживают стабильный сон, вода, белок и движение. Проверьте калории и сон в разделе Центр → Питание и Обзор.",
+  "Разбор анализов крови":
+    "Для разбора анализов загрузите результаты в раздел Мед карта (Профиль). В демо-режиме полный разбор будет после подключения сервиса.",
+  "Что делать при переутомлении?":
+    "При переутомлении: снизьте нагрузку, увеличьте сон, пейте достаточно воды. В приложении смотрите блок восстановления и не пропускайте отдых.",
 };
 
 const DEFAULT_MOCK = "Принял. Это демо-режим: полный ответ будет доступен после подключения сервиса.";
@@ -28,10 +27,12 @@ const DEFAULT_MOCK = "Принял. Это демо-режим: полный о�
 type Message = { role: "user" | "assistant"; text: string };
 
 export default function AI() {
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [greetingShown, setGreetingShown] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isDark = theme === "dark";
 
   useEffect(() => {
     if (messages.length === 0 && !greetingShown) {
@@ -49,7 +50,7 @@ export default function AI() {
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
     setInput("");
 
-    const key = CHIPS.find((c) => trimmed.toLowerCase().includes(c.toLowerCase()));
+    const key = AI_QUICK_PROMPTS.find((c) => trimmed.toLowerCase().includes(c.toLowerCase()));
     const reply = key ? MOCK_RESPONSES[key] ?? DEFAULT_MOCK : DEFAULT_MOCK;
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
@@ -62,7 +63,11 @@ export default function AI() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col bg-gradient-to-b from-slate-900 to-slate-800">
+    <div
+      className={`flex h-[calc(100vh-3.5rem)] flex-col bg-gradient-to-b ${
+        isDark ? "from-indigo-950 to-slate-900" : "from-indigo-50 to-white"
+      }`}
+    >
       <div
         ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-28"
@@ -73,11 +78,11 @@ export default function AI() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center pt-16 text-center"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
-              <Bot className="h-6 w-6 text-primary" />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600/20">
+              <Sparkles className="h-7 w-7 text-indigo-500" />
             </div>
             <p className="text-lg font-medium text-foreground">
-              Здравствуйте, я Dr.AI. Чем могу помочь?
+              Здравствуйте. Я Dr.AI. Чем могу помочь?
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Выберите подсказку или напишите вопрос
@@ -91,8 +96,8 @@ export default function AI() {
                 className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
               >
                 {m.role === "assistant" ? (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                    <Bot className="h-4 w-4 text-primary" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600/20">
+                    <Sparkles className="h-4 w-4 text-indigo-500" />
                   </div>
                 ) : (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
@@ -100,24 +105,36 @@ export default function AI() {
                   </div>
                 )}
                 <Card
-                  className={`max-w-[85%] border border-border ${
-                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card"
+                  className={`max-w-[85%] border ${
+                    m.role === "user"
+                      ? "border-border bg-muted text-foreground"
+                      : "border-indigo-500/30 bg-indigo-600/10"
                   }`}
                 >
-                  <CardContent className="p-3 text-sm">{m.text}</CardContent>
+                  <CardContent
+                    className={`p-3 text-sm ${
+                      m.role === "assistant"
+                        ? isDark
+                          ? "text-indigo-400"
+                          : "text-indigo-600"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {m.text}
+                  </CardContent>
                 </Card>
               </li>
             ))}
           </ul>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {CHIPS.map((chip) => (
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {AI_QUICK_PROMPTS.map((chip) => (
             <button
               key={chip}
               type="button"
               onClick={() => send(chip)}
-              className="rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              className="rounded-full border border-indigo-500/30 bg-indigo-600/10 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-indigo-600/20"
             >
               {chip}
             </button>

@@ -65,8 +65,8 @@ export default function VoiceAssistant() {
     <button
       onClick={startListening}
       className={`fixed bottom-20 right-4 h-14 w-14 rounded-full flex items-center justify-center shadow-lg transition ${
-        listening ? "bg-red-500" : "bg-primary"
-      } text-white`}
+        listening ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+      }`}
     >
       🎤
     </button>

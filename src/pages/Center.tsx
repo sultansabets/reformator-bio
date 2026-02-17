@@ -886,7 +886,7 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
-                    <Flame className="h-4 w-4 text-amber-500" />
+                    <Flame className="h-4 w-4 text-status-amber" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">Калории</p>
                       <p className="text-sm font-semibold text-foreground">~{workoutCalories} ккал</p>

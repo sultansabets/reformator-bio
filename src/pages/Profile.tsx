@@ -11,6 +11,8 @@ import {
   Ruler,
   Scale,
   Target,
+  Pill,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -155,12 +157,12 @@ function HistoryTab() {
             <div
               className={`text-xs font-medium ${
                 item.status === "пришел"
-                  ? "text-green-500"
+                  ? "text-status-green"
                   : item.status === "планируется"
-                  ? "text-blue-500"
+                  ? "text-primary"
                   : item.status === "не пришел"
-                  ? "text-red-500"
-                  : "text-yellow-500"
+                  ? "text-status-red"
+                  : "text-status-amber"
               }`}
             >
               {item.status}
@@ -222,6 +224,370 @@ function SubscriptionsTab() {
   );
 }
 
+// --- Medications tab: types and storage ---
+type Medication = {
+  id: string;
+  name: string;
+  dosage: string;
+  times: string[];
+  startDate: string;
+  endDate: string;
+};
+
+type MedicationsData = {
+  medications: Medication[];
+  taken: Record<string, Record<string, boolean>>;
+};
+
+const MEDICATIONS_STORAGE_PREFIX = "medications_";
+
+function getMedicationsStorageKey(userId: string): string {
+  return `${MEDICATIONS_STORAGE_PREFIX}${userId}`;
+}
+
+function loadMedicationsData(userId: string): MedicationsData {
+  if (!userId) return { medications: [], taken: {} };
+  try {
+    const raw = localStorage.getItem(getMedicationsStorageKey(userId));
+    if (!raw) return { medications: [], taken: {} };
+    const parsed = JSON.parse(raw) as MedicationsData;
+    return {
+      medications: Array.isArray(parsed.medications) ? parsed.medications : [],
+      taken: parsed.taken && typeof parsed.taken === "object" ? parsed.taken : {},
+    };
+  } catch {
+    return { medications: [], taken: {} };
+  }
+}
+
+function saveMedicationsData(userId: string, data: MedicationsData): void {
+  if (!userId) return;
+  try {
+    localStorage.setItem(getMedicationsStorageKey(userId), JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+}
+
+function isMedicationActiveOnDate(med: Medication, dateStr: string): boolean {
+  return dateStr >= med.startDate && dateStr <= med.endDate;
+}
+
+function getIntakesForDay(medications: Medication[], dateStr: string): { med: Medication; time: string; intakeKey: string }[] {
+  const out: { med: Medication; time: string; intakeKey: string }[] = [];
+  for (const med of medications) {
+    if (!isMedicationActiveOnDate(med, dateStr)) continue;
+    for (const time of med.times) {
+      if (!time?.trim()) continue;
+      out.push({ med, time: time.trim(), intakeKey: `${med.id}_${time.trim()}` });
+    }
+  }
+  return out.sort((a, b) => a.time.localeCompare(b.time));
+}
+
+function toDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+const DAY_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+
+function MedicationsTab({ userId }: { userId: string }) {
+  const [data, setData] = useState<MedicationsData>(() => loadMedicationsData(userId));
+  const [selectedDate, setSelectedDate] = useState<string>(() => toDateStr(new Date()));
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    setData(loadMedicationsData(userId));
+  }, [userId]);
+
+  useEffect(() => {
+    saveMedicationsData(userId, data);
+  }, [userId, data]);
+
+  useEffect(() => {
+    if (addModalOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [addModalOpen]);
+
+  const todayStr = toDateStr(new Date());
+  const days: string[] = [];
+  const start = new Date(todayStr);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    days.push(toDateStr(d));
+  }
+
+  const intakes = getIntakesForDay(data.medications, selectedDate);
+  const hasIntakesOnDay = (dateStr: string) => getIntakesForDay(data.medications, dateStr).length > 0;
+
+  const toggleTaken = (dateStr: string, intakeKey: string) => {
+    setData((prev) => ({
+      ...prev,
+      taken: {
+        ...prev.taken,
+        [dateStr]: {
+          ...prev.taken[dateStr],
+          [intakeKey]: !prev.taken[dateStr]?.[intakeKey],
+        },
+      },
+    }));
+  };
+
+  const isTaken = (dateStr: string, intakeKey: string) => !!data.taken[dateStr]?.[intakeKey];
+
+  if (!userId) return null;
+
+  const emptyState = data.medications.length === 0;
+
+  return (
+    <div className="pb-24">
+      {/* 7-day horizontal calendar */}
+      <motion.div
+        className="flex gap-2 overflow-x-auto scrollbar-hide py-2"
+        style={{ WebkitOverflowScrolling: "touch" }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(_, info) => {
+          const threshold = 40;
+          if (info.offset.x < -threshold && days.indexOf(selectedDate) < 6) {
+            setSelectedDate(days[days.indexOf(selectedDate) + 1]);
+          } else if (info.offset.x > threshold && days.indexOf(selectedDate) > 0) {
+            setSelectedDate(days[days.indexOf(selectedDate) - 1]);
+          }
+        }}
+      >
+        {days.map((dateStr) => {
+          const d = new Date(dateStr + "T12:00:00");
+          const dayLabel = DAY_LABELS[d.getDay()];
+          const dayNum = d.getDate();
+          const active = selectedDate === dateStr;
+          const hasIntake = hasIntakesOnDay(dateStr);
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              onClick={() => setSelectedDate(dateStr)}
+              className={`flex shrink-0 flex-col items-center rounded-xl border-2 px-3 py-2.5 transition-all ${
+                active
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border bg-card text-muted-foreground"
+              }`}
+            >
+              <span className="text-[10px] font-medium">{dayLabel}</span>
+              <span className="text-base font-semibold">{dayNum}</span>
+              {hasIntake && (
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
+              )}
+            </button>
+          );
+        })}
+      </motion.div>
+
+      {emptyState ? (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-8 flex flex-col items-center justify-center py-12 text-center"
+          >
+            <Pill className="h-12 w-12 text-muted-foreground/60" strokeWidth={1.5} />
+            <h3 className="mt-4 text-sm font-semibold text-foreground">Нет курсов лекарств</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Добавьте ваше первое лекарство</p>
+          </motion.div>
+          <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background p-4 safe-area-pb">
+            <Button className="w-full" onClick={() => setAddModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Добавить
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedDate}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 space-y-2"
+            >
+              <p className="text-xs font-medium text-muted-foreground">
+                Приёмы на {new Date(selectedDate + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+              </p>
+              {intakes.length === 0 ? (
+                <p className="py-4 text-center text-xs text-muted-foreground">Нет приёмов на этот день</p>
+              ) : (
+                intakes.map(({ med, time, intakeKey }) => (
+                  <Card key={intakeKey} className="border border-border">
+                    <CardContent className="p-0">
+                      <button
+                        type="button"
+                        onClick={() => toggleTaken(selectedDate, intakeKey)}
+                        className="flex w-full items-center justify-between px-4 py-3 text-left"
+                      >
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">{med.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {med.dosage} • {time}
+                          </div>
+                        </div>
+                        <span
+                          className={`text-xs font-medium ${
+                            isTaken(selectedDate, intakeKey) ? "text-status-green" : "text-muted-foreground"
+                          }`}
+                        >
+                          {isTaken(selectedDate, intakeKey) ? "Принято" : "Отметить"}
+                        </span>
+                      </button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </motion.div>
+          </AnimatePresence>
+          <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background p-4 safe-area-pb">
+            <Button className="w-full" onClick={() => setAddModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Добавить
+            </Button>
+          </div>
+        </>
+      )}
+
+      <AddMedicationModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSave={(med) => {
+          setData((prev) => ({
+            ...prev,
+            medications: [...prev.medications, { ...med, id: `med_${Date.now()}_${Math.random().toString(36).slice(2, 9)}` }],
+          }));
+          setAddModalOpen(false);
+        }}
+      />
+    </div>
+  );
+}
+
+function AddMedicationModal({
+  open,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSave: (med: Omit<Medication, "id">) => void;
+}) {
+  const [name, setName] = useState("");
+  const [dosage, setDosage] = useState("");
+  const [times, setTimes] = useState<string[]>(["08:00"]);
+  const [startDate, setStartDate] = useState(() => toDateStr(new Date()));
+  const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setDosage("");
+      setTimes(["08:00"]);
+      setStartDate(toDateStr(new Date()));
+      setEndDate("");
+    }
+  }, [open]);
+
+  const addTime = () => setTimes((t) => [...t, "12:00"]);
+  const removeTime = (i: number) => setTimes((t) => t.filter((_, idx) => idx !== i));
+  const setTime = (i: number, v: string) => setTimes((t) => t.map((val, idx) => (idx === i ? v : val)));
+
+  const handleSave = () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+    const trimmedTimes = times.map((t) => t.trim()).filter(Boolean);
+    if (trimmedTimes.length === 0) return;
+    const end = endDate.trim();
+    const endDateValue = end || (() => {
+      const d = new Date(startDate + "T12:00:00");
+      d.setFullYear(d.getFullYear() + 10);
+      return toDateStr(d);
+    })();
+    onSave({
+      name: trimmedName,
+      dosage: dosage.trim(),
+      times: trimmedTimes,
+      startDate,
+      endDate: endDateValue,
+    });
+  };
+
+  if (!open) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[9999] flex flex-col overflow-x-hidden bg-background"
+      >
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <h2 className="text-lg font-semibold text-foreground">Добавить лекарство</h2>
+          <button type="button" onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted" aria-label="Закрыть">
+            ✕
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="space-y-2">
+            <Label>Название</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Например: Витамин D" className="h-11 border-border" />
+          </div>
+          <div className="space-y-2">
+            <Label>Дозировка</Label>
+            <Input value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="Например: 2000 МЕ" className="h-11 border-border" />
+          </div>
+          <div className="space-y-2">
+            <Label>Время приёма</Label>
+            {times.map((t, i) => (
+              <div key={i} className="flex gap-2">
+                <Input type="time" value={t} onChange={(e) => setTime(i, e.target.value)} className="h-11 border-border flex-1" />
+                {times.length > 1 ? (
+                  <Button type="button" variant="outline" size="icon" onClick={() => removeTime(i)} className="shrink-0" aria-label="Удалить время">
+                    —
+                  </Button>
+                ) : null}
+              </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={addTime} className="w-full">
+              + Добавить время
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Label>Дата начала</Label>
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-11 border-border" />
+          </div>
+          <div className="space-y-2">
+            <Label>Дата окончания</Label>
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="Не ограничено" className="h-11 border-border" />
+          </div>
+        </div>
+        <div className="border-t border-border p-4">
+          <Button className="w-full" onClick={handleSave}>
+            Сохранить
+          </Button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
@@ -261,7 +627,7 @@ const Profile = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [profileTab, setProfileTab] = useState<"medical" | "history" | "subscriptions">("medical");
+  const [profileTab, setProfileTab] = useState<"medical" | "history" | "subscriptions" | "medications">("medical");
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editNickname, setEditNickname] = useState("");
@@ -429,8 +795,8 @@ const Profile = () => {
                 : "Имя Фамилия"}
             </span>
             {user?.isVerified && (
-              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
-                <span className="text-[10px] font-bold text-white">✓</span>
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                <span className="text-[10px] font-bold text-primary-foreground">✓</span>
               </span>
             )}
           </div>
@@ -538,13 +904,14 @@ const Profile = () => {
         </Button>
       </motion.div>
 
-      {/* Tabs: Медкарта | Записи | Продукты */}
+      {/* Tabs: Медкарта | Записи | Продукты | Лекарства */}
       <motion.div variants={item} className="mt-6 border-b border-border">
         <div className="flex">
           {[
             { key: "medical" as const, label: "Медкарта" },
             { key: "history" as const, label: "Записи" },
             { key: "subscriptions" as const, label: "Продукты" },
+            { key: "medications" as const, label: "Лекарства" },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -564,9 +931,28 @@ const Profile = () => {
 
       {/* Tab content */}
       <motion.div variants={item} className="mt-4 space-y-4">
-        {profileTab === "medical" && <MedicalTab />}
-        {profileTab === "history" && <HistoryTab />}
-        {profileTab === "subscriptions" && <SubscriptionsTab />}
+        <AnimatePresence mode="wait">
+          {profileTab === "medical" && (
+            <motion.div key="medical" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <MedicalTab />
+            </motion.div>
+          )}
+          {profileTab === "history" && (
+            <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <HistoryTab />
+            </motion.div>
+          )}
+          {profileTab === "subscriptions" && (
+            <motion.div key="subscriptions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <SubscriptionsTab />
+            </motion.div>
+          )}
+          {profileTab === "medications" && (
+            <motion.div key="medications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <MedicationsTab userId={user?.id ?? ""} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Тарифы — отдельная секция внизу */}
