@@ -17,6 +17,7 @@ import { getGreetingByTime } from "@/lib/greeting";
 import { getRecommendedKcal } from "@/lib/health";
 import { computeHealthMetrics } from "@/lib/healthEngine";
 import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
+import ReadinessRing from "@/components/control/ReadinessRing";
 import { Card, CardContent } from "@/components/ui/card";
 
 const NUTRITION_KEY = "reformator_bio_nutrition";
@@ -174,6 +175,22 @@ const sleepLast3Days = [
   { day: "Сегодня", hours: 7.5 },
 ];
 
+const SLEEP_AVG_HOURS =
+  (sleepLast3Days[0].hours + sleepLast3Days[1].hours + sleepLast3Days[2].hours) / 3;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/** Body state label from 0–100 score */
+function getBodyStateLabel(score: number): string {
+  if (score >= 85) return "Оптимальное";
+  if (score >= 70) return "Хорошее";
+  if (score >= 55) return "Умеренное";
+  if (score >= 40) return "Низкое";
+  return "Критично";
+}
+
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
@@ -226,6 +243,59 @@ const ControlCenter = () => {
   const testosteroneStatusLabel = testosteroneStatusKey != null ? TESTOSTERON_STATUS_LABELS[testosteroneStatusKey] : null;
 
   const stepsToday = 8240;
+
+  const { bodyStateScore, bodyStateLabel } = useMemo(() => {
+    const recommended = user?.height && user?.weight ? getRecommendedKcal(user.weight, user.height) : null;
+    const targetKcal = recommended?.target ?? 2000;
+    const intensity = workoutIntensityFromToday(todayWorkout.durationSec, todayWorkout.caloriesBurned);
+
+    const sleepScore = clamp((SLEEP_AVG_HOURS / 8) * 100, 0, 100);
+    const recoveryScoreNorm = clamp(metrics.recoveryScore, 0, 100);
+    const trainingBalanceScore = clamp(100 - Math.abs(5 - intensity) * 12, 0, 100);
+    const calorieRatio = targetKcal > 0 ? todayKcal / targetKcal : 1;
+    const calorieBalanceScore = clamp(100 - Math.abs(1 - calorieRatio) * 80, 0, 100);
+    const stressInverseScore = clamp(100 - metrics.stressScore, 0, 100);
+    const pulseBpm = 62;
+    const pulseScore = clamp(100 - Math.abs(72 - pulseBpm) * 3, 0, 100);
+    const oxygenPct = 98;
+    const oxygenScore = clamp(oxygenPct, 0, 100);
+
+    const hasTestosterone = testosteroneValue != null;
+    let testosteroneScore = 50;
+    if (hasTestosterone && testosteroneStatusKey) {
+      testosteroneScore = testosteroneStatusKey === "normal" ? 85 : testosteroneStatusKey === "high" ? 70 : 40;
+    }
+
+    let raw: number;
+    if (hasTestosterone) {
+      raw =
+        sleepScore * 0.2 +
+        recoveryScoreNorm * 0.15 +
+        trainingBalanceScore * 0.15 +
+        calorieBalanceScore * 0.15 +
+        stressInverseScore * 0.15 +
+        testosteroneScore * 0.1 +
+        pulseScore * 0.05 +
+        oxygenScore * 0.05;
+    } else {
+      const sumWeights = 0.2 + 0.15 + 0.15 + 0.15 + 0.15 + 0.05 + 0.05;
+      raw =
+        (sleepScore * 0.2 + recoveryScoreNorm * 0.15 + trainingBalanceScore * 0.15 +
+          calorieBalanceScore * 0.15 + stressInverseScore * 0.15 + pulseScore * 0.05 + oxygenScore * 0.05) /
+        sumWeights;
+    }
+    const bodyStateScore = clamp(Math.round(raw), 0, 100);
+    return { bodyStateScore, bodyStateLabel: getBodyStateLabel(bodyStateScore) };
+  }, [
+    user?.height,
+    user?.weight,
+    metrics.recoveryScore,
+    metrics.stressScore,
+    todayKcal,
+    todayWorkout,
+    testosteroneValue,
+    testosteroneStatusKey,
+  ]);
 
   const factors = useMemo(
     () => [
@@ -347,13 +417,15 @@ const ControlCenter = () => {
       initial="hidden"
       animate="show"
     >
-      {/* Block 1 — Состояние */}
-      <motion.div variants={item} className="mb-6">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Состояние
-        </h2>
-        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
+      {/* Header: greeting + name */}
+      <motion.div variants={item} className="mb-2">
+        <p className="text-sm text-muted-foreground">{getGreetingByTime()},</p>
         <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
+      </motion.div>
+
+      {/* Body state ring */}
+      <motion.div variants={item} className="flex flex-col items-center py-6">
+        <ReadinessRing score={bodyStateScore} statusLabel={bodyStateLabel} />
       </motion.div>
 
       {/* Block 2 — Метрики */}

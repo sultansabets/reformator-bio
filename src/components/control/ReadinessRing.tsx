@@ -1,29 +1,42 @@
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ReadinessRingProps {
   score: number;
+  /** Optional status label (e.g. body state); when not provided uses default labels */
+  statusLabel?: string;
 }
 
-const ReadinessRing = ({ score }: ReadinessRingProps) => {
+const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
+  const progress = Math.min(100, Math.max(0, score)) / 100;
+  const strokeDashoffset = circumference * (1 - progress);
 
-  const getColor = () => {
-    if (score >= 70) return "hsl(var(--status-green))";
-    if (score >= 40) return "hsl(var(--status-amber))";
-    return "hsl(var(--status-red))";
+  const getStrokeColorClass = () => {
+    if (score >= 70) return "stroke-status-green";
+    if (score >= 40) return "stroke-status-amber";
+    return "stroke-status-red";
+  };
+
+  const getLabelColorClass = () => {
+    if (score >= 70) return "text-status-green";
+    if (score >= 40) return "text-status-amber";
+    return "text-status-red";
   };
 
   const getLabel = () => {
+    if (statusLabel) return statusLabel;
     if (score >= 70) return "Оптимально";
     if (score >= 40) return "Умеренно";
     return "Восстановление";
   };
 
+  const displayScore = Math.round(Math.min(100, Math.max(0, score)));
+
   return (
     <div className="relative flex flex-col items-center">
-      <svg width="180" height="180" viewBox="0 0 180 180">
+      <svg width="180" height="180" viewBox="0 0 180 180" className="shrink-0">
         <circle
           cx="90"
           cy="90"
@@ -37,29 +50,28 @@ const ReadinessRing = ({ score }: ReadinessRingProps) => {
           cy="90"
           r={radius}
           fill="none"
-          stroke={getColor()}
+          className={getStrokeColorClass()}
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={circumference - progress}
+          strokeDashoffset={strokeDashoffset}
           transform="rotate(-90 90 90)"
           initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: circumference - progress }}
+          animate={{ strokeDashoffset }}
           transition={{ duration: 1.2, ease: "easeOut" }}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <motion.span
           className="text-5xl font-bold tracking-tight text-foreground"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          {score}
+          {displayScore}
         </motion.span>
         <span
-          className="text-xs font-semibold uppercase tracking-widest"
-          style={{ color: getColor() }}
+          className={cn("mt-1 text-xs font-semibold uppercase tracking-widest", getLabelColorClass())}
         >
           {getLabel()}
         </span>
