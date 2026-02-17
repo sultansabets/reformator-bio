@@ -4,15 +4,9 @@ import { motion } from "framer-motion";
 import {
   User,
   Mail,
-  Briefcase,
   Calendar,
   Activity,
   Watch,
-  Bell,
-  Globe,
-  Moon,
-  HelpCircle,
-  LogOut,
   ChevronRight,
   ChevronDown,
   FlaskConical,
@@ -24,9 +18,7 @@ import {
   Target,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,12 +64,6 @@ import {
   type NutritionGoal,
 } from "@/lib/health";
 
-const goals = [
-  { label: "Сон", target: "8ч", current: "7ч 42м" },
-  { label: "Активность", target: "600 ккал", current: "420 ккал" },
-  { label: "Восстановл.", target: "80+", current: "82" },
-];
-
 const DEVICE_IDS = ["apple", "reformator-band"] as const;
 const DEVICE_LABELS: Record<(typeof DEVICE_IDS)[number], string> = {
   apple: "Apple Watch",
@@ -93,18 +79,16 @@ function buildDevices(wearable?: string): { id: string; name: string; connected:
   }));
 }
 
-const labHistory = [
-  { date: "12 фев 2025", type: "Общий анализ крови", status: "Норма" },
-  { date: "05 янв 2025", type: "Витамин D, ферритин", status: "Витамин D понижен" },
-  { date: "20 дек 2024", type: "Липидный профиль", status: "Норма" },
-];
-
-const settingsItems = [
-  { icon: Bell, label: "Уведомления" },
-  { icon: Globe, label: "Язык и единицы" },
-  { icon: HelpCircle, label: "Помощь и поддержка" },
-  { icon: LogOut, label: "Выйти" },
-];
+const LAB_RESULT_ITEMS = [
+  "Результаты анализов",
+  "УЗИ",
+  "ЭКГ",
+  "Главный врач",
+  "Уролог",
+  "Спортивный врач",
+  "Реабилитолог",
+  "Психотерапевт",
+] as const;
 
 const container = {
   hidden: {},
@@ -115,16 +99,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
-type ModalType =
-  | "fullName"
-  | "email"
-  | "role"
-  | "dob"
-  | "activity"
-  | "device"
-  | "lab"
-  | "setting"
-  | null;
+type ModalType = "email" | "dob" | "activity" | "device" | "lab" | "setting" | null;
 
 function validateHeight(value: string): string | null {
   const n = Number(value);
@@ -139,18 +114,17 @@ function validateWeight(value: string): string | null {
   return null;
 }
 
-type EditableField = "fullName" | "email" | "dob" | "activity" | "height" | "weight" | "goal";
+type EditableField = "firstName" | "lastName" | "email" | "dob" | "height" | "weight" | "goal";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout, updateUser } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { user, updateUser } = useAuth();
   const [modal, setModal] = useState<ModalType>(null);
   const [labOpen, setLabOpen] = useState(false);
   const devices = buildDevices(user?.wearable);
   const [modalPayload, setModalPayload] = useState<{
     device?: (typeof devices)[number];
-    lab?: (typeof labHistory)[number];
+    labItem?: string;
     settingLabel?: string;
   } | null>(null);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
@@ -159,22 +133,19 @@ const Profile = () => {
 
   const profileDisplay = {
     fullName: user?.fullName?.trim() ?? "",
+    firstName: user?.firstName?.trim() ?? "",
+    lastName: user?.lastName?.trim() ?? "",
     email: user?.email?.trim() ?? "",
     dob: user?.dob?.trim() ?? "",
-    activityLevel: user?.activityLevel?.trim() ?? "",
+    activityLevel: user?.activityLevel?.trim() ?? "Авто из тренировок",
     height: user?.height != null ? String(user.height) : "",
     weight: user?.weight != null ? String(user.weight) : "",
     goal: user?.goal ? NUTRITION_GOAL_LABELS[user.goal] : "",
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
-
   const openModal = (
     type: ModalType,
-    payload?: { device?: { id: string; name: string; connected: boolean; lastSync: string; battery: string }; lab?: (typeof labHistory)[number]; settingLabel?: string }
+    payload?: { device?: { id: string; name: string; connected: boolean; lastSync: string; battery: string }; labItem?: string; settingLabel?: string }
   ) => {
     setModal(type);
     setModalPayload(payload ?? null);
@@ -183,11 +154,7 @@ const Profile = () => {
   const startEdit = (field: EditableField) => {
     setEditingField(field);
     const value =
-      field === "activity"
-        ? profileDisplay.activityLevel
-        : field === "goal"
-          ? user?.goal ?? ""
-          : profileDisplay[field as keyof typeof profileDisplay];
+      field === "goal" ? user?.goal ?? "" : profileDisplay[field as keyof typeof profileDisplay];
     setEditDraft(typeof value === "string" ? value : "");
     setEditError(null);
   };
@@ -213,14 +180,10 @@ const Profile = () => {
       return;
     }
     const trimmed = editDraft.trim();
-    if (field === "activity") {
-      updateUser({ activityLevel: trimmed });
-    } else if (field === "fullName") {
-      const parts = trimmed.split(/\s+/).filter(Boolean);
-      updateUser({
-        firstName: parts[0] ?? "",
-        lastName: parts.slice(1).join(" ") ?? "",
-      });
+    if (field === "firstName") {
+      updateUser({ firstName: trimmed });
+    } else if (field === "lastName") {
+      updateUser({ lastName: trimmed });
     } else if (field === "height") {
       updateUser({ height: Number(trimmed) });
     } else if (field === "weight") {
@@ -229,7 +192,7 @@ const Profile = () => {
       if (["gain", "maintain", "lose"].includes(trimmed)) {
         updateUser({ goal: trimmed as NutritionGoal });
       }
-    } else {
+    } else if (field === "email" || field === "dob") {
       updateUser({ [field]: trimmed });
     }
     setEditingField(null);
@@ -237,14 +200,14 @@ const Profile = () => {
     setEditError(null);
   };
 
-  const personalInfoRows: { key: EditableField | "role"; label: string; value: string; icon: typeof User; editable: boolean }[] = [
-    { key: "fullName", label: "Полное имя", value: profileDisplay.fullName || "—", icon: User, editable: true },
-    { key: "email", label: "Электронная почта", value: profileDisplay.email || "—", icon: Mail, editable: true },
-    { key: "role", label: "Роль", value: "Пользователь", icon: Briefcase, editable: false },
+  const personalInfoRows: { key: EditableField | "activity"; label: string; value: string; icon: typeof User; editable: boolean }[] = [
+    { key: "firstName", label: "Имя", value: profileDisplay.firstName || "—", icon: User, editable: true },
+    { key: "lastName", label: "Фамилия", value: profileDisplay.lastName || "—", icon: User, editable: true },
+    { key: "email", label: "Email", value: profileDisplay.email || "—", icon: Mail, editable: true },
     { key: "dob", label: "Дата рождения", value: formatDateRu(profileDisplay.dob) || "—", icon: Calendar, editable: true },
     { key: "height", label: "Рост", value: profileDisplay.height ? `${profileDisplay.height} см` : "—", icon: Ruler, editable: true },
     { key: "weight", label: "Вес", value: profileDisplay.weight ? `${profileDisplay.weight} кг` : "—", icon: Scale, editable: true },
-    { key: "activity", label: "Уровень активности", value: profileDisplay.activityLevel || "—", icon: Activity, editable: true },
+    { key: "activity", label: "Уровень активности", value: profileDisplay.activityLevel || "—", icon: Activity, editable: false },
     { key: "goal", label: "Цель по питанию", value: profileDisplay.goal || "—", icon: Target, editable: true },
   ];
 
@@ -257,11 +220,30 @@ const Profile = () => {
     >
       {/* Profile header */}
       <motion.div variants={item} className="mb-6 flex items-center gap-4">
-        <Avatar className="h-16 w-16 border border-border">
-          <AvatarFallback className="bg-primary text-lg font-semibold text-primary-foreground">
-            {getInitials(profileDisplay.fullName || "Пользователь")}
-          </AvatarFallback>
-        </Avatar>
+        <label className="relative cursor-pointer">
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const r = new FileReader();
+              r.onload = () => {
+                const dataUrl = r.result as string;
+                if (dataUrl) updateUser({ avatar: dataUrl });
+              };
+              r.readAsDataURL(file);
+              e.target.value = "";
+            }}
+          />
+          <Avatar className="h-16 w-16 border-2 border-border cursor-pointer hover:opacity-90 transition-opacity">
+            <AvatarImage src={user?.avatar} alt="" />
+            <AvatarFallback className="bg-primary text-lg font-semibold text-primary-foreground">
+              {getInitials(profileDisplay.fullName || "Пользователь")}
+            </AvatarFallback>
+          </Avatar>
+        </label>
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             {profileDisplay.fullName || "Пользователь"}
@@ -272,38 +254,26 @@ const Profile = () => {
         </div>
       </motion.div>
 
-      {/* Personal info card */}
+      {/* Личные данные (expandable) */}
       <motion.div variants={item}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Личные данные
         </h2>
-        <Card className="mb-5 border border-border bg-card shadow-sm">
+        <Collapsible defaultOpen>
+          <Card className="mb-5 border border-border bg-card shadow-sm overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-200 hover:bg-muted/40"
+              >
+                <span className="text-sm font-medium text-foreground">Личные данные</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
           <CardContent className="divide-y divide-border p-0">
             {personalInfoRows.map((row) => {
               const isEditing = editingField === row.key;
-              if (row.key === "role") {
-                return (
-                  <button
-                    key={row.key}
-                    type="button"
-                    onClick={() => openModal("role")}
-                    className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-200 hover:bg-muted/40"
-                  >
-                    <div className="flex items-center gap-3">
-                      <row.icon className="h-4 w-4 text-muted-foreground" />
-                      <div className="text-left">
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                          {row.label}
-                        </p>
-                        <p className="text-sm font-medium text-foreground">
-                          {row.value}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                );
-              }
               if (isEditing) {
                 return (
                   <div
@@ -397,19 +367,23 @@ const Profile = () => {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => startEdit(row.key)}
-                    className="ml-2 flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Редактировать
-                  </button>
+                  {row.editable && (
+                    <button
+                      type="button"
+                      onClick={() => startEdit(row.key as EditableField)}
+                      className="ml-2 flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Редактировать
+                    </button>
+                  )}
                 </div>
               );
             })}
           </CardContent>
-        </Card>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </motion.div>
 
       {/* BMI card */}
@@ -435,24 +409,6 @@ const Profile = () => {
           </Card>
         </motion.div>
       )}
-
-      {/* Daily goals */}
-      <motion.div variants={item}>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Ежедневные цели
-        </h2>
-        <div className="mb-5 grid grid-cols-3 gap-2">
-          {goals.map((g) => (
-            <Card key={g.label} className="border border-border shadow-sm transition-shadow duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-              <CardContent className="flex flex-col items-center p-3">
-                <span className="text-[10px] text-muted-foreground">{g.label}</span>
-                <span className="text-lg font-semibold text-foreground">{g.current}</span>
-                <span className="text-[10px] text-muted-foreground">/ {g.target}</span>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </motion.div>
 
       {/* Connected devices */}
       <motion.div variants={item}>
@@ -494,11 +450,11 @@ const Profile = () => {
         </Card>
       </motion.div>
 
-      {/* Lab history */}
+      {/* Результаты анализов */}
       <motion.div variants={item}>
         <Collapsible open={labOpen} onOpenChange={setLabOpen}>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Анализы и результаты
+            Результаты анализов
           </h2>
           <Card className="mb-5 border border-border shadow-sm overflow-hidden">
             <CollapsibleTrigger asChild>
@@ -509,7 +465,7 @@ const Profile = () => {
                 <div className="flex items-center gap-3">
                   <FlaskConical className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">
-                    Анализы и результаты
+                    Результаты анализов
                   </span>
                 </div>
                 <motion.span
@@ -522,21 +478,15 @@ const Profile = () => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="divide-y divide-border border-t border-border">
-                {labHistory.map((lab, i) => (
+                {LAB_RESULT_ITEMS.map((label) => (
                   <button
-                    key={`${lab.date}-${i}`}
+                    key={label}
                     type="button"
-                    onClick={() => openModal("lab", { lab })}
+                    onClick={() => openModal("lab", { labItem: label })}
                     className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors duration-200 hover:bg-muted/40"
                   >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{lab.type}</p>
-                      <p className="text-xs text-muted-foreground">{lab.date}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-[10px]">{lab.status}</Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
+                    <span className="text-sm font-medium text-foreground">{label}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
                 ))}
               </div>
@@ -545,65 +495,20 @@ const Profile = () => {
         </Collapsible>
       </motion.div>
 
-      {/* Settings */}
-      <motion.div variants={item}>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Настройки
-        </h2>
-        <Card className="mb-8 border border-border shadow-sm">
-          <CardContent className="divide-y divide-border p-0">
-            <div className="flex items-center justify-between px-4 py-3.5">
-              <div className="flex items-center gap-3">
-                <Moon className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Тема</span>
-              </div>
-              <Switch
-                checked={theme === "dark"}
-                onCheckedChange={toggleTheme}
-                aria-label="Переключить тему"
-              />
-            </div>
-            {settingsItems.map((s) => (
-              <button
-                key={s.label}
-                onClick={
-                  s.label === "Выйти"
-                    ? handleLogout
-                    : () => openModal("setting", { settingLabel: s.label })
-                }
-                className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors duration-200 hover:bg-muted/40"
-              >
-                <div className="flex items-center gap-3">
-                  <s.icon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">{s.label}</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-      </motion.div>
-
       {/* Detail modal */}
       <Dialog open={modal !== null} onOpenChange={(open) => !open && setModal(null)}>
         <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">
-              {modal === "fullName" && "Полное имя"}
-              {modal === "email" && "Электронная почта"}
-              {modal === "role" && "Роль"}
+              {modal === "fullName" && "Имя"}
+              {modal === "email" && "Email"}
               {modal === "dob" && "Дата рождения"}
               {modal === "activity" && "Уровень активности"}
               {modal === "device" && modalPayload?.device?.name}
-              {modal === "lab" && modalPayload?.lab?.type}
+              {modal === "lab" && modalPayload?.labItem}
               {modal === "setting" && modalPayload?.settingLabel}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              {modal === "fullName" && profileDisplay.fullName}
-              {modal === "email" && profileDisplay.email}
-              {modal === "role" && "Пользователь"}
-              {modal === "dob" && (formatDateRu(profileDisplay.dob) || profileDisplay.dob || "—")}
-              {modal === "activity" && profileDisplay.activityLevel}
               {modal === "device" && modalPayload?.device && (
                 <span className="block pt-1">
                   Статус: {modalPayload.device.connected ? "Подключено" : "Не подключено"}
@@ -611,14 +516,29 @@ const Profile = () => {
                   Синхронизация: {modalPayload.device.lastSync}
                   <br />
                   Заряд: {modalPayload.device.battery}
+                  {modalPayload.device.id === "apple" && !modalPayload.device.connected && (
+                    <>
+                      <br />
+                      <Button
+                        className="mt-3 w-full"
+                        size="sm"
+                        onClick={() => {
+                          const grant = window.confirm("Разрешить доступ к данным Health? (демо)");
+                          if (grant) updateUser({ wearable: "apple" });
+                          setModal(null);
+                        }}
+                      >
+                        Подключить
+                      </Button>
+                    </>
+                  )}
+                  {modalPayload.device.id === "reformator-band" && !modalPayload.device.connected && (
+                    <p className="mt-2 text-xs">Подключение пока недоступно.</p>
+                  )}
                 </span>
               )}
-              {modal === "lab" && modalPayload?.lab && (
-                <span className="block pt-1">
-                  Дата: {modalPayload.lab.date}
-                  <br />
-                  Статус: {modalPayload.lab.status}
-                </span>
+              {modal === "lab" && (
+                <span className="block pt-1">Скоро будет доступно.</span>
               )}
               {modal === "setting" && (
                 <span className="block pt-1">Только для отображения. Без сохранения на сервере.</span>

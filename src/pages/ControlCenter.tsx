@@ -1,24 +1,22 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Heart,
   BedDouble,
   Activity,
-  Brain,
-  Sun,
-  Dumbbell,
   Zap,
-  FlaskConical,
-  Battery,
-  AlertCircle,
+  UtensilsCrossed,
+  Dumbbell,
   Dna,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
 import { getRecommendedKcal } from "@/lib/health";
 import { computeHealthMetrics } from "@/lib/healthEngine";
 import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
-import ReadinessRing from "@/components/control/ReadinessRing";
 import { Card, CardContent } from "@/components/ui/card";
 
 const NUTRITION_KEY = "reformator_bio_nutrition";
@@ -27,6 +25,12 @@ const WORKOUT_HISTORY_KEY = "reformator_bio_workout_history";
 
 function getTodayDateString(): string {
   const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getDateDaysAgo(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
@@ -48,6 +52,39 @@ function readTodayKcal(): number {
   }
 }
 
+function readKcalLast3Days(): { date: string; kcal: number }[] {
+  const today = getTodayDateString();
+  const todayKcal = readTodayKcal();
+  const result: { date: string; kcal: number }[] = [{ date: today, kcal: todayKcal }];
+  for (let i = 1; i <= 2; i++) {
+    const d = getDateDaysAgo(i);
+    try {
+      const raw = localStorage.getItem(NUTRITION_KEY);
+      if (!raw) {
+        result.push({ date: d, kcal: 0 });
+        continue;
+      }
+      const parsed = JSON.parse(raw);
+      if (parsed.date !== d) {
+        result.push({ date: d, kcal: 0 });
+        continue;
+      }
+      const sum = (arr: { manualKcal?: number; kcalPer100?: number; grams?: number }[]) =>
+        arr.reduce((s, i) => {
+          const k = i.manualKcal ?? (i.kcalPer100 && i.grams ? (i.grams / 100) * i.kcalPer100 : 0);
+          return s + Math.round(k);
+        }, 0);
+      result.push({
+        date: d,
+        kcal: sum(parsed.breakfast ?? []) + sum(parsed.lunch ?? []) + sum(parsed.dinner ?? []) + sum(parsed.snacks ?? []),
+      });
+    } catch {
+      result.push({ date: d, kcal: 0 });
+    }
+  }
+  return result;
+}
+
 function readTodayWater(): { current: number; goal: number } {
   try {
     const raw = localStorage.getItem(WATER_KEY);
@@ -58,6 +95,30 @@ function readTodayWater(): { current: number; goal: number } {
     return { current: Number(parsed.current) || 0, goal: Number(parsed.goal) || 2500 };
   } catch {
     return { current: 0, goal: 2500 };
+  }
+}
+
+interface WorkoutEntry {
+  date: string;
+  type: string;
+  durationSec: number;
+  caloriesBurned: number;
+  startedAt: number;
+}
+
+function readWorkoutHistoryLast3Days(): WorkoutEntry[] {
+  try {
+    const raw = localStorage.getItem(WORKOUT_HISTORY_KEY);
+    if (!raw) return [];
+    const list = JSON.parse(raw) as WorkoutEntry[];
+    if (!Array.isArray(list)) return [];
+    const today = getTodayDateString();
+    const day1 = getDateDaysAgo(1);
+    const day2 = getDateDaysAgo(2);
+    const allowed = [today, day1, day2];
+    return list.filter((e) => allowed.includes(e.date)).slice(0, 20);
+  } catch {
+    return [];
   }
 }
 
@@ -76,12 +137,10 @@ function readTodayWorkout(): { durationSec: number; caloriesBurned: number } {
   }
 }
 
-/** ng/dL → nmol/L for health engine */
 function testosteroneNgDlToNmolL(ngDl: number): number {
   return ngDl * 0.0347;
 }
 
-/** Derive 0–10 workout intensity from today's duration (sec) and calories burned */
 function workoutIntensityFromToday(durationSec: number, caloriesBurned: number): number {
   if (durationSec <= 0) return 0;
   const minutes = durationSec / 60;
@@ -103,70 +162,36 @@ function getMetricStatus(value: number, highIsGood: boolean): "Низкий" | "
   return "Высокий";
 }
 
-const whyFactors = [
-  {
-    icon: BedDouble,
-    label: "Сон",
-    value: "7ч 42м",
-    status: "Глубокий сон 1.8ч — выше среднего",
-    colorClass: "bg-status-green/15 text-status-green",
-  },
-  {
-    icon: Zap,
-    label: "Нагрузка",
-    value: "12.4",
-    status: "Умеренная нагрузка — хороший баланс",
-    colorClass: "bg-status-amber/15 text-status-amber",
-  },
-  {
-    icon: FlaskConical,
-    label: "Анализы",
-    value: "Норма",
-    status: "Витамин D немного понижен",
-    colorClass: "bg-status-green/15 text-status-green",
-  },
-];
-
-const otherActions = [
-  { icon: Sun, label: "Утренняя рутина", desc: "10 мин растяжка + холодный душ" },
-  { icon: Dumbbell, label: "Интенсивная тренировка", desc: "Организм готов к высокой нагрузке" },
-];
-
-const quickMetrics = [
-  { icon: Heart, label: "Пульс", value: "62", unit: "уд/м", pulse: true },
-  { icon: BedDouble, label: "Сон", value: "7ч 42м", unit: "" },
-  { icon: Activity, label: "Нагрузка", value: "12.4", unit: "strain" },
-  { icon: Brain, label: "Стресс", value: "Низкий", unit: "" },
-];
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
+const TESTOSTERON_STATUS_LABELS: Record<"low" | "normal" | "high", string> = {
+  low: "Ниже нормы",
+  normal: "Норма",
+  high: "Выше нормы",
 };
 
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-};
+const sleepLast3Days = [
+  { day: "Позавчера", hours: 7.2 },
+  { day: "Вчера", hours: 6.8 },
+  { day: "Сегодня", hours: 7.5 },
+];
+
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
+const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
 const ControlCenter = () => {
   const { user } = useAuth();
   const displayName = user?.fullName?.trim() || "Пользователь";
+  const [expandedFactor, setExpandedFactor] = useState<string | null>(null);
 
-  const { metrics, latestLab } = useMemo(() => {
-    const todayKcal = readTodayKcal();
+  const { metrics, latestLab, todayKcal, kcalLast3, workoutLast3, todayWorkout } = useMemo(() => {
     const water = readTodayWater();
     const workout = readTodayWorkout();
     const recommended = user?.height && user?.weight ? getRecommendedKcal(user.weight, user.height) : null;
     const targetKcal = recommended?.target ?? 2000;
     const lab = getLatestLab();
-
-    const testosteroneNmolL =
-      lab?.testosterone != null ? testosteroneNgDlToNmolL(lab.testosterone) : undefined;
-
+    const testosteroneNmolL = lab?.testosterone != null ? testosteroneNgDlToNmolL(lab.testosterone) : undefined;
     const input = {
       sleepHours: 7.5,
-      caloriesConsumed: todayKcal,
+      caloriesConsumed: readTodayKcal(),
       caloriesTarget: targetKcal,
       workoutIntensity: workoutIntensityFromToday(workout.durationSec, workout.caloriesBurned),
       waterMl: water.current,
@@ -180,18 +205,140 @@ const ControlCenter = () => {
         platelets: lab?.other?.platelets,
       },
     };
-
     const healthMetrics = computeHealthMetrics(input);
-    return { metrics: healthMetrics, latestLab: lab };
+    return {
+      metrics: healthMetrics,
+      latestLab: lab,
+      todayKcal: readTodayKcal(),
+      kcalLast3: readKcalLast3Days(),
+      workoutLast3: readWorkoutHistoryLast3Days(),
+      todayWorkout: readTodayWorkout(),
+    };
   }, [user?.height, user?.weight]);
 
   const energyScore = metrics.energyScore;
   const stressScore = metrics.stressScore;
-
+  const recoveryScore = metrics.recoveryScore;
   const energyStatus = getMetricStatus(energyScore, true);
   const stressStatus = getMetricStatus(stressScore, false);
   const testosteroneValue = latestLab?.testosterone;
-  const testosteroneStatus = testosteroneValue != null ? getTestosteroneStatus(testosteroneValue) : null;
+  const testosteroneStatusKey = testosteroneValue != null ? getTestosteroneStatus(testosteroneValue) : null;
+  const testosteroneStatusLabel = testosteroneStatusKey != null ? TESTOSTERON_STATUS_LABELS[testosteroneStatusKey] : null;
+
+  const stepsToday = 8240;
+
+  const factors = useMemo(
+    () => [
+      {
+        id: "sleep",
+        icon: BedDouble,
+        label: "Сон",
+        value: "7ч 42м",
+        colorClass: "bg-status-green/15 text-status-green",
+        expandedContent: (
+          <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+            {sleepLast3Days.map((s) => (
+              <li key={s.day}>
+                {s.day}: {s.hours} ч
+              </li>
+            ))}
+          </ul>
+        ),
+      },
+      {
+        id: "recovery",
+        icon: Zap,
+        label: "Восстановление",
+        value: `${recoveryScore}`,
+        colorClass: "bg-status-green/15 text-status-green",
+        expandedContent: (
+          <p className="mt-2 text-xs text-muted-foreground">
+            На основе сна и тренировочной нагрузки (мок).
+          </p>
+        ),
+      },
+      {
+        id: "workout",
+        icon: Dumbbell,
+        label: "Тренировки",
+        value: `${Math.floor(todayWorkout.durationSec / 60)} мин`,
+        colorClass: "bg-status-amber/15 text-status-amber",
+        expandedContent: (
+          <div className="mt-2 space-y-2 text-xs">
+            <p className="text-muted-foreground">Тренировки за 3 дня:</p>
+            <ul className="space-y-1">
+              {workoutLast3.length === 0 ? (
+                <li className="text-muted-foreground">Нет записей</li>
+              ) : (
+                workoutLast3.slice(0, 5).map((w, i) => (
+                  <li key={`${w.date}-${w.startedAt}-${i}`} className="text-foreground">
+                    {w.type} — {Math.floor(w.durationSec / 60)} мин, ~{w.caloriesBurned} ккал
+                  </li>
+                ))
+              )}
+            </ul>
+            <p className="text-muted-foreground">Шаги сегодня: {stepsToday}</p>
+          </div>
+        ),
+      },
+      {
+        id: "kcal",
+        icon: UtensilsCrossed,
+        label: "Ккал",
+        value: `${todayKcal}`,
+        colorClass: "bg-primary/15 text-primary",
+        expandedContent: (
+          <div className="mt-2 space-y-1 text-xs">
+            <p className="text-muted-foreground">Ккал за 3 дня:</p>
+            <ul className="space-y-0.5">
+              {kcalLast3.map((k) => (
+                <li key={k.date} className="text-foreground">
+                  {k.date}: {k.kcal} ккал
+                </li>
+              ))}
+            </ul>
+          </div>
+        ),
+      },
+      {
+        id: "testosterone",
+        icon: Dna,
+        label: "Тестостерон",
+        value: testosteroneValue != null ? `${testosteroneValue} нг/дл` : "—",
+        colorClass: "bg-status-green/15 text-status-green",
+        expandedContent: (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {testosteroneValue == null
+              ? "Добавьте результат анализа в разделе Анализы"
+              : `Статус: ${testosteroneStatusLabel ?? "—"}`}
+          </p>
+        ),
+      },
+      {
+        id: "stress",
+        icon: AlertCircle,
+        label: "Стресс",
+        value: `${stressScore}`,
+        colorClass: "bg-status-amber/15 text-status-amber",
+        expandedContent: (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Уровень кортизола/стресса. {stressStatus}.
+          </p>
+        ),
+      },
+    ],
+    [
+      recoveryScore,
+      todayWorkout.durationSec,
+      workoutLast3,
+      todayKcal,
+      kcalLast3,
+      testosteroneValue,
+      testosteroneStatusLabel,
+      stressScore,
+      stressStatus,
+    ]
+  );
 
   return (
     <motion.div
@@ -200,178 +347,94 @@ const ControlCenter = () => {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={item} className="mb-2">
+      {/* Block 1 — Состояние */}
+      <motion.div variants={item} className="mb-6">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Состояние
+        </h2>
         <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
         <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
       </motion.div>
 
-      <motion.div variants={item} className="flex flex-col items-center py-6">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Общий статус
+      {/* Block 2 — Метрики */}
+      <motion.div variants={item} className="mb-6">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Метрики
         </h2>
-        <ReadinessRing score={82} />
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Ваш организм хорошо восстановился. Можно увеличить нагрузку.
-        </p>
+        <div className="grid grid-cols-3 gap-2">
+          <Card className="border border-border bg-card shadow-sm">
+            <CardContent className="flex flex-col items-center gap-1 p-3">
+              <Heart className="h-4 w-4 text-primary" />
+              <span className="text-lg font-bold text-foreground">62</span>
+              <span className="text-[10px] text-muted-foreground">Пульс</span>
+            </CardContent>
+          </Card>
+          <Card className="border border-border bg-card shadow-sm">
+            <CardContent className="flex flex-col items-center gap-1 p-3">
+              <Activity className="h-4 w-4 text-primary" />
+              <span className="text-lg font-bold text-foreground">120/80</span>
+              <span className="text-[10px] text-muted-foreground">Давление</span>
+            </CardContent>
+          </Card>
+          <Card className="border border-border bg-card shadow-sm">
+            <CardContent className="flex flex-col items-center gap-1 p-3">
+              <BedDouble className="h-4 w-4 text-primary" />
+              <span className="text-lg font-bold text-foreground">98%</span>
+              <span className="text-[10px] text-muted-foreground">Кислород в крови</span>
+            </CardContent>
+          </Card>
+        </div>
       </motion.div>
 
-      <motion.div variants={item} className="mt-6">
+      {/* Block 3 — Факторы влияния */}
+      <motion.div variants={item}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Факторы влияния
         </h2>
         <div className="space-y-2">
-          {whyFactors.slice(0, 2).map((f) => (
-            <Card key={f.label} className="border border-border bg-card shadow-sm">
-              <CardContent className="flex items-center gap-3 p-3">
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.colorClass}`}
+          {factors.map((f) => {
+            const isExpanded = expandedFactor === f.id;
+            return (
+              <Card
+                key={f.id}
+                className="border border-border bg-card shadow-sm overflow-hidden"
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-3 p-3 text-left"
+                  onClick={() => setExpandedFactor(isExpanded ? null : f.id)}
                 >
-                  <f.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-semibold text-foreground">{f.label}</span>
-                    <span className="text-sm font-bold text-foreground">{f.value}</span>
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.colorClass}`}
+                  >
+                    <f.icon className="h-4 w-4" />
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">{f.status}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="flex items-center gap-3 p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <Battery className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-semibold text-foreground">Энергия</span>
-                  <span className="text-sm font-bold text-foreground">{energyScore}</span>
-                </div>
-                <p className="truncate text-xs text-muted-foreground">
-                  {energyScore > 75
-                    ? "Высокий уровень энергии"
-                    : energyScore >= 50
-                      ? "Стабильное состояние"
-                      : energyScore >= 25
-                        ? "Сниженный ресурс"
-                        : "Требуется восстановление"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="flex items-center gap-3 p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-amber/15 text-status-amber">
-                <AlertCircle className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-semibold text-foreground">Стресс</span>
-                  <span className="text-sm font-bold text-foreground">{stressScore}</span>
-                </div>
-                <p className="truncate text-xs text-muted-foreground">
-                  {stressScore > 75
-                    ? "Высокая нагрузка"
-                    : stressScore >= 50
-                      ? "Умеренный уровень"
-                      : stressScore >= 25
-                        ? "Контролируемый стресс"
-                        : "Минимальный стресс"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="flex items-center gap-3 p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-status-green/15 text-status-green">
-                <Dna className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-semibold text-foreground">Тестостерон</span>
-                  <span className="text-sm font-bold text-foreground">
-                    {testosteroneValue != null ? `${testosteroneValue} нг/дл` : "Нет данных"}
-                  </span>
-                </div>
-                <p className="truncate text-xs text-muted-foreground">
-                  {testosteroneValue == null
-                    ? "Добавьте результат анализа в разделе Анализы"
-                    : testosteroneValue < 300
-                      ? "Понижен — влияет на энергию"
-                      : testosteroneValue > 900
-                        ? "Повышенный уровень"
-                        : "В пределах нормы"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          {whyFactors.slice(2, 3).map((f) => (
-            <Card key={f.label} className="border border-border bg-card shadow-sm">
-              <CardContent className="flex items-center gap-3 p-3">
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.colorClass}`}
-                >
-                  <f.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between">
+                  <div className="min-w-0 flex-1">
                     <span className="text-sm font-semibold text-foreground">{f.label}</span>
-                    <span className="text-sm font-bold text-foreground">{f.value}</span>
+                    <span className="ml-2 text-sm font-bold text-foreground">{f.value}</span>
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">{f.status}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </motion.div>
-
-      <motion.div variants={item} className="mt-6">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Что важно сегодня
-        </h2>
-        <div className="space-y-2">
-          {otherActions.map((a) => (
-            <Card
-              key={a.label}
-              className="cursor-pointer border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
-            >
-              <CardContent className="flex items-center gap-3 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent">
-                  <a.icon className="h-4 w-4 text-accent-foreground" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="text-sm font-semibold text-foreground">{a.label}</span>
-                  <p className="truncate text-xs text-muted-foreground">{a.desc}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </motion.div>
-
-      <motion.div variants={item} className="mt-6 mb-4">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Быстрые метрики
-        </h2>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {quickMetrics.map((m) => (
-            <Card key={m.label} className="min-w-[110px] shrink-0 border border-border bg-card shadow-sm">
-              <CardContent className="flex flex-col items-center gap-1 p-3">
-                <div className="relative">
-                  <m.icon className="h-4 w-4 text-primary" />
-                  {m.pulse && (
-                    <span className="absolute -right-1 -top-1 h-2 w-2 animate-pulse rounded-full bg-status-red" />
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                   )}
-                </div>
-                <span className="text-lg font-bold text-foreground">{m.value}</span>
-                <span className="text-[10px] text-muted-foreground">
-                  {m.unit ? m.unit : m.label}
-                </span>
-              </CardContent>
-            </Card>
-          ))}
+                </button>
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="border-t border-border bg-muted/30 px-3 pb-3 pt-1"
+                    >
+                      {f.expandedContent}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
+            );
+          })}
         </div>
       </motion.div>
     </motion.div>

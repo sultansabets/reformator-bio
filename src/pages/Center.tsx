@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   UtensilsCrossed,
@@ -77,6 +77,8 @@ const recoveryData = [
   { day: "Вс", score: 82 },
 ];
 const analyticsPeriods = ["День", "Неделя", "Месяц"] as const;
+const CENTER_TABS = ["Обзор", "Питание", "Тренировки"] as const;
+type CenterTab = (typeof CENTER_TABS)[number];
 
 const WORKOUT_TYPES = [
   { id: "gym", label: "Тренировка в зале", emoji: "🏋" },
@@ -216,6 +218,7 @@ function saveWorkoutHistory(entries: WorkoutHistoryEntry[]): void {
 export default function Center() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [centerTab, setCenterTab] = useState<CenterTab>("Обзор");
   const [analyticsPeriod, setAnalyticsPeriod] = useState<(typeof analyticsPeriods)[number]>("Неделя");
   const [nutrition, setNutrition] = useState<NutritionDay>(loadNutrition);
   const [addModal, setAddModal] = useState<{ meal: (typeof MEAL_KEYS)[number] } | null>(null);
@@ -500,6 +503,15 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
 
   const waterProgress = water.goal > 0 ? Math.min(100, (water.current / water.goal) * 100) : 0;
 
+  const todayWorkout = useMemo(() => {
+    const today = getTodayDateString();
+    const entries = workoutHistory.filter((e) => e.date === today);
+    return {
+      durationSec: entries.reduce((s, e) => s + e.durationSec, 0) + (workoutActive ? workoutElapsedSec : 0),
+      caloriesBurned: entries.reduce((s, e) => s + e.caloriesBurned, 0) + (workoutActive ? workoutCalories : 0),
+    };
+  }, [workoutHistory, workoutActive, workoutElapsedSec, workoutCalories]);
+
   return (
     <motion.div
       className="min-h-screen px-4 py-6 pb-28"
@@ -507,9 +519,142 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
       initial="hidden"
       animate="show"
     >
-      <h1 className="mb-6 text-lg font-semibold tracking-tight text-foreground">Центр</h1>
+      <h1 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Центр</h1>
 
-      {/* 1. Daily summary */}
+      {/* Top segmented navigation */}
+      <motion.div variants={itemAnim} className="mb-5 flex gap-1 rounded-xl bg-muted p-1">
+        {CENTER_TABS.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setCenterTab(tab)}
+            className={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all ${
+              centerTab === tab ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </motion.div>
+
+      {/* Обзор: analytics by period */}
+      {centerTab === "Обзор" && (
+        <motion.section variants={itemAnim} className="mb-8">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Аналитика
+          </h2>
+          <div className="mb-4 flex gap-1 rounded-xl bg-muted p-1">
+            {analyticsPeriods.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setAnalyticsPeriod(p)}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
+                  analyticsPeriod === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <Card className="mb-4 border border-border shadow-sm">
+            <CardContent className="p-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Калории
+              </p>
+              <p className="text-lg font-semibold text-foreground">{totalKcal} ккал за день</p>
+            </CardContent>
+          </Card>
+          <Card className="mb-4 border border-border shadow-sm">
+            <CardContent className="p-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Тренировки
+              </p>
+              <p className="text-sm text-foreground">
+                Сегодня: {Math.floor(todayWorkout.durationSec / 60)} мин, ~{todayWorkout.caloriesBurned} ккал
+              </p>
+              {workoutHistory.length > 0 && (
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  {workoutHistory.slice(0, 3).map((h, i) => (
+                    <li key={`${h.date}-${h.startedAt}-${i}`}>
+                      {h.type} — {Math.floor(h.durationSec / 60)} мин
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="mb-4 border border-border shadow-sm">
+            <CardContent className="p-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Тренды сна
+              </p>
+              <ResponsiveContainer width="100%" height={140}>
+                <BarChart data={sleepData}>
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis hide domain={[5, 9]} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+                  <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          <Card className="mb-4 border border-border shadow-sm">
+            <CardContent className="p-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Нагрузка
+              </p>
+              <ResponsiveContainer width="100%" height={140}>
+                <LineChart data={loadData}>
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+                  <Line type="monotone" dataKey="load" stroke="hsl(var(--status-amber))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--status-amber))" }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          <Card className="mb-4 border border-border shadow-sm">
+            <CardContent className="p-4">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Восстановление
+              </p>
+              <ResponsiveContainer width="100%" height={140}>
+                <AreaChart data={recoveryData}>
+                  <defs>
+                    <linearGradient id="recoveryGradCenter" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--status-green))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--status-green))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis hide domain={[50, 100]} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+                  <Area type="monotone" dataKey="score" stroke="hsl(var(--status-green))" strokeWidth={2} fill="url(#recoveryGradCenter)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          <Card className="cursor-pointer border border-border shadow-sm transition-shadow hover:shadow-md" onClick={() => navigate("/data")}>
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
+                  <FlaskConical className="h-4 w-4 text-accent-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Анализы</p>
+                  <p className="text-xs text-muted-foreground">Лаб. показатели и история</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </motion.section>
+      )}
+
+      {/* Питание */}
+      {centerTab === "Питание" && (
+        <>
       <motion.section variants={itemAnim} className="mb-6">
         <Card className="border border-border bg-card shadow-sm">
           <CardContent className="p-4">
@@ -547,8 +692,6 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
           </Card>
         )}
       </motion.section>
-
-      {/* 2. Meals */}
       <motion.section variants={itemAnim} className="mb-8">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <UtensilsCrossed className="h-3.5 w-3.5" />
@@ -620,8 +763,6 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
           </CardContent>
         </Card>
       </motion.section>
-
-      {/* 3. Water */}
       <motion.section variants={itemAnim} className="mb-8">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Droplets className="h-3.5 w-3.5" />
@@ -648,8 +789,11 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
           </CardContent>
         </Card>
       </motion.section>
+        </>
+      )}
 
-      {/* 4. Workout */}
+      {/* Тренировки */}
+      {centerTab === "Тренировки" && (
       <motion.section variants={itemAnim}>
         <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Dumbbell className="h-3.5 w-3.5" />
@@ -745,145 +889,9 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
           </div>
         )}
       </motion.section>
+      )}
 
-      {/* 5. Analytics (moved from Insights) */}
-      <motion.section variants={itemAnim} className="mb-8 mt-8">
-        <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Аналитика
-        </h2>
-        <div className="mb-4 flex gap-1 rounded-xl bg-muted p-1">
-          {analyticsPeriods.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setAnalyticsPeriod(p)}
-              className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
-                analyticsPeriod === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-        <Card className="mb-4 border border-border shadow-sm">
-          <CardContent className="p-4">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Тренды сна
-            </p>
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart data={sleepData}>
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                />
-                <YAxis hide domain={[5, 9]} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="mb-4 border border-border shadow-sm">
-          <CardContent className="p-4">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Нагрузка
-            </p>
-            <ResponsiveContainer width="100%" height={140}>
-              <LineChart data={loadData}>
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                />
-                <YAxis hide />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    fontSize: 12,
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="load"
-                  stroke="hsl(var(--status-amber))"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "hsl(var(--status-amber))" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="mb-4 border border-border shadow-sm">
-          <CardContent className="p-4">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              История восстановления
-            </p>
-            <ResponsiveContainer width="100%" height={140}>
-              <AreaChart data={recoveryData}>
-                <defs>
-                  <linearGradient id="recoveryGradCenter" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--status-green))" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(var(--status-green))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="day"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                />
-                <YAxis hide domain={[50, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    fontSize: 12,
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="score"
-                  stroke="hsl(var(--status-green))"
-                  strokeWidth={2}
-                  fill="url(#recoveryGradCenter)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card
-          className="cursor-pointer border border-border shadow-sm transition-shadow hover:shadow-md"
-          onClick={() => navigate("/labs")}
-        >
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-                <FlaskConical className="h-4 w-4 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Анализы</p>
-                <p className="text-xs text-muted-foreground">Лаб. показатели и история</p>
-              </div>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </CardContent>
-        </Card>
-      </motion.section>
-
-      {/* 6. Voice assistant */}
+      {/* Voice assistant */}
       <button
         type="button"
         onClick={toggleVoice}

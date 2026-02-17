@@ -4,11 +4,13 @@ const AUTH_KEY = "reformator_bio_auth";
 const USER_KEY = "reformator_bio_user";
 
 export interface StoredUser {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  nickname?: string;
   phone: string;
   email?: string;
   password: string;
+  avatar?: string;
   dob?: string;
   activityLevel?: string;
   wearable?: string;
@@ -18,7 +20,7 @@ export interface StoredUser {
 }
 
 export type ProfileUpdates = Partial<
-  Pick<StoredUser, "firstName" | "lastName" | "email" | "dob" | "activityLevel" | "height" | "weight" | "goal">
+  Pick<StoredUser, "firstName" | "lastName" | "nickname" | "email" | "avatar" | "dob" | "activityLevel" | "height" | "weight" | "goal" | "wearable">
 >;
 
 interface AuthContextType {
@@ -26,11 +28,12 @@ interface AuthContextType {
   user: (StoredUser & { fullName: string }) | null;
   login: (loginId: string, password: string) => { success: boolean; error?: string };
   register: (data: {
-    firstName: string;
-    lastName: string;
     phone: string;
-    email?: string;
     password: string;
+    nickname: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
   }) => void;
   logout: () => void;
   hasUser: () => boolean;
@@ -47,7 +50,10 @@ function getStoredUser(): StoredUser | null {
 }
 
 function withFullName(stored: StoredUser): StoredUser & { fullName: string } {
-  const fullName = [stored.firstName, stored.lastName].filter(Boolean).join(" ").trim() || "Пользователь";
+  const fullName =
+    stored.nickname?.trim() ||
+    [stored.firstName, stored.lastName].filter(Boolean).join(" ").trim() ||
+    "Пользователь";
   return { ...stored, fullName };
 }
 
@@ -99,13 +105,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasUser = useCallback(() => !!getStoredUser(), []);
 
   const register = useCallback(
-    (data: { firstName: string; lastName: string; phone: string; email?: string; password: string }) => {
+    (data: {
+      phone: string;
+      password: string;
+      nickname: string;
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+    }) => {
       const newUser: StoredUser = {
-        firstName: data.firstName.trim(),
-        lastName: data.lastName.trim(),
         phone: data.phone.trim(),
-        email: data.email?.trim() || undefined,
         password: data.password,
+        nickname: data.nickname.trim(),
+        firstName: data.firstName?.trim(),
+        lastName: data.lastName?.trim(),
+        email: data.email?.trim() || undefined,
       };
       try {
         localStorage.setItem(USER_KEY, JSON.stringify(newUser));
