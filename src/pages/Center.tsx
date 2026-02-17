@@ -599,6 +599,36 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
             ))}
           </motion.div>
 
+          {/* Метрики: Биометрический возраст + Ментальное здоровье */}
+          <motion.div variants={itemAnim} className="mb-6 grid grid-cols-2 gap-4">
+            <Card className="border border-emerald-500/40 bg-card">
+              <CardContent className="p-4">
+                <p className="text-xs uppercase text-muted-foreground">
+                  Биометрический возраст
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">
+                  {(user as { biologicalAge?: number } | null)?.biologicalAge != null
+                    ? String((user as { biologicalAge?: number }).biologicalAge)
+                    : "—"}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border border-border bg-card">
+              <CardContent className="p-4">
+                <p className="text-xs uppercase text-muted-foreground">
+                  Ментальное здоровье
+                </p>
+                <Button
+                  className="mt-3 w-full"
+                  size="sm"
+                  onClick={() => navigate("/ai?mental=1")}
+                >
+                  {user?.mentalHealthScore != null ? String(user.mentalHealthScore) : "Узнать"}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           <motion.section variants={itemAnim} className="mb-8">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Аналитика

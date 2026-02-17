@@ -5,8 +5,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
 import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
-import NotificationBottomSheet from "@/components/notifications/NotificationBottomSheet";
-import NotificationPanel from "@/components/notifications/NotificationPanel";
 import { getNotifications, setNotifications, seedMockIfEmpty, type Notification } from "@/lib/notifications";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
@@ -296,27 +294,38 @@ const AppLayout = () => {
         <Outlet />
       </main>
       <BottomNav />
-      <NotificationBottomSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)}>
-        <div className="flex min-h-0 flex-1 flex-col bg-background">
-          <header className="flex items-center justify-between px-4 pb-2">
-            <h1 className="text-lg font-semibold text-foreground">Уведомления</h1>
-          </header>
-          {!notificationsEnabled && (
-            <p className="px-4 pb-1 text-xs text-muted-foreground">Уведомления отключены</p>
-          )}
-          <NotificationPanel
-            notifications={notificationList}
-            onMarkRead={(id) => {
-              const next = notificationList.map((n) =>
-                n.id === id ? { ...n, read: true } : n
-              );
-              setNotificationList(next);
-              setNotifications(next);
-            }}
-            hideTitle
-          />
-        </div>
-      </NotificationBottomSheet>
+
+      {/* Уведомления: fullscreen Sheet справа налево */}
+      <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <SheetContent
+          side="right"
+          className="h-screen w-full max-w-full overflow-y-auto border-border bg-background p-0 sm:max-w-md"
+        >
+          <div className="flex flex-col h-full">
+            <div className="shrink-0 border-b border-border px-4 pt-14 pb-4">
+              <h2 className="text-lg font-semibold text-foreground">Уведомления</h2>
+              {!notificationsEnabled && (
+                <p className="mt-1 text-xs text-muted-foreground">Уведомления отключены</p>
+              )}
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {notificationList.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Пока нет уведомлений</p>
+              ) : (
+                notificationList.map((item) => (
+                  <div
+                    key={item.id}
+                    className="border-b border-border py-4"
+                  >
+                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
