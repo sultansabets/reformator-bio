@@ -85,32 +85,28 @@ const AppLayout = () => {
 
   return (
     <div className="mx-auto min-h-screen max-w-md overflow-x-hidden bg-background transition-colors duration-300">
-      <header
-        className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-4"
-      >
-        <div className="flex items-center">
+      <header className="sticky top-0 z-40 border-b border-border bg-background">
+        <div className="relative flex h-14 items-center justify-center px-4">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen((prev) => !prev)}
+            className="absolute left-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Настройки"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
           <img
             src={theme === "dark" ? logoDark : logoLight}
             alt="Reformator Bio Logo"
             className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
           />
-        </div>
-        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setNotificationsOpen(true)}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="absolute right-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Уведомления"
           >
             <Bell className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((prev) => !prev)}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Настройки"
-          >
-            <Settings className="h-5 w-5" />
           </button>
         </div>
       </header>

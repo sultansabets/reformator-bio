@@ -36,7 +36,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
 
   return (
     <div className="relative flex flex-col items-center">
-      <svg width="180" height="180" viewBox="0 0 180 180" className="shrink-0">
+      <svg viewBox="0 0 180 180" className="h-56 w-56 shrink-0">
         <circle
           cx="90"
           cy="90"
@@ -61,7 +61,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           transition={{ duration: 1.2, ease: "easeOut" }}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
         <motion.span
           className="text-5xl font-bold tracking-tight text-foreground"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -70,8 +70,14 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
         >
           {displayScore}
         </motion.span>
+        <span className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Состояние
+        </span>
         <span
-          className={cn("mt-1 text-xs font-semibold uppercase tracking-widest", getLabelColorClass())}
+          className={cn(
+            "mt-1 text-sm font-semibold uppercase tracking-wide",
+            getLabelColorClass()
+          )}
         >
           {getLabel()}
         </span>
