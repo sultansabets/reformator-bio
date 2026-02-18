@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown } from "lucide-react";
+import { Bell, Settings, Sun, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
@@ -86,28 +86,48 @@ const AppLayout = () => {
   return (
     <div className="mx-auto min-h-screen max-w-md overflow-x-hidden bg-background transition-colors duration-300">
       <header className="sticky top-0 z-40 border-b border-border bg-background">
-        <div className="relative flex h-14 items-center justify-center px-4">
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((prev) => !prev)}
-            className="absolute left-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Настройки"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-          <img
-            src={theme === "dark" ? logoDark : logoLight}
-            alt="Reformator Bio Logo"
-            className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
-          />
-          <button
-            type="button"
-            onClick={() => setNotificationsOpen(true)}
-            className="absolute right-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Уведомления"
-          >
-            <Bell className="h-5 w-5" />
-          </button>
+        <div className="relative flex h-14 items-center justify-between px-4">
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              aria-label="Переключить тему"
+            >
+              {theme === "light" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <img
+              src={theme === "dark" ? logoDark : logoLight}
+              alt="Reformator Bio Logo"
+              className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen(true)}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              aria-label="Уведомления"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              aria-label="Настройки"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </header>
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
