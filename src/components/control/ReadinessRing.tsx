@@ -8,13 +8,12 @@ interface ReadinessRingProps {
 }
 
 const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
-  const size = 300;
+  const size = 250;
   const strokeWidth = 8;
   const center = size / 2;
   const radius = center - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = Math.min(100, Math.max(0, score)) / 100;
-  const strokeDashoffset = circumference * (1 - progress);
+  const progress = Math.min(100, Math.max(0, score));
 
   const getStrokeColorClass = () => {
     if (score >= 70) return "stroke-status-green";
@@ -35,10 +34,10 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
     return "Восстановление";
   };
 
-  const displayScore = Math.round(Math.min(100, Math.max(0, score)));
+  const displayScore = Math.round(progress);
 
   return (
-    <div className="relative h-[300px] w-[300px]">
+    <div className="relative h-[250px] w-[250px]">
       <svg
         width={size}
         height={size}
@@ -62,7 +61,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          strokeDashoffset={circumference - (progress / 100) * circumference}
           transform={`rotate(-90 ${center} ${center})`}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset }}
