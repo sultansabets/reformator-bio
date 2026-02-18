@@ -431,13 +431,13 @@ const ControlCenter = () => {
       animate="show"
     >
       {/* Header: greeting + name */}
-      <motion.div variants={item} className="mb-2">
-        <p className="text-sm text-muted-foreground">{getGreetingByTime()},</p>
-        <h1 className="text-2xl font-bold text-foreground">{displayName}</h1>
+      <motion.div variants={item} className="mb-4 flex flex-col items-center text-center">
+        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
 
       {/* Body state ring */}
-      <motion.div variants={item} className="flex flex-col items-center py-6">
+      <motion.div variants={item} className="mb-6 flex justify-center">
         <ReadinessRing score={bodyStateScore} statusLabel={bodyStateLabel} />
       </motion.div>
 

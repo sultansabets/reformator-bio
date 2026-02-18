@@ -36,7 +36,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
 
   return (
     <div className="relative flex flex-col items-center">
-      <svg viewBox="0 0 180 180" className="h-56 w-56 shrink-0">
+      <svg viewBox="0 0 180 180" className="h-[212px] w-[212px] shrink-0">
         <circle
           cx="90"
           cy="90"
