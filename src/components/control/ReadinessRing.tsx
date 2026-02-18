@@ -14,6 +14,9 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
   const radius = center - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(100, Math.max(0, score));
+  const progressValue = typeof progress === "number" ? progress : 0;
+  const dashOffset =
+    circumference - (progressValue / 100) * circumference;
 
   const getStrokeColorClass = () => {
     if (score >= 70) return "stroke-status-green";
@@ -61,10 +64,10 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={circumference - (progress / 100) * circumference}
+          strokeDashoffset={dashOffset}
           transform={`rotate(-90 ${center} ${center})`}
           initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset }}
+          animate={{ strokeDashoffset: dashOffset }}
           transition={{ duration: 1.2, ease: "easeOut" }}
         />
       </svg>
