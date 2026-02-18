@@ -446,26 +446,26 @@ const ControlCenter = () => {
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Метрики
         </h2>
-        <div className="grid grid-cols-3 gap-2">
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="flex flex-col items-center gap-1 p-3">
-              <Heart className="h-4 w-4 text-primary" />
-              <span className="text-lg font-bold text-foreground">62</span>
-              <span className="text-[10px] text-muted-foreground">Пульс</span>
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="flex w-full flex-col items-center justify-center rounded-2xl bg-card">
+            <CardContent className="flex flex-col items-center justify-center px-4 py-6">
+              <Heart className="mb-3 h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-semibold text-foreground">62</span>
+              <span className="mt-1 text-sm text-muted-foreground">Пульс</span>
             </CardContent>
           </Card>
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="flex flex-col items-center gap-1 p-3">
-              <Activity className="h-4 w-4 text-primary" />
-              <span className="text-lg font-bold text-foreground">120/80</span>
-              <span className="text-[10px] text-muted-foreground">Давление</span>
+          <Card className="flex w-full flex-col items-center justify-center rounded-2xl bg-card">
+            <CardContent className="flex flex-col items-center justify-center px-4 py-6">
+              <Activity className="mb-3 h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-semibold text-foreground">120/80</span>
+              <span className="mt-1 text-sm text-muted-foreground">Давление</span>
             </CardContent>
           </Card>
-          <Card className="border border-border bg-card shadow-sm">
-            <CardContent className="flex flex-col items-center gap-1 p-3">
-              <BedDouble className="h-4 w-4 text-primary" />
-              <span className="text-lg font-bold text-foreground">98%</span>
-              <span className="text-[10px] text-muted-foreground">Кислород в крови</span>
+          <Card className="flex w-full flex-col items-center justify-center rounded-2xl bg-card">
+            <CardContent className="flex flex-col items-center justify-center px-4 py-6">
+              <BedDouble className="mb-3 h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-semibold text-foreground">98%</span>
+              <span className="mt-1 text-sm text-muted-foreground">Кислород в крови</span>
             </CardContent>
           </Card>
         </div>
