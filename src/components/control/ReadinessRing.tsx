@@ -36,14 +36,14 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
 
   return (
     <div className="relative flex flex-col items-center">
-      <svg viewBox="0 0 180 180" className="h-[212px] w-[212px] shrink-0">
+      <svg viewBox="0 0 180 180" className="h-[220px] w-[220px] shrink-0">
         <circle
           cx="90"
           cy="90"
           r={radius}
           fill="none"
           stroke="hsl(var(--border))"
-          strokeWidth="8"
+          strokeWidth="6"
         />
         <motion.circle
           cx="90"
@@ -51,7 +51,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           r={radius}
           fill="none"
           className={getStrokeColorClass()}
-          strokeWidth="8"
+          strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
