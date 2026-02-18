@@ -10,7 +10,8 @@ interface ReadinessRingProps {
 const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
   const size = 300;
   const strokeWidth = 8;
-  const radius = (size - strokeWidth) / 2;
+  const center = size / 2;
+  const radius = center - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(100, Math.max(0, score)) / 100;
   const strokeDashoffset = circumference * (1 - progress);
@@ -37,22 +38,24 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative h-[300px] w-[300px]">
       <svg
+        width={size}
+        height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="relative h-[300px] w-[300px] shrink-0"
+        className="absolute left-0 top-0"
       >
         <circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
           stroke="hsl(var(--border))"
           strokeWidth={strokeWidth}
         />
         <motion.circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
           className={getStrokeColorClass()}
@@ -60,7 +63,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          transform="rotate(-90 90 90)"
+          transform={`rotate(-90 ${center} ${center})`}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset }}
           transition={{ duration: 1.2, ease: "easeOut" }}
