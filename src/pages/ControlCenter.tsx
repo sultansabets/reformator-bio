@@ -437,7 +437,7 @@ const ControlCenter = () => {
       </motion.div>
 
       {/* Body state ring */}
-      <motion.div variants={item} className="mb-6 flex justify-center">
+      <motion.div variants={item} className="mt-6 mb-8 flex justify-center">
         <ReadinessRing score={bodyStateScore} statusLabel={bodyStateLabel} />
       </motion.div>
 

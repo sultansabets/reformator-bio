@@ -8,7 +8,9 @@ interface ReadinessRingProps {
 }
 
 const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
-  const radius = 70;
+  const size = 300;
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(100, Math.max(0, score)) / 100;
   const strokeDashoffset = circumference * (1 - progress);
@@ -36,22 +38,25 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
 
   return (
     <div className="relative flex flex-col items-center">
-      <svg viewBox="0 0 180 180" className="h-[220px] w-[220px] shrink-0">
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className="relative h-[300px] w-[300px] shrink-0"
+      >
         <circle
-          cx="90"
-          cy="90"
+          cx={size / 2}
+          cy={size / 2}
           r={radius}
           fill="none"
           stroke="hsl(var(--border))"
-          strokeWidth="6"
+          strokeWidth={strokeWidth}
         />
         <motion.circle
-          cx="90"
-          cy="90"
+          cx={size / 2}
+          cy={size / 2}
           r={radius}
           fill="none"
           className={getStrokeColorClass()}
-          strokeWidth="6"
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
@@ -70,12 +75,12 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
         >
           {displayScore}
         </motion.span>
-        <span className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="mt-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Состояние
         </span>
         <span
           className={cn(
-            "mt-1 text-sm font-semibold uppercase tracking-wide",
+            "mt-1 text-base font-semibold uppercase tracking-wide",
             getLabelColorClass()
           )}
         >
