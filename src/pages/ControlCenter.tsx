@@ -1,17 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  Heart,
-  BedDouble,
-  Activity,
-  Zap,
-  UtensilsCrossed,
-  Dumbbell,
-  Dna,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
 import { getRecommendedKcal } from "@/lib/health";
@@ -19,7 +7,11 @@ import { computeHealthMetrics } from "@/lib/healthEngine";
 import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
 import { getStorageKey } from "@/lib/userStorage";
 import HealthOrb from "@/components/control/HealthOrb";
-import { Card, CardContent } from "@/components/ui/card";
+import { EnergyCard } from "@/components/control/EnergyCard";
+import { HormonesCard } from "@/components/control/HormonesCard";
+import { StrengthCard } from "@/components/control/StrengthCard";
+import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
+import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -147,25 +139,6 @@ function workoutIntensityFromToday(durationSec: number, caloriesBurned: number):
   return Math.round(Math.min(10, intensityFromDuration + intensityFromCal * 0.5));
 }
 
-function getMetricStatus(value: number, highIsGood: boolean): "Низкий" | "Умеренный" | "Высокий" | "Оптимальный" {
-  if (highIsGood) {
-    if (value >= 76) return "Оптимальный";
-    if (value >= 51) return "Высокий";
-    if (value >= 26) return "Умеренный";
-    return "Низкий";
-  }
-  if (value <= 25) return "Оптимальный";
-  if (value <= 50) return "Низкий";
-  if (value <= 75) return "Умеренный";
-  return "Высокий";
-}
-
-const TESTOSTERON_STATUS_LABELS: Record<"low" | "normal" | "high", string> = {
-  low: "Ниже нормы",
-  normal: "Норма",
-  high: "Выше нормы",
-};
-
 const sleepLast3Days = [
   { day: "Позавчера", hours: 7.2 },
   { day: "Вчера", hours: 6.8 },
@@ -194,7 +167,8 @@ const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transiti
 const ControlCenter = () => {
   const { user } = useAuth();
   const displayName = user?.fullName?.trim() || "Пользователь";
-  const [expandedFactor, setExpandedFactor] = useState<string | null>(null);
+  const [metricSheetOpen, setMetricSheetOpen] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
   const storageKeys = useMemo(() => {
     if (!user?.id) return null;
@@ -249,13 +223,24 @@ const ControlCenter = () => {
   const energyScore = metrics.energyScore;
   const stressScore = metrics.stressScore;
   const recoveryScore = metrics.recoveryScore;
-  const energyStatus = getMetricStatus(energyScore, true);
-  const stressStatus = getMetricStatus(stressScore, false);
   const testosteroneValue = latestLab?.testosterone;
-  const testosteroneStatusKey = testosteroneValue != null ? getTestosteroneStatus(testosteroneValue) : null;
-  const testosteroneStatusLabel = testosteroneStatusKey != null ? TESTOSTERON_STATUS_LABELS[testosteroneStatusKey] : null;
+  const testosteroneIndex = metrics.testosteroneIndex;
 
-  const stepsToday = 8240;
+  const { energyPercent, hormonesPercent, strengthPercent } = useMemo(() => {
+    const intensity = workoutIntensityFromToday(todayWorkout.durationSec, todayWorkout.caloriesBurned);
+    const workoutBalance = clamp(100 - Math.abs(5 - intensity) * 12, 0, 100);
+    return {
+      energyPercent: clamp(energyScore, 0, 100),
+      hormonesPercent: testosteroneIndex != null ? clamp(testosteroneIndex, 0, 100) : clamp(Math.round((energyScore + recoveryScore) / 2), 0, 100),
+      strengthPercent: clamp(Math.round(recoveryScore * 0.55 + workoutBalance * 0.45), 0, 100),
+    };
+  }, [energyScore, recoveryScore, testosteroneIndex, todayWorkout.durationSec, todayWorkout.caloriesBurned]);
+
+  const openMetricSheet = (detail: MetricDetail) => {
+    setSelectedMetric(detail);
+    setMetricSheetOpen(true);
+  };
+  const testosteroneStatusKey = testosteroneValue != null ? getTestosteroneStatus(testosteroneValue) : null;
 
   const { bodyStateScore, bodyStateLabel } = useMemo(() => {
     const recommended = user?.height && user?.weight ? getRecommendedKcal(user.weight, user.height) : null;
@@ -310,119 +295,6 @@ const ControlCenter = () => {
     testosteroneStatusKey,
   ]);
 
-  const factors = useMemo(
-    () => [
-      {
-        id: "sleep",
-        icon: BedDouble,
-        label: "Сон",
-        value: "7ч 42м",
-        colorClass: "bg-status-green/15 text-status-green",
-        expandedContent: (
-          <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
-            {sleepLast3Days.map((s) => (
-              <li key={s.day}>
-                {s.day}: {s.hours} ч
-              </li>
-            ))}
-          </ul>
-        ),
-      },
-      {
-        id: "recovery",
-        icon: Zap,
-        label: "Восстановление",
-        value: `${recoveryScore}`,
-        colorClass: "bg-status-green/15 text-status-green",
-        expandedContent: (
-          <p className="mt-2 text-xs text-muted-foreground">
-            На основе сна и тренировочной нагрузки (мок).
-          </p>
-        ),
-      },
-      {
-        id: "workout",
-        icon: Dumbbell,
-        label: "Тренировки",
-        value: `${Math.floor(todayWorkout.durationSec / 60)} мин`,
-        colorClass: "bg-status-amber/15 text-status-amber",
-        expandedContent: (
-          <div className="mt-2 space-y-2 text-xs">
-            <p className="text-muted-foreground">Тренировки за 3 дня:</p>
-            <ul className="space-y-1">
-              {workoutLast3.length === 0 ? (
-                <li className="text-muted-foreground">Нет записей</li>
-              ) : (
-                workoutLast3.slice(0, 5).map((w, i) => (
-                  <li key={`${w.date}-${w.startedAt}-${i}`} className="text-foreground">
-                    {w.type} — {Math.floor(w.durationSec / 60)} мин, ~{w.caloriesBurned} ккал
-                  </li>
-                ))
-              )}
-            </ul>
-            <p className="text-muted-foreground">Шаги сегодня: {stepsToday}</p>
-          </div>
-        ),
-      },
-      {
-        id: "kcal",
-        icon: UtensilsCrossed,
-        label: "Ккал",
-        value: `${todayKcal}`,
-        colorClass: "bg-primary/15 text-primary",
-        expandedContent: (
-          <div className="mt-2 space-y-1 text-xs">
-            <p className="text-muted-foreground">Ккал за 3 дня:</p>
-            <ul className="space-y-0.5">
-              {kcalLast3.map((k) => (
-                <li key={k.date} className="text-foreground">
-                  {k.date}: {k.kcal} ккал
-                </li>
-              ))}
-            </ul>
-          </div>
-        ),
-      },
-      {
-        id: "testosterone",
-        icon: Dna,
-        label: "Тестостерон",
-        value: testosteroneValue != null ? `${testosteroneValue} нг/дл` : "—",
-        colorClass: "bg-status-green/15 text-status-green",
-        expandedContent: (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {testosteroneValue == null
-              ? "Добавьте результат анализа в разделе Анализы"
-              : `Статус: ${testosteroneStatusLabel ?? "—"}`}
-          </p>
-        ),
-      },
-      {
-        id: "stress",
-        icon: AlertCircle,
-        label: "Стресс",
-        value: `${stressScore}`,
-        colorClass: "bg-status-amber/15 text-status-amber",
-        expandedContent: (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Уровень кортизола/стресса. {stressStatus}.
-          </p>
-        ),
-      },
-    ],
-    [
-      recoveryScore,
-      todayWorkout.durationSec,
-      workoutLast3,
-      todayKcal,
-      kcalLast3,
-      testosteroneValue,
-      testosteroneStatusLabel,
-      stressScore,
-      stressStatus,
-    ]
-  );
-
   return (
     <motion.div
       className="px-5 pt-12 pb-24"
@@ -449,27 +321,36 @@ const ControlCenter = () => {
           Метрики
         </h2>
         <div className="grid grid-cols-3 gap-4">
-          <Card className="flex w-full flex-col items-center justify-center rounded-2xl bg-card">
-            <CardContent className="flex flex-col items-center justify-center px-4 py-6">
-              <Heart className="mb-3 h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-semibold text-foreground">62</span>
-              <span className="mt-1 text-sm text-muted-foreground">Пульс</span>
-            </CardContent>
-          </Card>
-          <Card className="flex w-full flex-col items-center justify-center rounded-2xl bg-card">
-            <CardContent className="flex flex-col items-center justify-center px-4 py-6">
-              <Activity className="mb-3 h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-semibold text-foreground">120/80</span>
-              <span className="mt-1 text-sm text-muted-foreground">Давление</span>
-            </CardContent>
-          </Card>
-          <Card className="flex w-full flex-col items-center justify-center rounded-2xl bg-card">
-            <CardContent className="flex flex-col items-center justify-center px-4 py-6">
-              <BedDouble className="mb-3 h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-semibold text-foreground">98%</span>
-              <span className="mt-1 text-sm text-muted-foreground">Кислород в крови</span>
-            </CardContent>
-          </Card>
+          <EnergyCard
+            percent={energyPercent}
+            onClick={() =>
+              openMetricSheet({
+                key: "energy",
+                title: "Энергия",
+                percent: energyPercent,
+              })
+            }
+          />
+          <HormonesCard
+            percent={hormonesPercent}
+            onClick={() =>
+              openMetricSheet({
+                key: "hormones",
+                title: "Гормоны",
+                percent: hormonesPercent,
+              })
+            }
+          />
+          <StrengthCard
+            percent={strengthPercent}
+            onClick={() =>
+              openMetricSheet({
+                key: "strength",
+                title: "Сила",
+                percent: strengthPercent,
+              })
+            }
+          />
         </div>
       </motion.div>
 
@@ -478,52 +359,15 @@ const ControlCenter = () => {
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Факторы влияния
         </h2>
-        <div className="space-y-2">
-          {factors.map((f) => {
-            const isExpanded = expandedFactor === f.id;
-            return (
-              <Card
-                key={f.id}
-                className="border border-border bg-card shadow-sm overflow-hidden"
-              >
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-3 p-3 text-left"
-                  onClick={() => setExpandedFactor(isExpanded ? null : f.id)}
-                >
-                  <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.colorClass}`}
-                  >
-                    <f.icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-sm font-semibold text-foreground">{f.label}</span>
-                    <span className="ml-2 text-sm font-bold text-foreground">{f.value}</span>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
-                </button>
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="border-t border-border bg-muted/30 px-3 pb-3 pt-1"
-                    >
-                      {f.expandedContent}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Card>
-            );
-          })}
-        </div>
+        <InfluenceFactors />
       </motion.div>
+
+      {/* Metric detail sheet */}
+      <MetricDetailSheet
+        open={metricSheetOpen}
+        onOpenChange={setMetricSheetOpen}
+        detail={selectedMetric}
+      />
     </motion.div>
   );
 };
