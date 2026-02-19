@@ -88,31 +88,43 @@ const AppLayout = () => {
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const [menuBarVisible, setMenuBarVisible] = useState(true);
+  const THRESHOLD = 6;
+  const TOP_THRESHOLD = 20;
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const y = el.scrollTop;
-    const dy = y - lastScrollY.current;
-    lastScrollY.current = y;
+    const currentScrollY = el.scrollTop;
+    const dy = currentScrollY - lastScrollY.current;
+
     if (!ticking.current) {
-      requestAnimationFrame(() => {
-        setMenuBarVisible((prev) => {
-          if (dy > 8) return false;
-          if (dy < -8) return true;
-          return prev;
-        });
+      window.requestAnimationFrame(() => {
+        if (currentScrollY < TOP_THRESHOLD) {
+          setMenuBarVisible(true);
+        } else if (dy > THRESHOLD) {
+          setMenuBarVisible(false);
+        } else if (dy < -THRESHOLD) {
+          setMenuBarVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
         ticking.current = false;
       });
       ticking.current = true;
     }
   }, []);
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => handleScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [handleScroll]);
+
   return (
     <div
       ref={scrollRef}
-      onScroll={handleScroll}
-      className="mx-auto min-h-screen max-w-md overflow-x-visible overflow-y-auto bg-background transition-colors duration-300"
+      className="mx-auto h-screen max-w-md overflow-x-hidden overflow-y-auto overscroll-contain bg-background transition-colors duration-300 [-webkit-overflow-scrolling:touch]"
     >
       <header className="sticky top-0 z-40 bg-background">
         <div className="relative flex h-14 items-center justify-between px-4">
