@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const SIZE = 250;
-const PARTICLE_COUNT = 60;
+const PARTICLE_COUNT = 200;
 
 /** Score-based theme: 0-40 red, 41-70 orange, 71-100 green */
 const getThemeFromScore = (score: number) => {
@@ -44,13 +44,18 @@ interface HealthCoreProps {
   score: number;
 }
 
+const PARALLAX_SENSITIVITY = 0.4;
+
 export default function HealthCore({ score }: HealthCoreProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const particlesRef = useRef<Particle[] | null>(null);
   const rafRef = useRef<number | null>(null);
+  const tiltRef = useRef({ x: 0, y: 0 });
+  const themeHexRef = useRef<string>("");
   const { theme } = useTheme();
 
   const themeData = useMemo(() => getThemeFromScore(score), [score]);
+  themeHexRef.current = themeData.hex;
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 
   const isDark = theme === "dark";
@@ -74,8 +79,26 @@ export default function HealthCore({ score }: HealthCoreProps) {
     const draw = () => {
       ctx.clearRect(0, 0, SIZE, SIZE);
 
-      const [r, g, b] = hexToRgb(themeData.hex);
+      const hex = themeHexRef.current;
+      const [r, g, b] = hexToRgb(hex);
       const color = `rgba(${r}, ${g}, ${b}, `;
+
+      const ox = tiltRef.current.x;
+      const oy = tiltRef.current.y;
+
+      const gradient = ctx.createRadialGradient(
+        center + ox,
+        center + oy,
+        0,
+        center + ox,
+        center + oy,
+        center
+      );
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.12)`);
+      gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.04)`);
+      gradient.addColorStop(1, "transparent");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, SIZE, SIZE);
 
       for (const p of particles) {
         p.x += p.vx;
@@ -86,8 +109,11 @@ export default function HealthCore({ score }: HealthCoreProps) {
         p.x = Math.max(0, Math.min(SIZE, p.x));
         p.y = Math.max(0, Math.min(SIZE, p.y));
 
+        const drawX = p.x + ox;
+        const drawY = p.y + oy;
+
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(drawX, drawY, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = color + p.opacity + ")";
         ctx.fill();
       }
@@ -95,11 +121,33 @@ export default function HealthCore({ score }: HealthCoreProps) {
       rafRef.current = requestAnimationFrame(draw);
     };
 
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const beta = e.beta ?? 0;
+      const gamma = e.gamma ?? 0;
+      tiltRef.current = {
+        x: Math.max(-15, Math.min(15, gamma * PARALLAX_SENSITIVITY)),
+        y: Math.max(-15, Math.min(15, (beta - 45) * PARALLAX_SENSITIVITY)),
+      };
+    };
+
+    if (typeof DeviceOrientationEvent !== "undefined") {
+      if (typeof (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission === "function") {
+        (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> })
+          .requestPermission()
+          .then(() => window.addEventListener("deviceorientation", handleOrientation))
+          .catch(() => {});
+      } else {
+        window.addEventListener("deviceorientation", handleOrientation);
+      }
+    }
+
     rafRef.current = requestAnimationFrame(draw);
+
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("deviceorientation", handleOrientation);
     };
-  }, [themeData.hex]);
+  }, []);
 
   const glowColor = themeData.hex;
   const glowOpacity = isDark ? 0.2 : 0.25;
