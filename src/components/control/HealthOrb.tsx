@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useMemo } from "react";
 
-const SIZE = 236;
-const INTERNAL_RES = 800;
+const VISUAL_SIZE = 320;
+const BLOB_SEGMENTS = 125;
 const PARTICLE_COUNT = 120;
-const BASE_RADIUS = SIZE / 2 - 3;
+const BASE_RADIUS = VISUAL_SIZE / 2 - 3;
 const MOUNT_DURATION_MS = 2000;
 const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
@@ -98,7 +98,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const center = SIZE / 2;
+    const center = VISUAL_SIZE / 2;
+    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 3) : 1;
     if (!particlesRef.current) {
       particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => createParticle(center));
     }
@@ -108,9 +109,11 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    (ctx as CanvasRenderingContext2D & { imageSmoothingQuality?: string }).imageSmoothingQuality = "high";
 
-    canvas.width = INTERNAL_RES;
-    canvas.height = INTERNAL_RES;
+    canvas.width = VISUAL_SIZE * dpr;
+    canvas.height = VISUAL_SIZE * dpr;
 
     const getDynamicRadius = (angle: number, t: number) => {
       const phase = (t / LIQUID_CYCLE_MS) * Math.PI * 2;
@@ -137,17 +140,16 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const time = timeRef.current;
       const rot = rotationRef.current;
 
-      const scale = INTERNAL_RES / SIZE;
-      ctx.clearRect(0, 0, INTERNAL_RES, INTERNAL_RES);
+      ctx.clearRect(0, 0, VISUAL_SIZE * dpr, VISUAL_SIZE * dpr);
       ctx.save();
-      ctx.scale(scale, scale);
+      ctx.scale(dpr, dpr);
       ctx.translate(center, center);
       ctx.rotate(rot);
       ctx.translate(-center, -center);
 
       const pathPoints: [number, number][] = [];
-      for (let i = 0; i <= 96; i++) {
-        const angle = (i / 96) * Math.PI * 2;
+      for (let i = 0; i <= BLOB_SEGMENTS; i++) {
+        const angle = (i / BLOB_SEGMENTS) * Math.PI * 2;
         const dynamicRadius = getDynamicRadius(angle, elapsed);
         const px = center + Math.cos(angle) * Math.max(2, dynamicRadius * easeOut);
         const py = center + Math.sin(angle) * Math.max(2, dynamicRadius * easeOut);
@@ -184,8 +186,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       const inset = 2.5;
       ctx.beginPath();
-      for (let i = 0; i <= 96; i++) {
-        const a = (i / 96) * Math.PI * 2;
+      for (let i = 0; i <= BLOB_SEGMENTS; i++) {
+        const a = (i / BLOB_SEGMENTS) * Math.PI * 2;
         const dr = getDynamicRadius(a, elapsed) * easeOut - inset;
         const qx = center + Math.cos(a) * Math.max(2, dr);
         const qy = center + Math.sin(a) * Math.max(2, dr);
@@ -237,15 +239,14 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   }, []);
 
   return (
-    <div className="relative flex h-[236px] w-[236px] items-center justify-center">
-      <canvas
-        ref={canvasRef}
-        width={INTERNAL_RES}
-        height={INTERNAL_RES}
-        className="absolute left-0 top-0"
-        style={{ width: SIZE, height: SIZE }}
-      />
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+    <div className="relative flex h-[380px] w-[380px] items-center justify-center overflow-visible">
+      <div className="relative flex h-[320px] w-[320px] items-center justify-center">
+        <canvas
+          ref={canvasRef}
+          className="absolute left-0 top-0"
+          style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
         <span className="text-5xl font-bold tracking-tight text-foreground">
           {displayScore}
         </span>
@@ -258,6 +259,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         >
           {score >= 70 ? "ВЫСОКОЕ" : score >= 40 ? "УМЕРЕННОЕ" : "НИЗКОЕ"}
         </span>
+        </div>
       </div>
     </div>
   );
