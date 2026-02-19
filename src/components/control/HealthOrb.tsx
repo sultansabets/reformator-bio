@@ -4,7 +4,7 @@ const SIZE = 250;
 const PARTICLE_COUNT = 120;
 const BASE_RADIUS = SIZE / 2 - 3;
 const MOUNT_DURATION_MS = 2000;
-const CENTER_CLEAR_RATIO = 0.35;
+const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -23,27 +23,25 @@ function getColorFromScore(score: number): string {
 interface Particle {
   x: number;
   y: number;
-  angle: number;
   radius: number;
-  orbitSpeed: number;
-  driftSpeed: number;
+  angle: number;
+  speed: number;
   size: number;
   opacity: number;
   maxOpacity: number;
 }
 
 function createParticle(center: number): Particle {
-  const safeR = BASE_RADIUS * CENTER_CLEAR_RATIO;
-  const outerR = BASE_RADIUS * 0.9;
-  const r = safeR + Math.random() * (outerR - safeR);
+  const coreR = BASE_RADIUS * CORE_RADIUS_RATIO;
+  const bandWidth = BASE_RADIUS * 0.15;
+  const r = coreR + Math.random() * bandWidth;
   const angle = Math.random() * Math.PI * 2;
   return {
     x: center + Math.cos(angle) * r,
     y: center + Math.sin(angle) * r,
-    angle,
     radius: r,
-    orbitSpeed: 0.005 + Math.random() * 0.006,
-    driftSpeed: 0.015 + Math.random() * 0.02,
+    angle,
+    speed: 0.12 + Math.random() * 0.1,
     size: 2 + Math.random() * 3,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
@@ -51,25 +49,25 @@ function createParticle(center: number): Particle {
 }
 
 function updateParticle(p: Particle, center: number, mountProgress: number) {
-  const safeR = BASE_RADIUS * CENTER_CLEAR_RATIO;
-  const outerR = BASE_RADIUS * 0.93;
+  const coreR = BASE_RADIUS * CORE_RADIUS_RATIO;
+  const edgeR = BASE_RADIUS * 0.92;
+  const fadeStartR = BASE_RADIUS * 0.78;
 
-  p.angle += p.orbitSpeed;
-  p.radius += p.driftSpeed;
-
-  if (p.radius > outerR) {
-    p.radius = safeR + Math.random() * (outerR - safeR) * 0.3;
-    p.angle = Math.random() * Math.PI * 2;
-  }
-  if (p.radius < safeR) {
-    p.radius = safeR;
-  }
-
+  p.radius += p.speed;
   p.x = center + Math.cos(p.angle) * p.radius;
   p.y = center + Math.sin(p.angle) * p.radius;
 
+  if (p.radius > edgeR) {
+    p.radius = coreR + Math.random() * BASE_RADIUS * 0.12;
+    p.angle = Math.random() * Math.PI * 2;
+    p.x = center + Math.cos(p.angle) * p.radius;
+    p.y = center + Math.sin(p.angle) * p.radius;
+  }
+
   if (mountProgress < 1) {
     p.opacity = p.maxOpacity * mountProgress * mountProgress;
+  } else if (p.radius > fadeStartR) {
+    p.opacity = p.maxOpacity * (1 - (p.radius - fadeStartR) / (edgeR - fadeStartR));
   } else {
     p.opacity = p.maxOpacity;
   }
@@ -162,22 +160,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.closePath();
       ctx.clip();
 
-      const rimGradient = ctx.createRadialGradient(
-        center,
-        center,
-        BASE_RADIUS * 0.6,
-        center,
-        center,
-        BASE_RADIUS + 14
-      );
-      rimGradient.addColorStop(0, "transparent");
-      rimGradient.addColorStop(0.65, "transparent");
-      rimGradient.addColorStop(0.82, `rgba(${r}, ${g}, ${b}, ${0.2 * easeOut})`);
-      rimGradient.addColorStop(0.92, `rgba(${r}, ${g}, ${b}, ${0.35 * easeOut})`);
-      rimGradient.addColorStop(1, `rgba(255, 255, 255, ${0.2 * easeOut})`);
-      ctx.fillStyle = rimGradient;
-      ctx.fillRect(0, 0, SIZE, SIZE);
-
       ctx.beginPath();
       pathPoints.forEach(([px, py], i) => {
         if (i === 0) ctx.moveTo(px, py);
@@ -189,7 +171,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       if (particles.length > 0) {
         const colorBase = `rgba(${r}, ${g}, ${b}, `;
-        const centerClearR = BASE_RADIUS * CENTER_CLEAR_RATIO;
+        const coreRadius = BASE_RADIUS * CORE_RADIUS_RATIO;
 
         for (const p of particles) {
           if (!reducedMotionRef.current) {
@@ -201,7 +183,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           const dy = p.y - center;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist > centerClearR) {
+          if (dist > coreRadius) {
             ctx.save();
             ctx.shadowBlur = p.size * 2;
             ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${p.opacity * 0.5})`;
@@ -231,7 +213,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 40%)`,
+          background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 35%)`,
           boxShadow: `0 0 70px rgba(${cr},${cg},${cb},0.5), 0 0 140px rgba(${cr},${cg},${cb},0.3), inset 0 0 35px rgba(${cr},${cg},${cb},0.2)`,
         }}
       />
