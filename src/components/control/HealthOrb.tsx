@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from "react";
 
-const SIZE = 250;
+const SIZE = 236;
 const PARTICLE_COUNT = 120;
 const BASE_RADIUS = SIZE / 2 - 3;
 const MOUNT_DURATION_MS = 2000;

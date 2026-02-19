@@ -437,8 +437,10 @@ const ControlCenter = () => {
       </motion.div>
 
       {/* Body state orb */}
-      <motion.div variants={item} className="mt-6 mb-8 flex justify-center">
-        <HealthOrb score={bodyStateScore} />
+      <motion.div variants={item} className="mt-6 mb-8 flex justify-center overflow-visible">
+        <div className="relative flex items-center justify-center overflow-visible p-6">
+          <HealthOrb score={bodyStateScore} />
+        </div>
       </motion.div>
 
       {/* Block 2 — Метрики */}
