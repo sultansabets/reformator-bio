@@ -4,7 +4,7 @@ const SIZE = 250;
 const PARTICLE_COUNT = 120;
 const BASE_RADIUS = SIZE / 2 - 3;
 const MOUNT_DURATION_MS = 2000;
-const CENTER_CLEAR_RATIO = 0.28;
+const CENTER_CLEAR_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -25,52 +25,49 @@ interface Particle {
   y: number;
   angle: number;
   radius: number;
-  driftSpeed: number;
   orbitSpeed: number;
-  radiusBase: number;
+  driftSpeed: number;
   size: number;
   opacity: number;
   maxOpacity: number;
-  outward: number;
 }
 
 function createParticle(center: number): Particle {
-  const innerR = BASE_RADIUS * CENTER_CLEAR_RATIO;
-  const outerR = BASE_RADIUS * 0.92;
-  const r = innerR + Math.random() * (outerR - innerR);
+  const safeR = BASE_RADIUS * CENTER_CLEAR_RATIO;
+  const outerR = BASE_RADIUS * 0.9;
+  const r = safeR + Math.random() * (outerR - safeR);
   const angle = Math.random() * Math.PI * 2;
   return {
     x: center + Math.cos(angle) * r,
     y: center + Math.sin(angle) * r,
     angle,
     radius: r,
-    driftSpeed: (Math.random() - 0.5) * 0.15,
-    orbitSpeed: (Math.random() - 0.5) * 0.008,
-    radiusBase: r,
+    orbitSpeed: 0.005 + Math.random() * 0.006,
+    driftSpeed: 0.015 + Math.random() * 0.02,
     size: 2 + Math.random() * 3,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
-    outward: Math.random() > 0.4 ? 1 : -1,
   };
 }
 
 function updateParticle(p: Particle, center: number, mountProgress: number) {
+  const safeR = BASE_RADIUS * CENTER_CLEAR_RATIO;
+  const outerR = BASE_RADIUS * 0.93;
+
   p.angle += p.orbitSpeed;
-  p.radius += p.driftSpeed * p.outward;
-  const innerR = BASE_RADIUS * CENTER_CLEAR_RATIO;
-  const outerR = BASE_RADIUS * 0.95;
-  if (p.radius < innerR) {
-    p.radius = innerR;
-    p.driftSpeed = Math.abs(p.driftSpeed) * 0.5;
-    p.outward = 1;
-  }
+  p.radius += p.driftSpeed;
+
   if (p.radius > outerR) {
-    p.radius = outerR;
-    p.driftSpeed = -Math.abs(p.driftSpeed) * 0.5;
-    p.outward = -1;
+    p.radius = safeR + Math.random() * (outerR - safeR) * 0.3;
+    p.angle = Math.random() * Math.PI * 2;
   }
+  if (p.radius < safeR) {
+    p.radius = safeR;
+  }
+
   p.x = center + Math.cos(p.angle) * p.radius;
   p.y = center + Math.sin(p.angle) * p.radius;
+
   if (mountProgress < 1) {
     p.opacity = p.maxOpacity * mountProgress * mountProgress;
   } else {
@@ -168,16 +165,16 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const rimGradient = ctx.createRadialGradient(
         center,
         center,
-        BASE_RADIUS * 0.7,
+        BASE_RADIUS * 0.6,
         center,
         center,
-        BASE_RADIUS + 8
+        BASE_RADIUS + 14
       );
       rimGradient.addColorStop(0, "transparent");
-      rimGradient.addColorStop(0.7, "transparent");
-      rimGradient.addColorStop(0.88, `rgba(${r}, ${g}, ${b}, ${0.15 * easeOut})`);
-      rimGradient.addColorStop(0.96, `rgba(${r}, ${g}, ${b}, ${0.25 * easeOut})`);
-      rimGradient.addColorStop(1, `rgba(255, 255, 255, ${0.18 * easeOut})`);
+      rimGradient.addColorStop(0.65, "transparent");
+      rimGradient.addColorStop(0.82, `rgba(${r}, ${g}, ${b}, ${0.2 * easeOut})`);
+      rimGradient.addColorStop(0.92, `rgba(${r}, ${g}, ${b}, ${0.35 * easeOut})`);
+      rimGradient.addColorStop(1, `rgba(255, 255, 255, ${0.2 * easeOut})`);
       ctx.fillStyle = rimGradient;
       ctx.fillRect(0, 0, SIZE, SIZE);
 
@@ -186,8 +183,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       });
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.15 * easeOut})`;
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.4 * easeOut})`;
+      ctx.lineWidth = 3;
       ctx.stroke();
 
       if (particles.length > 0) {
@@ -235,7 +232,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         className="absolute inset-0 rounded-full"
         style={{
           background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 40%)`,
-          boxShadow: `0 0 60px rgba(${cr},${cg},${cb},0.4), 0 0 120px rgba(${cr},${cg},${cb},0.25), inset 0 0 25px rgba(${cr},${cg},${cb},0.15)`,
+          boxShadow: `0 0 70px rgba(${cr},${cg},${cb},0.5), 0 0 140px rgba(${cr},${cg},${cb},0.3), inset 0 0 35px rgba(${cr},${cg},${cb},0.2)`,
         }}
       />
       <canvas
