@@ -18,7 +18,7 @@ import { getRecommendedKcal } from "@/lib/health";
 import { computeHealthMetrics } from "@/lib/healthEngine";
 import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
 import { getStorageKey } from "@/lib/userStorage";
-import HealthCore from "@/components/control/HealthCore";
+import HealthOrb from "@/components/control/HealthOrb";
 import { Card, CardContent } from "@/components/ui/card";
 
 function getTodayDateString(): string {
@@ -436,9 +436,9 @@ const ControlCenter = () => {
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
 
-      {/* Body state core */}
+      {/* Body state orb */}
       <motion.div variants={item} className="mt-6 mb-8 flex justify-center">
-        <HealthCore score={bodyStateScore} />
+        <HealthOrb score={bodyStateScore} />
       </motion.div>
 
       {/* Block 2 — Метрики */}
