@@ -130,7 +130,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const elapsed = timestamp - mountStartRef.current;
       const mountProgress = Math.min(1, elapsed / MOUNT_DURATION_MS);
       const easeOut = 1 - Math.pow(1 - mountProgress, 1.3);
-      const glowIntensity = 0.6 + easeOut * 0.4;
 
       if (!reducedMotionRef.current) {
         timeRef.current = elapsed * 0.001;
@@ -166,14 +165,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.closePath();
       ctx.clip();
 
-      const innerGlow = ctx.createRadialGradient(center, center, 0, center, center, BASE_RADIUS + 20);
-      innerGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${0.12 * glowIntensity})`);
-      innerGlow.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, ${0.06 * glowIntensity})`);
-      innerGlow.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.02)`);
-      innerGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = innerGlow;
-      ctx.fillRect(0, 0, SIZE, SIZE);
-
       const rimGradient = ctx.createRadialGradient(
         center,
         center,
@@ -195,17 +186,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       });
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.35 * easeOut})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.beginPath();
-      pathPoints.forEach(([px, py], i) => {
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      ctx.strokeStyle = `rgba(255, 255, 255, ${0.12 * easeOut})`;
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.15 * easeOut})`;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       if (particles.length > 0) {
@@ -252,8 +234,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(ellipse 70% 70% at 50% 50%, rgba(${cr},${cg},${cb},0.22) 0%, rgba(${cr},${cg},${cb},0.08) 40%, transparent 75%)`,
-          boxShadow: `0 0 60px rgba(${cr},${cg},${cb},0.4), 0 0 100px rgba(${cr},${cg},${cb},0.15), inset 0 0 60px rgba(${cr},${cg},${cb},0.08)`,
+          background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 40%)`,
+          boxShadow: `0 0 60px rgba(${cr},${cg},${cb},0.4), 0 0 120px rgba(${cr},${cg},${cb},0.25), inset 0 0 25px rgba(${cr},${cg},${cb},0.15)`,
         }}
       />
       <canvas
