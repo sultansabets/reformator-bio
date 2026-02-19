@@ -158,16 +158,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         else ctx.lineTo(px, py);
       });
       ctx.closePath();
-      ctx.clip();
 
-      ctx.beginPath();
-      pathPoints.forEach(([px, py], i) => {
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.4 * easeOut})`;
-      ctx.lineWidth = 3;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.35 * easeOut})`;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.55 * easeOut})`;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.clip();
 
       if (particles.length > 0) {
         const colorBase = `rgba(${r}, ${g}, ${b}, `;
@@ -209,19 +208,12 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   }, []);
 
   return (
-    <div className="relative flex h-[250px] w-[250px] items-center justify-center overflow-hidden rounded-full">
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 35%)`,
-          boxShadow: `0 0 70px rgba(${cr},${cg},${cb},0.5), 0 0 140px rgba(${cr},${cg},${cb},0.3), inset 0 0 35px rgba(${cr},${cg},${cb},0.2)`,
-        }}
-      />
+    <div className="relative flex h-[250px] w-[250px] items-center justify-center">
       <canvas
         ref={canvasRef}
         width={SIZE}
         height={SIZE}
-        className="absolute left-0 top-0 rounded-full"
+        className="absolute left-0 top-0"
         style={{ width: SIZE, height: SIZE }}
       />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
