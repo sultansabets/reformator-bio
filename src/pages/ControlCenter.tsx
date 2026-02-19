@@ -18,7 +18,7 @@ import { getRecommendedKcal } from "@/lib/health";
 import { computeHealthMetrics } from "@/lib/healthEngine";
 import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
 import { getStorageKey } from "@/lib/userStorage";
-import ReadinessRing from "@/components/control/ReadinessRing";
+import HealthCore from "@/components/control/HealthCore";
 import { Card, CardContent } from "@/components/ui/card";
 
 function getTodayDateString(): string {
@@ -436,9 +436,9 @@ const ControlCenter = () => {
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
 
-      {/* Body state ring */}
+      {/* Body state core */}
       <motion.div variants={item} className="mt-6 mb-8 flex justify-center">
-        <ReadinessRing score={bodyStateScore} statusLabel={bodyStateLabel} />
+        <HealthCore score={bodyStateScore} />
       </motion.div>
 
       {/* Block 2 — Метрики */}
