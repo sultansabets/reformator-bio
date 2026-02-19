@@ -15,18 +15,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRecommendedKcal, getMacros } from "@/lib/health";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -39,67 +27,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { getStorageKey } from "@/lib/userStorage";
-import StoriesViewer, { type StoryItem } from "@/components/stories/StoriesViewer";
+import { useTranslation } from "react-i18next";
+import { Camera, PenLine } from "lucide-react";
+import { FloatingAddWidget } from "@/components/center/FloatingAddWidget";
 
 const WATER_GOAL_ML = 2500;
 
-const sleepData = [
-  { day: "Пн", hours: 7.2, quality: 80 },
-  { day: "Вт", hours: 6.8, quality: 65 },
-  { day: "Ср", hours: 7.5, quality: 85 },
-  { day: "Чт", hours: 8.0, quality: 90 },
-  { day: "Пт", hours: 6.5, quality: 60 },
-  { day: "Сб", hours: 7.8, quality: 82 },
-  { day: "Вс", hours: 7.4, quality: 78 },
-];
-const loadData = [
-  { day: "Пн", load: 8.2 },
-  { day: "Вт", load: 14.5 },
-  { day: "Ср", load: 10.1 },
-  { day: "Чт", load: 16.3 },
-  { day: "Пт", load: 6.8 },
-  { day: "Сб", load: 12.4 },
-  { day: "Вс", load: 9.7 },
-];
-const recoveryData = [
-  { day: "Пн", score: 72 },
-  { day: "Вт", score: 65 },
-  { day: "Ср", score: 78 },
-  { day: "Чт", score: 85 },
-  { day: "Пт", score: 60 },
-  { day: "Сб", score: 80 },
-  { day: "Вс", score: 82 },
-];
-const CENTER_TABS = ["Обзор", "Питание", "Тренировки"] as const;
+const BODY_PARTS = ["chest", "back", "legs", "shoulders", "arms", "abs"] as const;
+const CARDIO_TYPES = ["run", "swim", "bike", "hiit", "other"] as const;
+
+const CENTER_TABS = ["Питание", "Тренировки"] as const;
 type CenterTab = (typeof CENTER_TABS)[number];
 
-const HIGHLIGHTS = [
-  { id: "sleep", label: "Сон", emoji: "😴", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: "recovery", label: "Восстановление", emoji: "💤", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: "training", label: "Тренировки", emoji: "🏋️", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: "nutrition", label: "Питание", emoji: "🥗", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: "hormones", label: "Тестостерон", emoji: "🧬", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: "stress", label: "Стресс", emoji: "🧠", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-] as const;
-
-const HIGHLIGHT_STORIES: StoryItem[] = HIGHLIGHTS.map((h) => ({
-  id: h.id,
-  title: h.label,
-  videoUrl: "/videos/highlight-preview.mp4",
-  youtubeUrl: h.youtubeUrl,
-}));
-
-const WORKOUT_TYPES = [
-  { id: "gym", label: "Тренировка в зале", emoji: "🏋" },
-  { id: "run", label: "Бег", emoji: "🏃" },
-  { id: "swim", label: "Плавание", emoji: "🏊" },
-  { id: "bike", label: "Велосипед", emoji: "🚴" },
-  { id: "boxing", label: "Бокс", emoji: "🥊" },
-  { id: "yoga", label: "Йога", emoji: "🧘" },
-  { id: "hiking", label: "Хайкинг", emoji: "🏔" },
-] as const;
+const WORKOUT_CARDIO_MAP: Record<string, string> = {
+  run: "Бег",
+  swim: "Плавание",
+  bike: "Велосипед",
+  hiit: "HIIT",
+  other: "Другое",
+};
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -191,6 +146,30 @@ function saveNutrition(nutritionKey: string, data: NutritionDay): void {
   }
 }
 
+interface NutritionHistoryDay {
+  date: string;
+  totalKcal: number;
+}
+
+function loadNutritionHistory(key: string): NutritionHistoryDay[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNutritionHistory(key: string, history: NutritionHistoryDay[]): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(history.slice(-60)));
+  } catch {
+    // ignore
+  }
+}
+
 const MEAL_KEYS = ["breakfast", "lunch", "dinner", "snacks"] as const;
 const MEAL_LABELS: Record<(typeof MEAL_KEYS)[number], string> = {
   breakfast: "Завтрак",
@@ -205,6 +184,7 @@ interface WorkoutHistoryEntry {
   durationSec: number;
   caloriesBurned: number;
   startedAt: number;
+  bodyParts?: string[];
 }
 
 function loadWorkoutHistory(workoutHistoryKey: string): WorkoutHistoryEntry[] {
@@ -246,15 +226,14 @@ export default function Center() {
     if (!user?.id) return null;
     return {
       nutrition: getStorageKey(user.id, "nutrition"),
+      nutrition_history: getStorageKey(user.id, "nutrition_history"),
       water: getStorageKey(user.id, "water"),
       workout_history: getStorageKey(user.id, "workout_history"),
       workouts: getStorageKey(user.id, "workouts"),
     };
   }, [user?.id]);
 
-  const [centerTab, setCenterTab] = useState<CenterTab>("Обзор");
-  const biologicalAge = user?.biologicalAge ?? "—";
-  const mentalHealthScore = user?.mentalHealthScore ?? null;
+  const [centerTab, setCenterTab] = useState<CenterTab>("Питание");
   const [nutrition, setNutrition] = useState<NutritionDay>(defaultNutrition);
   const [addModal, setAddModal] = useState<{ meal: (typeof MEAL_KEYS)[number] } | null>(null);
   const [newName, setNewName] = useState("");
@@ -269,7 +248,9 @@ export default function Center() {
   const [waterModalOpen, setWaterModalOpen] = useState(false);
   const [waterInputMl, setWaterInputMl] = useState("");
 
-  const [workoutType, setWorkoutType] = useState<string>(WORKOUT_TYPES[0].id);
+  const [workoutMode, setWorkoutMode] = useState<"strength" | "cardio">("strength");
+  const [selectedBodyParts, setSelectedBodyParts] = useState<Set<string>>(new Set());
+  const [cardioType, setCardioType] = useState<string>("run");
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
   const [workoutActive, setWorkoutActive] = useState(false);
   const [workoutPaused, setWorkoutPaused] = useState(false);
@@ -281,18 +262,36 @@ export default function Center() {
   const [workoutCalories, setWorkoutCalories] = useState(0);
 
   const [voiceListening, setVoiceListening] = useState(false);
-  const [storiesOpen, setStoriesOpen] = useState(false);
-  const [storyIndex, setStoryIndex] = useState(0);
+  const [nutritionAddMethod, setNutritionAddMethod] = useState<"voice" | "photo" | "manual" | null>(null);
+  const [workoutAddMethod, setWorkoutAddMethod] = useState<"voice" | "text" | null>(null);
+  const [nutritionHistory, setNutritionHistory] = useState<NutritionHistoryDay[]>([]);
+  const [workoutPlanModalOpen, setWorkoutPlanModalOpen] = useState(false);
 
   useEffect(() => {
     if (!storageKeys) return;
     setNutrition(loadNutrition(storageKeys.nutrition));
     setWater(loadWaterState(storageKeys.water));
     setWorkoutHistory(loadWorkoutHistory(storageKeys.workout_history));
+    setNutritionHistory(loadNutritionHistory(storageKeys.nutrition_history));
   }, [storageKeys]);
 
   useEffect(() => {
-    if (storageKeys) saveNutrition(storageKeys.nutrition, nutrition);
+    if (!storageKeys) return;
+    saveNutrition(storageKeys.nutrition, nutrition);
+    const sum =
+      nutrition.breakfast.reduce((s, i) => s + itemKcal(i), 0) +
+      nutrition.lunch.reduce((s, i) => s + itemKcal(i), 0) +
+      nutrition.dinner.reduce((s, i) => s + itemKcal(i), 0) +
+      nutrition.snacks.reduce((s, i) => s + itemKcal(i), 0);
+    if (sum > 0) {
+      const hist = loadNutritionHistory(storageKeys.nutrition_history);
+      const existing = hist.findIndex((h) => h.date === nutrition.date);
+      const entry = { date: nutrition.date, totalKcal: sum };
+      const next =
+        existing >= 0 ? hist.map((h, i) => (i === existing ? entry : h)) : [entry, ...hist];
+      saveNutritionHistory(storageKeys.nutrition_history, next);
+      setNutritionHistory(next);
+    }
   }, [nutrition, storageKeys]);
 
   useEffect(() => {
@@ -404,6 +403,7 @@ export default function Center() {
     return () => clearInterval(interval);
   }, [workoutActive, workoutPaused, workoutStartTime, workoutPausedAt, workoutTotalPausedMs]);
 
+  const canStartStrength = workoutMode === "strength" ? selectedBodyParts.size > 0 : true;
   const startWorkout = () => {
     setWorkoutActive(true);
     setWorkoutPaused(false);
@@ -429,10 +429,14 @@ export default function Center() {
   const stopWorkout = () => {
     const durationSec = workoutElapsedSec;
     const calories = workoutCalories;
-    const typeLabel = WORKOUT_TYPES.find((t) => t.id === workoutType)?.label ?? workoutType;
+    const typeLabel =
+      workoutMode === "strength"
+        ? `Силовая: ${Array.from(selectedBodyParts).map((id) => t(`center.${id}`)).join(", ") || "—"}`
+        : WORKOUT_CARDIO_MAP[cardioType] ?? cardioType;
     const entry: WorkoutHistoryEntry = {
       date: getTodayDateString(),
       type: typeLabel,
+      bodyParts: workoutMode === "strength" ? Array.from(selectedBodyParts) : undefined,
       durationSec,
       caloriesBurned: calories,
       startedAt: workoutStartTime ?? 0,
@@ -551,6 +555,8 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
     };
   }, [workoutHistory, workoutActive, workoutElapsedSec, workoutCalories]);
 
+  const { t } = useTranslation();
+
   return (
     <motion.div
       className="min-h-screen px-4 py-6 pb-28"
@@ -560,7 +566,7 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
     >
       <h1 className="mb-4 text-lg font-semibold tracking-tight text-foreground">Центр</h1>
 
-      {/* Top segmented navigation */}
+      {/* Top segmented navigation — только Питание и Тренировки */}
       <motion.div variants={itemAnim} className="mb-5 flex gap-1 rounded-xl bg-muted p-1">
         {CENTER_TABS.map((tab) => (
           <button
@@ -576,196 +582,28 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
         ))}
       </motion.div>
 
-      {/* Обзор: analytics + highlights */}
-      {centerTab === "Обзор" && (
-        <>
-          {/* Highlights row */}
-          <motion.div variants={itemAnim} className="mb-4 flex gap-4 overflow-x-auto scrollbar-hide pb-1">
-            {HIGHLIGHTS.map((h, index) => (
-              <button
-                key={h.id}
-                type="button"
-                onClick={() => {
-                  setStoryIndex(index);
-                  setStoriesOpen(true);
-                }}
-                className="flex flex-col items-center gap-1 text-center"
-              >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card text-xl">
-                  <span aria-hidden="true">{h.emoji}</span>
-                </div>
-                <span className="text-[11px] font-medium text-muted-foreground">{h.label}</span>
-              </button>
-            ))}
-          </motion.div>
-
-          {/* Аналитика */}
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Аналитика
-          </h2>
-
-          <motion.div variants={itemAnim} className="mb-5">
-            <Card className="rounded-3xl border border-emerald-500/30 bg-card">
-              <CardContent className="p-6">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Биометрический возраст
-                </p>
-                <div className="mt-4 flex items-end justify-between">
-                  <p className="text-5xl font-semibold text-foreground">
-                    {biologicalAge}
-                  </p>
-                  <span className="text-sm text-muted-foreground">лет</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemAnim} className="mb-5">
-            <Card className="rounded-3xl border border-border bg-card">
-              <CardContent className="p-6">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Ментальное здоровье
-                </p>
-                <div className="mt-4">
-                  {mentalHealthScore != null ? (
-                    <p className="text-4xl font-semibold text-foreground">
-                      {mentalHealthScore}%
-                    </p>
-                  ) : (
-                    <Button onClick={() => navigate("/ai?mental=1")}>
-                      Пройти тест
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <Card className="mb-4 border border-border shadow-sm">
-            <CardContent className="p-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Калории
-              </p>
-              <p className="text-lg font-semibold text-foreground">{totalKcal} ккал за день</p>
-            </CardContent>
-          </Card>
-          <Card className="mb-4 border border-border shadow-sm">
-            <CardContent className="p-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Тренировки
-              </p>
-              <p className="text-sm text-foreground">
-                Сегодня: {Math.floor(todayWorkout.durationSec / 60)} мин, ~{todayWorkout.caloriesBurned} ккал
-              </p>
-              {workoutHistory.length > 0 && (
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  {workoutHistory.slice(0, 3).map((h, i) => (
-                    <li key={`${h.date}-${h.startedAt}-${i}`}>
-                      {h.type} — {Math.floor(h.durationSec / 60)} мин
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="mb-4 border border-border shadow-sm">
-            <CardContent className="p-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Тренды сна
-              </p>
-              <ResponsiveContainer width="100%" height={140}>
-                <BarChart data={sleepData}>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis hide domain={[5, 9]} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
-                  <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          <Card className="mb-4 border border-border shadow-sm">
-            <CardContent className="p-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Нагрузка
-              </p>
-              <ResponsiveContainer width="100%" height={140}>
-                <LineChart data={loadData}>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis hide />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
-                  <Line type="monotone" dataKey="load" stroke="hsl(var(--status-amber))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--status-amber))" }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          <Card className="mb-4 border border-border shadow-sm">
-            <CardContent className="p-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Восстановление
-              </p>
-              <ResponsiveContainer width="100%" height={140}>
-                <AreaChart data={recoveryData}>
-                  <defs>
-                    <linearGradient id="recoveryGradCenter" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--status-green))" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(var(--status-green))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis hide domain={[50, 100]} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
-                  <Area type="monotone" dataKey="score" stroke="hsl(var(--status-green))" strokeWidth={2} fill="url(#recoveryGradCenter)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
       {/* Питание */}
       {centerTab === "Питание" && (
         <>
+      {/* 1. План питания — заблюрен */}
       <motion.section variants={itemAnim} className="mb-6">
-        <Card className="border border-border bg-card shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Калории за день</span>
-              <span className="text-lg font-semibold text-foreground">{totalKcal} ккал</span>
-            </div>
-            {recommended && (
-              <p className="mt-1 text-xs text-muted-foreground">{recommended.label}</p>
-            )}
-            {recommended && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Рекомендуемая норма: {recommended.target} ккал
-              </p>
-            )}
-            {overKcal > 0 && (
-              <p className="mt-2 text-xs text-destructive">
-                Вы превышаете рекомендуемую норму на {overKcal} ккал. Рекомендуется скорректировать рацион.
-              </p>
-            )}
+        <Card className="border border-border bg-card shadow-sm overflow-hidden relative">
+          <div className="absolute inset-0 backdrop-blur-md bg-background/60 z-10 flex items-center justify-center">
+            <p className="text-sm text-muted-foreground text-center px-4">
+              {t("center.nutritionPlanBlur")}
+            </p>
+          </div>
+          <CardContent className="p-6 blur-sm select-none pointer-events-none">
+            <p className="text-xs text-muted-foreground">Завтрак · Обед · Ужин</p>
+            <p className="mt-2 text-lg font-medium">—</p>
           </CardContent>
         </Card>
-        {macros && (
-          <Card className="mt-2 border border-border bg-card shadow-sm">
-            <CardContent className="p-3">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Рекомендуемые БЖУ
-              </p>
-              <div className="flex gap-4 text-sm">
-                <span className="text-foreground">Б: {macros.protein} г</span>
-                <span className="text-foreground">Ж: {macros.fat} г</span>
-                <span className="text-foreground">У: {macros.carbs} г</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </motion.section>
-      <motion.section variants={itemAnim} className="mb-8">
-        <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <UtensilsCrossed className="h-3.5 w-3.5" />
-          Питание
+
+      {/* 2. Сегодня */}
+      <motion.section variants={itemAnim} className="mb-6">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("center.todaySection")}
         </h2>
         <Card className="border border-border shadow-sm">
           <CardContent className="pt-4 space-y-4">
@@ -786,6 +624,7 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
                       setNewProtein("");
                       setNewFat("");
                       setNewCarbs("");
+                      setNutritionAddMethod(null);
                     }}
                   >
                     <Plus className="h-3 w-3" />
@@ -825,7 +664,7 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
               </div>
             ))}
             <div className="border-t border-border pt-3 text-xs text-muted-foreground">
-              Итого: {totalKcal} ккал
+              {t("center.caloriesPerDay")}: {totalKcal} {t("center.kcal")}
               {(totalProtein > 0 || totalFat > 0 || totalCarbs > 0) && (
                 <> · Б {totalProtein} г · Ж {totalFat} г · У {totalCarbs} г</>
               )}
@@ -833,10 +672,34 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
           </CardContent>
         </Card>
       </motion.section>
+
+      {/* 3. История питания */}
+      <motion.section variants={itemAnim} className="mb-8">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("center.history")}
+        </h2>
+        <Card className="border border-border shadow-sm">
+          <CardContent className="p-4">
+            {nutritionHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Нет записей</p>
+            ) : (
+              <ul className="space-y-2">
+                {nutritionHistory.slice(0, 14).map((h) => (
+                  <li key={h.date} className="flex justify-between text-sm">
+                    <span className="text-foreground">{h.date}</span>
+                    <span className="font-medium text-foreground">{h.totalKcal} {t("center.kcal")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </motion.section>
+
       <motion.section variants={itemAnim} className="mb-8">
         <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Droplets className="h-3.5 w-3.5" />
-          Вода
+          {t("center.water")}
         </h2>
         <Card className="border border-border shadow-sm">
           <CardContent className="p-4">
@@ -864,38 +727,51 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
 
       {/* Тренировки */}
       {centerTab === "Тренировки" && (
-      <motion.section variants={itemAnim}>
-        <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <Dumbbell className="h-3.5 w-3.5" />
-          Тренировка
-        </h2>
-        <Card className="border border-border shadow-sm">
-          <CardContent className="p-5">
-            {!workoutActive ? (
-              <>
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {WORKOUT_TYPES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setWorkoutType(t.id)}
-                      className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                        workoutType === t.id
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card hover:bg-muted/50"
-                      }`}
-                    >
-                      <span className="mr-1">{t.emoji}</span>
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-                <Button className="w-full gap-2" onClick={startWorkout}>
-                  <Play className="h-4 w-4" />
-                  Начать тренировку
-                </Button>
-              </>
-            ) : (
+      <motion.section variants={itemAnim} className="space-y-6">
+        {/* 1. Запуск — Силовые */}
+        <div>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("center.strength")}
+          </h2>
+          <Card className="border border-border shadow-sm">
+            <CardContent className="p-5">
+              {!workoutActive ? (
+                <>
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {BODY_PARTS.map((id) => {
+                      const selected = selectedBodyParts.has(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => {
+                            setWorkoutMode("strength");
+                            setSelectedBodyParts((prev) => {
+                              const next = new Set(prev);
+                              if (selected) next.delete(id);
+                              else next.add(id);
+                              return next;
+                            });
+                          }}
+                          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                            selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted/50"
+                          }`}
+                        >
+                          {t(`center.${id}` as "center.chest")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => { setWorkoutMode("strength"); startWorkout(); }}
+                    disabled={selectedBodyParts.size === 0}
+                  >
+                    <Play className="h-4 w-4" />
+                    {t("center.startWorkout")}
+                  </Button>
+                </>
+              ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-2xl font-mono font-semibold text-foreground">
                   {formatTime(workoutElapsedSec)}
@@ -904,44 +780,76 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
                   <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
                     <Heart className="h-4 w-4 text-destructive" />
                     <div>
-                      <p className="text-[10px] text-muted-foreground">Пульс</p>
-                      <p className="text-sm font-semibold text-foreground">{workoutHeartRate} уд/мин</p>
+                      <p className="text-[10px] text-muted-foreground">{t("center.pulse")}</p>
+                      <p className="text-sm font-semibold text-foreground">{workoutHeartRate} {t("center.bpm")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
                     <Flame className="h-4 w-4 text-status-amber" />
                     <div>
-                      <p className="text-[10px] text-muted-foreground">Калории</p>
-                      <p className="text-sm font-semibold text-foreground">~{workoutCalories} ккал</p>
+                      <p className="text-[10px] text-muted-foreground">{t("center.calories")}</p>
+                      <p className="text-sm font-semibold text-foreground">~{workoutCalories} {t("center.kcal")}</p>
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 gap-2"
-                    onClick={pauseWorkout}
-                  >
+                  <Button variant="outline" className="flex-1 gap-2" onClick={pauseWorkout}>
                     {workoutPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                    {workoutPaused ? "Продолжить" : "Пауза"}
+                    {workoutPaused ? t("common.continue") : t("center.pause")}
                   </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1 gap-2"
-                    onClick={stopWorkout}
-                  >
+                  <Button variant="destructive" className="flex-1 gap-2" onClick={stopWorkout}>
                     <Square className="h-4 w-4" />
-                    Стоп
+                    {t("center.stop")}
                   </Button>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
+        </div>
+
+        {/* 2. Кардио и прочие */}
+        {!workoutActive && (
+        <div>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Кардио
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {CARDIO_TYPES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setWorkoutMode("cardio");
+                  setCardioType(id);
+                  startWorkout();
+                }}
+                className="rounded-lg border border-border bg-card px-4 py-2 text-sm transition-colors hover:bg-muted/50"
+              >
+                {WORKOUT_CARDIO_MAP[id]}
+              </button>
+            ))}
+          </div>
+        </div>
+        )}
+
+        {/* 3. План тренировок */}
+        {!workoutActive && (
+        <div>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("center.workoutPlan")}
+          </h2>
+          <Button variant="outline" className="w-full" onClick={() => setWorkoutPlanModalOpen(true)}>
+            {t("center.addPlan")}
+          </Button>
+        </div>
+        )}
+
+        {/* 4. История тренировок */}
         {workoutHistory.length > 0 && (
-          <div className="mt-3">
+          <div>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              История тренировок
+              {t("center.workoutHistory")}
             </p>
             <ul className="space-y-1.5">
               {workoutHistory.slice(0, 7).map((h, i) => (
@@ -951,7 +859,7 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
                 >
                   <span className="text-foreground">{h.type}</span>
                   <span className="text-muted-foreground">
-                    {Math.floor(h.durationSec / 60)} мин · ~{h.caloriesBurned} ккал
+                    {Math.floor(h.durationSec / 60)} {t("center.min")} · ~{h.caloriesBurned} {t("center.kcal")}
                   </span>
                 </li>
               ))}
@@ -961,19 +869,63 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
       </motion.section>
       )}
 
-      {/* Voice assistant */}
-      <button
-        type="button"
-        onClick={toggleVoice}
-        className={`fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-lg transition-colors ${
-          voiceListening
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-border bg-card text-foreground hover:bg-muted"
-        }`}
-        aria-label="Голосовой ассистент"
-      >
-        <Mic className="h-6 w-6" />
-      </button>
+      {/* Floating add widget — Nutrition или Тренировки */}
+      {centerTab === "Питание" && (
+        <div className="fixed bottom-24 right-4 z-40">
+          <FloatingAddWidget
+            mainIcon={<UtensilsCrossed className="h-6 w-6" />}
+            options={[
+              { id: "voice", icon: <Mic className="h-5 w-5" />, label: t("center.voice") },
+              { id: "photo", icon: <Camera className="h-5 w-5" />, label: t("center.photo") },
+              { id: "manual", icon: <PenLine className="h-5 w-5" />, label: t("center.manual") },
+            ]}
+            onSelect={(id) => {
+              if (id === "voice") toggleVoice();
+              else if (id === "manual") {
+                setAddModal({ meal: "breakfast" });
+                setNewName("");
+                setNewGrams("");
+                setNewKcalPer100("");
+                setNewManualKcal("");
+                setNewProtein("");
+                setNewFat("");
+                setNewCarbs("");
+              }
+              setNutritionAddMethod(id as "voice" | "photo" | "manual");
+            }}
+            ariaLabel="Добавить приём пищи"
+          />
+        </div>
+      )}
+      {centerTab === "Тренировки" && (
+        <div className="fixed bottom-24 right-4 z-40">
+          <FloatingAddWidget
+            mainIcon={<Dumbbell className="h-6 w-6" />}
+            options={[
+              { id: "voice", icon: <Mic className="h-5 w-5" />, label: t("center.voice") },
+              { id: "text", icon: <PenLine className="h-5 w-5" />, label: t("center.text") },
+            ]}
+            onSelect={(id) => {
+              if (id === "voice") toggleVoice();
+              setWorkoutAddMethod(id as "voice" | "text");
+            }}
+            ariaLabel="Добавить тренировку"
+          />
+        </div>
+      )}
+
+      {/* Workout plan modal */}
+      <Dialog open={workoutPlanModalOpen} onOpenChange={setWorkoutPlanModalOpen}>
+        <DialogContent className="max-w-[340px] border border-border bg-card p-5">
+          <DialogHeader>
+            <DialogTitle className="text-base">{t("center.addPlan")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-4">
+            Скоро: форма добавления плана (дата, тип, части тела, продолжительность, цель, комментарий).
+          </p>
+          <Button onClick={() => setWorkoutPlanModalOpen(false)}>{t("common.close")}</Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Water modal */}
       <Dialog open={waterModalOpen} onOpenChange={setWaterModalOpen}>
@@ -1002,11 +954,27 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
       <Dialog open={addModal !== null} onOpenChange={(o) => !o && setAddModal(null)}>
         <DialogContent className="max-w-[340px] border border-border bg-card p-5">
           <DialogHeader>
-            <DialogTitle className="text-base">
-              {addModal ? MEAL_LABELS[addModal.meal] : ""}
-            </DialogTitle>
+            <DialogTitle className="text-base">Добавить приём пищи</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 pt-2">
+            <div>
+              <Label className="text-xs">Тип приёма</Label>
+              <Select
+                value={addModal?.meal ?? "breakfast"}
+                onValueChange={(v) => addModal && setAddModal({ meal: v as typeof addModal.meal })}
+              >
+                <SelectTrigger className="mt-1 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEAL_KEYS.map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {MEAL_LABELS[key]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label className="text-xs">Название</Label>
               <Input
@@ -1094,14 +1062,6 @@ rec.onresult = (e: SpeechRecognitionEvent) => {
         </DialogContent>
       </Dialog>
 
-      {/* Stories viewer (full-screen) */}
-      {storiesOpen && (
-        <StoriesViewer
-          stories={HIGHLIGHT_STORIES}
-          initialIndex={storyIndex}
-          onClose={() => setStoriesOpen(false)}
-        />
-      )}
     </motion.div>
   );
 }

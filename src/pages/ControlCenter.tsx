@@ -1,6 +1,18 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
+import {
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
 import { getRecommendedKcal } from "@/lib/health";
@@ -139,6 +151,34 @@ function workoutIntensityFromToday(durationSec: number, caloriesBurned: number):
   const intensityFromCal = Math.min(4, caloriesBurned / 100);
   return Math.round(Math.min(10, intensityFromDuration + intensityFromCal * 0.5));
 }
+
+const sleepData = [
+  { day: "Пн", hours: 7.2, quality: 80 },
+  { day: "Вт", hours: 6.8, quality: 65 },
+  { day: "Ср", hours: 7.5, quality: 85 },
+  { day: "Чт", hours: 8.0, quality: 90 },
+  { day: "Пт", hours: 6.5, quality: 60 },
+  { day: "Сб", hours: 7.8, quality: 82 },
+  { day: "Вс", hours: 7.4, quality: 78 },
+];
+const loadData = [
+  { day: "Пн", load: 8.2 },
+  { day: "Вт", load: 14.5 },
+  { day: "Ср", load: 10.1 },
+  { day: "Чт", load: 16.3 },
+  { day: "Пт", load: 6.8 },
+  { day: "Сб", load: 12.4 },
+  { day: "Вс", load: 9.7 },
+];
+const recoveryData = [
+  { day: "Пн", score: 72 },
+  { day: "Вт", score: 65 },
+  { day: "Ср", score: 78 },
+  { day: "Чт", score: 85 },
+  { day: "Пт", score: 60 },
+  { day: "Сб", score: 80 },
+  { day: "Вс", score: 82 },
+];
 
 const sleepLast3Days = [
   { day: "Позавчера", hours: 7.2 },
@@ -357,7 +397,7 @@ const ControlCenter = () => {
       </motion.div>
 
       {/* Block 4 — Системы ресурса */}
-      <motion.div variants={item}>
+      <motion.div variants={item} className="mb-6">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("systems.title")}
         </h2>
@@ -367,6 +407,57 @@ const ControlCenter = () => {
           physicalPercent={strengthPercent}
           metabolicPercent={recoveryScore}
         />
+      </motion.div>
+
+      {/* Block 5 — Аналитические карточки: Сон, Нагрузка, Восстановление */}
+      <motion.div variants={item} className="space-y-4">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("center.sleepTrends")}
+        </h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <ResponsiveContainer width="100%" height={140}>
+            <BarChart data={sleepData}>
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis hide domain={[5, 9]} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+              <Bar dataKey="hours" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("center.load")}
+        </h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <ResponsiveContainer width="100%" height={140}>
+            <LineChart data={loadData}>
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis hide />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+              <Line type="monotone" dataKey="load" stroke="hsl(var(--status-amber))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--status-amber))" }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("center.recovery")}
+        </h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <ResponsiveContainer width="100%" height={140}>
+            <AreaChart data={recoveryData}>
+              <defs>
+                <linearGradient id="recoveryGradMain" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--status-green))" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="hsl(var(--status-green))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis hide domain={[50, 100]} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+              <Area type="monotone" dataKey="score" stroke="hsl(var(--status-green))" strokeWidth={2} fill="url(#recoveryGradMain)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </motion.div>
 
       {/* Metric detail sheet */}
