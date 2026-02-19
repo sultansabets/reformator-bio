@@ -239,7 +239,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   }, []);
 
   return (
-    <div className="relative flex items-center justify-center overflow-visible">
+    <div className="relative flex h-[340px] w-[340px] items-center justify-center overflow-visible">
       <div className="relative flex h-[320px] w-[320px] shrink-0 items-center justify-center">
         <canvas
           ref={canvasRef}
