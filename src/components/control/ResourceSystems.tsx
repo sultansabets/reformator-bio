@@ -9,6 +9,8 @@ interface ResourceSystem {
   label: string;
   percent: number;
   sources: string[];
+  iconColor: string;
+  iconBg: string;
 }
 
 export interface ResourceSystemsProps {
@@ -34,6 +36,8 @@ export function ResourceSystems({
       label: "Гормональный ресурс",
       percent: hormonalPercent ?? 72,
       sources: ["Тестостерон", "Эстрадиол", "SHBG", "Пролактин"],
+      iconColor: "#FF9F0A",
+      iconBg: "rgba(255,159,10,0.15)",
     },
     {
       id: "nervous",
@@ -41,6 +45,8 @@ export function ResourceSystems({
       label: "Нервная система",
       percent: nervousPercent ?? 65,
       sources: ["HRV", "Пульс покоя", "Сон", "Стресс"],
+      iconColor: "#3B82F6",
+      iconBg: "rgba(59,130,246,0.15)",
     },
     {
       id: "physical",
@@ -48,6 +54,8 @@ export function ResourceSystems({
       label: "Физический потенциал",
       percent: physicalPercent ?? 58,
       sources: ["Тренировки", "Восстановление", "Мышечная масса", "Белок"],
+      iconColor: "#22C55E",
+      iconBg: "rgba(34,197,94,0.15)",
     },
     {
       id: "metabolic",
@@ -55,6 +63,8 @@ export function ResourceSystems({
       label: "Метаболический контроль",
       percent: metabolicPercent ?? 70,
       sources: ["Глюкоза", "Инсулин", "Жир %", "Талия"],
+      iconColor: "#EF4444",
+      iconBg: "rgba(239,68,68,0.15)",
     },
   ];
 
@@ -74,8 +84,11 @@ export function ResourceSystems({
               className="flex w-full items-center gap-3 p-3 text-left"
               onClick={() => setExpandedId(isExpanded ? null : s.id)}
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/70">
-                <Icon className="h-4 w-4 text-muted-foreground" />
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl [backdrop-filter:blur(2px)]"
+                style={{ backgroundColor: s.iconBg }}
+              >
+                <Icon className="h-4 w-4" style={{ color: s.iconColor }} />
               </div>
               <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
                 {s.label}
