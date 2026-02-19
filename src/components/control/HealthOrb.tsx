@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo } from "react";
 
 const SIZE = 236;
+const INTERNAL_RES = 800;
 const PARTICLE_COUNT = 120;
 const BASE_RADIUS = SIZE / 2 - 3;
 const MOUNT_DURATION_MS = 2000;
@@ -108,15 +109,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = SIZE;
-    canvas.height = SIZE;
+    canvas.width = INTERNAL_RES;
+    canvas.height = INTERNAL_RES;
 
     const getDynamicRadius = (angle: number, t: number) => {
       const phase = (t / LIQUID_CYCLE_MS) * Math.PI * 2;
       return (
         BASE_RADIUS +
-        Math.sin(angle * 3 + phase) * 5 +
-        Math.cos(angle * 2 - phase * 0.7) * 4
+        Math.sin(angle * 3 + phase) * 4.4 +
+        Math.cos(angle * 2 - phase * 0.7) * 3.5
       );
     };
 
@@ -136,9 +137,10 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const time = timeRef.current;
       const rot = rotationRef.current;
 
-      ctx.clearRect(0, 0, SIZE, SIZE);
-
+      const scale = INTERNAL_RES / SIZE;
+      ctx.clearRect(0, 0, INTERNAL_RES, INTERNAL_RES);
       ctx.save();
+      ctx.scale(scale, scale);
       ctx.translate(center, center);
       ctx.rotate(rot);
       ctx.translate(-center, -center);
@@ -235,11 +237,11 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   }, []);
 
   return (
-    <div className="relative flex h-[250px] w-[250px] items-center justify-center">
+    <div className="relative flex h-[236px] w-[236px] items-center justify-center">
       <canvas
         ref={canvasRef}
-        width={SIZE}
-        height={SIZE}
+        width={INTERNAL_RES}
+        height={INTERNAL_RES}
         className="absolute left-0 top-0"
         style={{ width: SIZE, height: SIZE }}
       />
