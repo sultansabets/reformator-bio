@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Settings, Sun, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown } from "lucide-react";
@@ -84,9 +84,37 @@ const AppLayout = () => {
     navigate("/login", { replace: true });
   };
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+  const [menuBarVisible, setMenuBarVisible] = useState(true);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const y = el.scrollTop;
+    const dy = y - lastScrollY.current;
+    lastScrollY.current = y;
+    if (!ticking.current) {
+      requestAnimationFrame(() => {
+        setMenuBarVisible((prev) => {
+          if (dy > 8) return false;
+          if (dy < -8) return true;
+          return prev;
+        });
+        ticking.current = false;
+      });
+      ticking.current = true;
+    }
+  }, []);
+
   return (
-    <div className="mx-auto min-h-screen max-w-md overflow-x-visible overflow-y-auto bg-background transition-colors duration-300">
-      <header className="sticky top-0 z-40 border-b border-border bg-background">
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className="mx-auto min-h-screen max-w-md overflow-x-visible overflow-y-auto bg-background transition-colors duration-300"
+    >
+      <header className="sticky top-0 z-40 bg-background">
         <div className="relative flex h-14 items-center justify-between px-4">
           <div className="flex items-center">
             <button
@@ -310,7 +338,7 @@ const AppLayout = () => {
       <main className="pb-20 transition-colors duration-300">
         <Outlet />
       </main>
-      <BottomNav />
+      <BottomNav visible={menuBarVisible} />
 
       {/* Уведомления: fullscreen Sheet справа налево */}
       <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
