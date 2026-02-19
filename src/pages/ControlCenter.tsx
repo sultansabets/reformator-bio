@@ -437,8 +437,8 @@ const ControlCenter = () => {
       </motion.div>
 
       {/* Body state orb */}
-      <motion.div variants={item} className="mt-6 mb-8 flex justify-center overflow-visible">
-        <div className="relative mx-auto flex h-[420px] w-full max-w-[420px] items-center justify-center overflow-visible">
+      <motion.div variants={item} className="mt-4 mb-4 flex justify-center overflow-visible">
+        <div className="relative mx-auto flex w-full max-w-[420px] items-center justify-center overflow-visible">
           <HealthOrb score={bodyStateScore} />
         </div>
       </motion.div>
