@@ -4,6 +4,7 @@ const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
 const PARTICLE_COUNT = 120;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
+const TEXT_SAFE_RADIUS = 70;
 const MOUNT_DURATION_MS = 2000;
 const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
@@ -33,9 +34,10 @@ interface Particle {
 }
 
 function createParticle(center: number): Particle {
-  const coreR = BASE_RADIUS * CORE_RADIUS_RATIO;
-  const bandWidth = BASE_RADIUS * 0.15;
-  const r = coreR + Math.random() * bandWidth;
+  const edgeR = BASE_RADIUS * 0.92;
+  const minR = TEXT_SAFE_RADIUS + 2;
+  const maxR = edgeR - 5;
+  const r = minR + Math.random() * (maxR - minR);
   const angle = Math.random() * Math.PI * 2;
   return {
     x: center + Math.cos(angle) * r,
@@ -43,23 +45,28 @@ function createParticle(center: number): Particle {
     radius: r,
     angle,
     speed: 0.12 + Math.random() * 0.1,
-    size: 2 + Math.random() * 3,
+    size: 1.2 + Math.random() * 1.8,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
   };
 }
 
 function updateParticle(p: Particle, center: number, mountProgress: number) {
-  const coreR = BASE_RADIUS * CORE_RADIUS_RATIO;
   const edgeR = BASE_RADIUS * 0.92;
   const fadeStartR = BASE_RADIUS * 0.78;
+  const minR = TEXT_SAFE_RADIUS + 2;
 
   p.radius += p.speed;
   p.x = center + Math.cos(p.angle) * p.radius;
   p.y = center + Math.sin(p.angle) * p.radius;
 
+  if (p.radius < TEXT_SAFE_RADIUS) {
+    p.radius = minR;
+    p.x = center + Math.cos(p.angle) * p.radius;
+    p.y = center + Math.sin(p.angle) * p.radius;
+  }
   if (p.radius > edgeR) {
-    p.radius = coreR + Math.random() * BASE_RADIUS * 0.12;
+    p.radius = minR + Math.random() * (edgeR - minR - 5);
     p.angle = Math.random() * Math.PI * 2;
     p.x = center + Math.cos(p.angle) * p.radius;
     p.y = center + Math.sin(p.angle) * p.radius;
@@ -239,7 +246,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   }, []);
 
   return (
-    <div className="relative flex h-[340px] w-[340px] items-center justify-center overflow-visible">
+    <div className="relative flex h-[390px] w-[340px] items-center justify-center overflow-visible">
       <div className="relative flex h-[320px] w-[320px] shrink-0 items-center justify-center">
         <canvas
           ref={canvasRef}
