@@ -1,12 +1,11 @@
 import React, { useRef, useEffect, useMemo } from "react";
 
 const SIZE = 250;
-const PARTICLE_COUNT = 150;
-const BASE_RADIUS = SIZE / 2 - 2;
-const PARTICLE_SPEED = 0.25;
-const RESPAWN_RADIUS_RATIO = 0.9;
-const MOUNT_DURATION_MS = 2600;
-const CENTER_CLEAR_RADIUS = BASE_RADIUS * 0.3;
+const PARTICLE_COUNT = 120;
+const BASE_RADIUS = SIZE / 2 - 3;
+const MOUNT_DURATION_MS = 2000;
+const CENTER_CLEAR_RATIO = 0.28;
+const LIQUID_CYCLE_MS = 8000;
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -24,36 +23,59 @@ function getColorFromScore(score: number): string {
 interface Particle {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
+  angle: number;
   radius: number;
+  driftSpeed: number;
+  orbitSpeed: number;
+  radiusBase: number;
+  size: number;
   opacity: number;
   maxOpacity: number;
+  outward: number;
 }
 
 function createParticle(center: number): Particle {
+  const innerR = BASE_RADIUS * CENTER_CLEAR_RATIO;
+  const outerR = BASE_RADIUS * 0.92;
+  const r = innerR + Math.random() * (outerR - innerR);
   const angle = Math.random() * Math.PI * 2;
-  const speed = PARTICLE_SPEED * (0.6 + Math.random() * 0.8);
   return {
-    x: center,
-    y: center,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-    radius: 2 + Math.random() * 3,
+    x: center + Math.cos(angle) * r,
+    y: center + Math.sin(angle) * r,
+    angle,
+    radius: r,
+    driftSpeed: (Math.random() - 0.5) * 0.15,
+    orbitSpeed: (Math.random() - 0.5) * 0.008,
+    radiusBase: r,
+    size: 2 + Math.random() * 3,
     opacity: 0,
-    maxOpacity: 0.4 + Math.random() * 0.35,
+    maxOpacity: 0.3 + Math.random() * 0.7,
+    outward: Math.random() > 0.4 ? 1 : -1,
   };
 }
 
-function respawnParticle(p: Particle, center: number) {
-  const angle = Math.random() * Math.PI * 2;
-  const speed = PARTICLE_SPEED * (0.6 + Math.random() * 0.8);
-  p.x = center;
-  p.y = center;
-  p.vx = Math.cos(angle) * speed;
-  p.vy = Math.sin(angle) * speed;
-  p.opacity = 0;
-  p.maxOpacity = 0.4 + Math.random() * 0.35;
+function updateParticle(p: Particle, center: number, mountProgress: number) {
+  p.angle += p.orbitSpeed;
+  p.radius += p.driftSpeed * p.outward;
+  const innerR = BASE_RADIUS * CENTER_CLEAR_RATIO;
+  const outerR = BASE_RADIUS * 0.95;
+  if (p.radius < innerR) {
+    p.radius = innerR;
+    p.driftSpeed = Math.abs(p.driftSpeed) * 0.5;
+    p.outward = 1;
+  }
+  if (p.radius > outerR) {
+    p.radius = outerR;
+    p.driftSpeed = -Math.abs(p.driftSpeed) * 0.5;
+    p.outward = -1;
+  }
+  p.x = center + Math.cos(p.angle) * p.radius;
+  p.y = center + Math.sin(p.angle) * p.radius;
+  if (mountProgress < 1) {
+    p.opacity = p.maxOpacity * mountProgress * mountProgress;
+  } else {
+    p.opacity = p.maxOpacity;
+  }
 }
 
 interface HealthOrbProps {
@@ -68,6 +90,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const timeRef = useRef(0);
   const mountStartRef = useRef<number | null>(null);
   const rotationRef = useRef(0);
+  const reducedMotionRef = useRef(false);
 
   const color = useMemo(() => getColorFromScore(score), [score]);
   colorRef.current = color;
@@ -75,6 +98,10 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 
   useEffect(() => {
+    reducedMotionRef.current =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const center = SIZE / 2;
     if (!particlesRef.current) {
       particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => createParticle(center));
@@ -89,14 +116,26 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     canvas.width = SIZE;
     canvas.height = SIZE;
 
+    const getDynamicRadius = (angle: number, t: number) => {
+      const phase = (t / LIQUID_CYCLE_MS) * Math.PI * 2;
+      return (
+        BASE_RADIUS +
+        Math.sin(angle * 3 + phase) * 5 +
+        Math.cos(angle * 2 - phase * 0.7) * 4
+      );
+    };
+
     const draw = (timestamp: number) => {
       if (mountStartRef.current == null) mountStartRef.current = timestamp;
       const elapsed = timestamp - mountStartRef.current;
       const mountProgress = Math.min(1, elapsed / MOUNT_DURATION_MS);
-      const easeOut = 1 - Math.pow(1 - mountProgress, 1.2);
+      const easeOut = 1 - Math.pow(1 - mountProgress, 1.3);
+      const glowIntensity = 0.6 + easeOut * 0.4;
 
-      timeRef.current += 0.014;
-      rotationRef.current += 0.0018;
+      if (!reducedMotionRef.current) {
+        timeRef.current = elapsed * 0.001;
+        rotationRef.current += 0.0015;
+      }
 
       const hex = colorRef.current;
       const [r, g, b] = hexToRgb(hex);
@@ -110,84 +149,89 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.rotate(rot);
       ctx.translate(-center, -center);
 
-      const getDynamicRadius = (angle: number) =>
-        BASE_RADIUS +
-        Math.sin(angle * 3 + time) * 8 +
-        Math.cos(angle * 2 - time * 0.8) * 5;
+      const pathPoints: [number, number][] = [];
+      for (let i = 0; i <= 96; i++) {
+        const angle = (i / 96) * Math.PI * 2;
+        const dynamicRadius = getDynamicRadius(angle, elapsed);
+        const px = center + Math.cos(angle) * Math.max(2, dynamicRadius * easeOut);
+        const py = center + Math.sin(angle) * Math.max(2, dynamicRadius * easeOut);
+        pathPoints.push([px, py]);
+      }
 
       ctx.beginPath();
-      for (let i = 0; i <= 80; i++) {
-        const angle = (i / 80) * Math.PI * 2;
-        const dynamicRadius = getDynamicRadius(angle) * easeOut;
-        const px = center + Math.cos(angle) * Math.max(1, dynamicRadius);
-        const py = center + Math.sin(angle) * Math.max(1, dynamicRadius);
+      pathPoints.forEach(([px, py], i) => {
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
-      }
+      });
       ctx.closePath();
       ctx.clip();
 
-      const innerGlow = ctx.createRadialGradient(center, center, 0, center, center, BASE_RADIUS);
-      innerGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.08)`);
-      innerGlow.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 0.04)`);
-      innerGlow.addColorStop(0.85, `rgba(${r}, ${g}, ${b}, 0.02)`);
+      const innerGlow = ctx.createRadialGradient(center, center, 0, center, center, BASE_RADIUS + 20);
+      innerGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${0.12 * glowIntensity})`);
+      innerGlow.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, ${0.06 * glowIntensity})`);
+      innerGlow.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.02)`);
       innerGlow.addColorStop(1, "transparent");
       ctx.fillStyle = innerGlow;
       ctx.fillRect(0, 0, SIZE, SIZE);
 
-      const glassHighlight = ctx.createRadialGradient(center, center, BASE_RADIUS * 0.6, center, center, BASE_RADIUS + 10);
-      glassHighlight.addColorStop(0, "rgba(255, 255, 255, 0)");
-      glassHighlight.addColorStop(0.85, "rgba(255, 255, 255, 0)");
-      glassHighlight.addColorStop(0.95, `rgba(255, 255, 255, ${0.12 * easeOut})`);
-      glassHighlight.addColorStop(1, `rgba(255, 255, 255, ${0.06 * easeOut})`);
-      ctx.fillStyle = glassHighlight;
+      const rimGradient = ctx.createRadialGradient(
+        center,
+        center,
+        BASE_RADIUS * 0.7,
+        center,
+        center,
+        BASE_RADIUS + 8
+      );
+      rimGradient.addColorStop(0, "transparent");
+      rimGradient.addColorStop(0.7, "transparent");
+      rimGradient.addColorStop(0.88, `rgba(${r}, ${g}, ${b}, ${0.15 * easeOut})`);
+      rimGradient.addColorStop(0.96, `rgba(${r}, ${g}, ${b}, ${0.25 * easeOut})`);
+      rimGradient.addColorStop(1, `rgba(255, 255, 255, ${0.18 * easeOut})`);
+      ctx.fillStyle = rimGradient;
       ctx.fillRect(0, 0, SIZE, SIZE);
 
       ctx.beginPath();
-      for (let i = 0; i <= 80; i++) {
-        const angle = (i / 80) * Math.PI * 2;
-        const dynamicRadius = getDynamicRadius(angle) * easeOut;
-        const px = center + Math.cos(angle) * Math.max(1, dynamicRadius);
-        const py = center + Math.sin(angle) * Math.max(1, dynamicRadius);
+      pathPoints.forEach(([px, py], i) => {
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
-      }
-      ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 * easeOut})`;
-      ctx.lineWidth = 1.5;
+      });
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.35 * easeOut})`;
+      ctx.lineWidth = 2;
       ctx.stroke();
 
-      const colorBase = `rgba(${r}, ${g}, ${b}, `;
-      const respawnR = BASE_RADIUS * RESPAWN_RADIUS_RATIO;
+      ctx.beginPath();
+      pathPoints.forEach(([px, py], i) => {
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.12 * easeOut})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        const dx = p.x - center;
-        const dy = p.y - center;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+      if (particles.length > 0) {
+        const colorBase = `rgba(${r}, ${g}, ${b}, `;
+        const centerClearR = BASE_RADIUS * CENTER_CLEAR_RATIO;
 
-        if (dist > respawnR) {
-          respawnParticle(p, center);
-        } else if (dist < CENTER_CLEAR_RADIUS) {
-          p.opacity = 0;
-        } else {
-          const fadeStart = respawnR * 0.72;
-          if (dist > fadeStart) {
-            p.opacity = p.maxOpacity * (1 - (dist - fadeStart) / (respawnR - fadeStart));
+        for (const p of particles) {
+          if (!reducedMotionRef.current) {
+            updateParticle(p, center, mountProgress);
           } else {
-            p.opacity = p.maxOpacity;
+            p.opacity = p.maxOpacity * 0.6;
           }
-        }
+          const dx = p.x - center;
+          const dy = p.y - center;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist > CENTER_CLEAR_RADIUS && dist < respawnR + 2) {
-          ctx.save();
-          ctx.shadowBlur = p.radius * 2;
-          ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${p.opacity * 0.5})`;
-          ctx.fillStyle = colorBase + Math.max(0, p.opacity) + ")";
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
+          if (dist > centerClearR) {
+            ctx.save();
+            ctx.shadowBlur = p.size * 2;
+            ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${p.opacity * 0.5})`;
+            ctx.fillStyle = colorBase + p.opacity + ")";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
         }
       }
 
@@ -208,8 +252,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(ellipse at center, rgba(${cr},${cg},${cb},0.2) 0%, rgba(${cr},${cg},${cb},0.05) 50%, transparent 80%)`,
-          boxShadow: `0 0 52px rgba(${cr},${cg},${cb},0.35), inset 0 0 50px rgba(${cr},${cg},${cb},0.06)`,
+          background: `radial-gradient(ellipse 70% 70% at 50% 50%, rgba(${cr},${cg},${cb},0.22) 0%, rgba(${cr},${cg},${cb},0.08) 40%, transparent 75%)`,
+          boxShadow: `0 0 60px rgba(${cr},${cg},${cb},0.4), 0 0 100px rgba(${cr},${cg},${cb},0.15), inset 0 0 60px rgba(${cr},${cg},${cb},0.08)`,
         }}
       />
       <canvas
