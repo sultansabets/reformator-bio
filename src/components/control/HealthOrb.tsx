@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useMemo } from "react";
 const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
 const PARTICLE_COUNT = 120;
-const BASE_RADIUS = VISUAL_SIZE / 2 - 3;
+const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const MOUNT_DURATION_MS = 2000;
 const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
@@ -119,8 +119,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const phase = (t / LIQUID_CYCLE_MS) * Math.PI * 2;
       return (
         BASE_RADIUS +
-        Math.sin(angle * 3 + phase) * 4.4 +
-        Math.cos(angle * 2 - phase * 0.7) * 3.5
+        Math.sin(angle * 3 + phase) * 3.08 +
+        Math.cos(angle * 2 - phase * 0.7) * 2.45
       );
     };
 
