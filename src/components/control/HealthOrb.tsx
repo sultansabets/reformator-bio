@@ -1,13 +1,14 @@
 import React, { useRef, useEffect, useMemo } from "react";
 
 const SIZE = 250;
-const PARTICLE_COUNT = 300;
+const PARTICLE_COUNT = 120;
 const MAX_TILT_PX = 10;
 const TILT_LERP = 0.08;
-const BOUNDARY_DISTORTION = 8;
+const BOUNDARY_DISTORTION = 6;
 const BASE_RADIUS = SIZE / 2 - 1;
-
-const SHAPE_TYPES = ["parallelogram", "rect", "rhombus", "triangle", "line"] as const;
+const CENTER_ZONE_RATIO = 0.4;
+const RING_OUTER_RATIO = 0.95;
+const MOUNT_DURATION_MS = 2500;
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -27,65 +28,28 @@ interface Particle {
   y: number;
   vx: number;
   vy: number;
-  size: number;
+  radius: number;
   opacity: number;
-  rotation: number;
-  shape: (typeof SHAPE_TYPES)[number];
 }
 
 function createParticles(): Particle[] {
   const particles: Particle[] = [];
   const center = SIZE / 2;
-  const maxR = BASE_RADIUS - BOUNDARY_DISTORTION - 4;
+  const innerR = BASE_RADIUS * CENTER_ZONE_RATIO;
+  const outerR = BASE_RADIUS * RING_OUTER_RATIO;
   for (let i = 0; i < PARTICLE_COUNT; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const r = Math.sqrt(Math.random()) * maxR;
+    const r = innerR + Math.sqrt(Math.random()) * (outerR - innerR);
     particles.push({
       x: center + Math.cos(angle) * r,
       y: center + Math.sin(angle) * r,
-      vx: (Math.random() - 0.5) * 0.1,
-      vy: (Math.random() - 0.5) * 0.1,
-      size: 2 + Math.random() * 4,
-      opacity: 0.25 + Math.random() * 0.4,
-      rotation: Math.random() * Math.PI * 2,
-      shape: SHAPE_TYPES[Math.floor(Math.random() * SHAPE_TYPES.length)],
+      vx: (Math.random() - 0.5) * 0.08,
+      vy: (Math.random() - 0.5) * 0.08,
+      radius: 3 + Math.random() * 3,
+      opacity: 0.35 + Math.random() * 0.35,
     });
   }
   return particles;
-}
-
-function drawShape(ctx: CanvasRenderingContext2D, shape: (typeof SHAPE_TYPES)[number], size: number) {
-  const s = size * 0.5;
-  ctx.beginPath();
-  switch (shape) {
-    case "parallelogram":
-      ctx.moveTo(-s * 1.2, -s * 0.6);
-      ctx.lineTo(s * 0.8, -s * 0.6);
-      ctx.lineTo(s * 1.2, s * 0.6);
-      ctx.lineTo(-s * 0.8, s * 0.6);
-      ctx.closePath();
-      break;
-    case "rect":
-      ctx.rect(-s * 1.1, -s * 0.5, s * 2.2, s);
-      break;
-    case "rhombus":
-      ctx.moveTo(0, -s);
-      ctx.lineTo(s * 0.9, 0);
-      ctx.lineTo(0, s);
-      ctx.lineTo(-s * 0.9, 0);
-      ctx.closePath();
-      break;
-    case "triangle":
-      ctx.moveTo(0, -s);
-      ctx.lineTo(s * 0.9, s * 0.7);
-      ctx.lineTo(-s * 0.9, s * 0.7);
-      ctx.closePath();
-      break;
-    case "line":
-      ctx.moveTo(-s * 2, 0);
-      ctx.lineTo(s * 2, 0);
-      break;
-  }
 }
 
 interface HealthOrbProps {
@@ -100,6 +64,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const tiltTargetRef = useRef({ x: 0, y: 0 });
   const tiltCurrentRef = useRef({ x: 0, y: 0 });
   const timeRef = useRef(0);
+  const mountStartRef = useRef<number | null>(null);
+  const rotationRef = useRef(0);
 
   const color = useMemo(() => getColorFromScore(score), [score]);
   colorRef.current = color;
@@ -121,6 +87,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     canvas.height = SIZE;
 
     const center = SIZE / 2;
+    const innerRing = BASE_RADIUS * CENTER_ZONE_RATIO;
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
       const gamma = e.gamma ?? 0;
@@ -143,11 +110,17 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       }
     }
 
-    const draw = () => {
-      timeRef.current += 0.015;
+    const draw = (timestamp: number) => {
+      if (mountStartRef.current == null) mountStartRef.current = timestamp;
+      const elapsed = timestamp - mountStartRef.current;
+      const mountProgress = Math.min(1, elapsed / MOUNT_DURATION_MS);
+      const easeOut = 1 - Math.pow(1 - mountProgress, 1.5);
+
+      timeRef.current += 0.012;
+      rotationRef.current += 0.002;
 
       const hex = colorRef.current;
-      const [cr, cg, cb] = hexToRgb(hex);
+      const [r, g, b] = hexToRgb(hex);
 
       const t = tiltCurrentRef.current;
       const target = tiltTargetRef.current;
@@ -156,12 +129,19 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       ctx.clearRect(0, 0, SIZE, SIZE);
 
-      ctx.save();
-      ctx.beginPath();
       const time = timeRef.current;
-      for (let i = 0; i <= 64; i++) {
-        const angle = (i / 64) * Math.PI * 2;
-        const distortion = Math.sin(angle * 3 + time) * BOUNDARY_DISTORTION;
+      const rot = rotationRef.current;
+      const distortionAmount = BOUNDARY_DISTORTION * easeOut;
+
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(rot);
+      ctx.translate(-center, -center);
+
+      ctx.beginPath();
+      for (let i = 0; i <= 72; i++) {
+        const angle = (i / 72) * Math.PI * 2;
+        const distortion = Math.sin(angle * 2 + time) * distortionAmount;
         const dynamicRadius = BASE_RADIUS + distortion;
         const px = center + Math.cos(angle) * dynamicRadius;
         const py = center + Math.sin(angle) * dynamicRadius;
@@ -171,7 +151,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.closePath();
       ctx.clip();
 
-      const g = ctx.createRadialGradient(
+      const gradient = ctx.createRadialGradient(
         center + t.x,
         center + t.y,
         0,
@@ -179,13 +159,14 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         center + t.y,
         center
       );
-      g.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0.2)`);
-      g.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, 0.06)`);
-      g.addColorStop(1, "transparent");
-      ctx.fillStyle = g;
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.12)`);
+      gradient.addColorStop(CENTER_ZONE_RATIO, `rgba(${r}, ${g}, ${b}, 0.06)`);
+      gradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.03)`);
+      gradient.addColorStop(1, "transparent");
+      ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, SIZE, SIZE);
 
-      const colorBase = `rgba(${cr}, ${cg}, ${cb}, `;
+      const colorBase = `rgba(${r}, ${g}, ${b}, `;
 
       for (const p of particles) {
         p.x += p.vx;
@@ -194,34 +175,38 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         const dy = p.y - center;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const angle = Math.atan2(dy, dx);
-        const distortion = Math.sin(angle * 3 + time) * BOUNDARY_DISTORTION;
-        const maxR = BASE_RADIUS + distortion - 2;
+        const distortion = Math.sin(angle * 2 + time) * distortionAmount;
+        const maxR = BASE_RADIUS + distortion - 4;
+
         if (dist > maxR) {
           const nx = (dx / dist) * maxR;
           const ny = (dy / dist) * maxR;
           p.x = center + nx;
           p.y = center + ny;
           const dot = p.vx * (nx / dist) + p.vy * (ny / dist);
-          p.vx -= (nx / dist) * dot * 1.2;
-          p.vy -= (ny / dist) * dot * 1.2;
+          p.vx -= (nx / dist) * dot * 1.1;
+          p.vy -= (ny / dist) * dot * 1.1;
         }
-        p.x = Math.max(4, Math.min(SIZE - 4, p.x));
-        p.y = Math.max(4, Math.min(SIZE - 4, p.y));
+        if (dist < innerRing + 2) {
+          const nx = (dx / dist) * (innerRing + 2);
+          const ny = (dy / dist) * (innerRing + 2);
+          p.x = center + nx;
+          p.y = center + ny;
+          const dot = p.vx * (nx / dist) + p.vy * (ny / dist);
+          p.vx -= (nx / dist) * dot * 1.1;
+          p.vy -= (ny / dist) * dot * 1.1;
+        }
+
+        p.x = Math.max(innerRing + 4, Math.min(SIZE - 4, p.x));
+        p.y = Math.max(innerRing + 4, Math.min(SIZE - 4, p.y));
 
         ctx.save();
-        ctx.translate(p.x + t.x, p.y + t.y);
-        ctx.rotate(p.rotation);
+        ctx.shadowBlur = p.radius * 2;
+        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${p.opacity * 0.7})`;
         ctx.fillStyle = colorBase + p.opacity + ")";
-        if (p.shape === "line") {
-          ctx.strokeStyle = colorBase + p.opacity + ")";
-          ctx.lineWidth = Math.max(0.5, p.size * 0.2);
-          ctx.lineCap = "round";
-          drawShape(ctx, p.shape, p.size);
-          ctx.stroke();
-        } else {
-          drawShape(ctx, p.shape, p.size);
-          ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.arc(p.x + t.x, p.y + t.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       }
 
@@ -243,8 +228,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(ellipse at center, rgba(${cr},${cg},${cb},0.25) 0%, rgba(${cr},${cg},${cb},0.08) 50%, transparent 70%)`,
-          boxShadow: `0 0 48px rgba(${cr},${cg},${cb},0.35), inset 0 0 40px rgba(${cr},${cg},${cb},0.06)`,
+          background: `radial-gradient(ellipse at center, rgba(${cr},${cg},${cb},0.22) 0%, rgba(${cr},${cg},${cb},0.06) 45%, transparent 75%)`,
+          boxShadow: `0 0 48px rgba(${cr},${cg},${cb},0.3), inset 0 0 36px rgba(${cr},${cg},${cb},0.04)`,
         }}
       />
       <canvas
