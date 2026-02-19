@@ -247,18 +247,12 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-        <span className="text-5xl font-bold tracking-tight text-foreground">
-          {displayScore}
-        </span>
-        <span className="mt-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Состояние
-        </span>
-        <span
-          className="mt-1 text-sm font-semibold uppercase tracking-wide"
-          style={{ color }}
-        >
-          {score >= 70 ? "ВЫСОКОЕ" : score >= 40 ? "УМЕРЕННОЕ" : "НИЗКОЕ"}
-        </span>
+          <span className="text-xs uppercase tracking-widest text-muted-foreground">
+            СОСТОЯНИЕ
+          </span>
+          <span className="mt-2 text-6xl font-bold tracking-tight text-foreground">
+            {displayScore}%
+          </span>
         </div>
       </div>
     </div>
