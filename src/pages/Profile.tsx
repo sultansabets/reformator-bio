@@ -960,9 +960,9 @@ const Profile = () => {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-x-hidden"
+            className="fixed inset-0 z-[9999] flex flex-col overflow-x-hidden bg-background w-full max-w-full"
           >
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex w-full max-w-full min-w-0 items-center justify-between border-b border-border p-4">
               <h2 className="text-lg font-semibold text-foreground">Редактировать профиль</h2>
               <button
                 type="button"
@@ -974,8 +974,8 @@ const Profile = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="space-y-2">
+            <div className="flex min-w-0 flex-1 flex-col space-y-4 overflow-x-hidden overflow-y-auto p-4">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="edit-firstName">Имя</Label>
                 <Input
                   id="edit-firstName"
@@ -985,10 +985,10 @@ const Profile = () => {
                     setEditFirstName(v);
                     updateUser({ firstName: v });
                   }}
-                  className="h-11 mt-1 border-border bg-background"
+                  className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="edit-lastName">Фамилия</Label>
                 <Input
                   id="edit-lastName"
@@ -998,10 +998,10 @@ const Profile = () => {
                     setEditLastName(v);
                     updateUser({ lastName: v });
                   }}
-                  className="h-11 mt-1 border-border bg-background"
+                  className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="edit-nickname">Никнейм</Label>
                 <Input
                   id="edit-nickname"
@@ -1012,11 +1012,11 @@ const Profile = () => {
                     setEditNickname(sanitized);
                     updateUser({ nickname: sanitized });
                   }}
-                  className="h-11 mt-1 border-border bg-background"
+                  className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                   placeholder="username"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="edit-dob">Дата рождения</Label>
                 <Input
                   id="edit-dob"
@@ -1027,20 +1027,20 @@ const Profile = () => {
                     setEditDob(v);
                     updateUser({ dob: v });
                   }}
-                  className="h-11 mt-1 border-border bg-background"
+                  className="h-11 mt-1 w-full min-w-0 max-w-full border-border bg-background"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="edit-age">Возраст</Label>
                 <Input
                   id="edit-age"
                   value={editAge}
                   readOnly
-                  className="h-9 mt-1 border-border bg-background text-muted-foreground"
+                  className="h-9 mt-1 w-full min-w-0 border-border bg-background text-muted-foreground"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
+              <div className="grid min-w-0 grid-cols-2 gap-3">
+                <div className="min-w-0 space-y-2">
                   <Label htmlFor="edit-height">Рост (см)</Label>
                   <Input
                     id="edit-height"
@@ -1054,10 +1054,10 @@ const Profile = () => {
                       const n = Number(v);
                       if (!Number.isNaN(n)) updateUser({ height: n });
                     }}
-                    className="h-11 mt-1 border-border bg-background"
+                    className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <Label htmlFor="edit-weight">Вес (кг)</Label>
                   <Input
                     id="edit-weight"
@@ -1071,11 +1071,11 @@ const Profile = () => {
                       const n = Number(v);
                       if (!Number.isNaN(n)) updateUser({ weight: n });
                     }}
-                    className="h-11 mt-1 border-border bg-background"
+                    className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="edit-city">Город</Label>
                 <Select
                   value={editCity}
@@ -1086,11 +1086,11 @@ const Profile = () => {
                 >
                   <SelectTrigger
                     id="edit-city"
-                    className="h-11 mt-1 border-border bg-background"
+                    className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                   >
                     <SelectValue placeholder="Выберите город" />
                   </SelectTrigger>
-                  <SelectContent className="border-border bg-popover">
+                  <SelectContent className="z-[10001] border-border bg-popover" position="popper">
                     {KZ_CITIES.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
