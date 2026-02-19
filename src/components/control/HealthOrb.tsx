@@ -4,6 +4,10 @@ const SIZE = 250;
 const PARTICLE_COUNT = 300;
 const MAX_TILT_PX = 10;
 const TILT_LERP = 0.08;
+const BOUNDARY_DISTORTION = 8;
+const BASE_RADIUS = SIZE / 2 - 1;
+
+const SHAPE_TYPES = ["parallelogram", "rect", "rhombus", "triangle", "line"] as const;
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -23,27 +27,65 @@ interface Particle {
   y: number;
   vx: number;
   vy: number;
-  radius: number;
+  size: number;
   opacity: number;
+  rotation: number;
+  shape: (typeof SHAPE_TYPES)[number];
 }
 
 function createParticles(): Particle[] {
   const particles: Particle[] = [];
   const center = SIZE / 2;
-  const maxR = center - 8;
+  const maxR = BASE_RADIUS - BOUNDARY_DISTORTION - 4;
   for (let i = 0; i < PARTICLE_COUNT; i++) {
     const angle = Math.random() * Math.PI * 2;
     const r = Math.sqrt(Math.random()) * maxR;
     particles.push({
       x: center + Math.cos(angle) * r,
       y: center + Math.sin(angle) * r,
-      vx: (Math.random() - 0.5) * 0.12,
-      vy: (Math.random() - 0.5) * 0.12,
-      radius: 1 + Math.random() * 2,
-      opacity: 0.2 + Math.random() * 0.5,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1,
+      size: 2 + Math.random() * 4,
+      opacity: 0.25 + Math.random() * 0.4,
+      rotation: Math.random() * Math.PI * 2,
+      shape: SHAPE_TYPES[Math.floor(Math.random() * SHAPE_TYPES.length)],
     });
   }
   return particles;
+}
+
+function drawShape(ctx: CanvasRenderingContext2D, shape: (typeof SHAPE_TYPES)[number], size: number) {
+  const s = size * 0.5;
+  ctx.beginPath();
+  switch (shape) {
+    case "parallelogram":
+      ctx.moveTo(-s * 1.2, -s * 0.6);
+      ctx.lineTo(s * 0.8, -s * 0.6);
+      ctx.lineTo(s * 1.2, s * 0.6);
+      ctx.lineTo(-s * 0.8, s * 0.6);
+      ctx.closePath();
+      break;
+    case "rect":
+      ctx.rect(-s * 1.1, -s * 0.5, s * 2.2, s);
+      break;
+    case "rhombus":
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s * 0.9, 0);
+      ctx.lineTo(0, s);
+      ctx.lineTo(-s * 0.9, 0);
+      ctx.closePath();
+      break;
+    case "triangle":
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s * 0.9, s * 0.7);
+      ctx.lineTo(-s * 0.9, s * 0.7);
+      ctx.closePath();
+      break;
+    case "line":
+      ctx.moveTo(-s * 2, 0);
+      ctx.lineTo(s * 2, 0);
+      break;
+  }
 }
 
 interface HealthOrbProps {
@@ -57,6 +99,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const colorRef = useRef<string>("#34c759");
   const tiltTargetRef = useRef({ x: 0, y: 0 });
   const tiltCurrentRef = useRef({ x: 0, y: 0 });
+  const timeRef = useRef(0);
 
   const color = useMemo(() => getColorFromScore(score), [score]);
   colorRef.current = color;
@@ -101,6 +144,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     }
 
     const draw = () => {
+      timeRef.current += 0.015;
+
       const hex = colorRef.current;
       const [cr, cg, cb] = hexToRgb(hex);
 
@@ -113,7 +158,17 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       ctx.save();
       ctx.beginPath();
-      ctx.arc(center, center, center - 1, 0, Math.PI * 2);
+      const time = timeRef.current;
+      for (let i = 0; i <= 64; i++) {
+        const angle = (i / 64) * Math.PI * 2;
+        const distortion = Math.sin(angle * 3 + time) * BOUNDARY_DISTORTION;
+        const dynamicRadius = BASE_RADIUS + distortion;
+        const px = center + Math.cos(angle) * dynamicRadius;
+        const py = center + Math.sin(angle) * dynamicRadius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
       ctx.clip();
 
       const g = ctx.createRadialGradient(
@@ -135,15 +190,39 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        if (p.x < 0 || p.x > SIZE) p.vx *= -1;
-        if (p.y < 0 || p.y > SIZE) p.vy *= -1;
-        p.x = Math.max(0, Math.min(SIZE, p.x));
-        p.y = Math.max(0, Math.min(SIZE, p.y));
+        const dx = p.x - center;
+        const dy = p.y - center;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const distortion = Math.sin(angle * 3 + time) * BOUNDARY_DISTORTION;
+        const maxR = BASE_RADIUS + distortion - 2;
+        if (dist > maxR) {
+          const nx = (dx / dist) * maxR;
+          const ny = (dy / dist) * maxR;
+          p.x = center + nx;
+          p.y = center + ny;
+          const dot = p.vx * (nx / dist) + p.vy * (ny / dist);
+          p.vx -= (nx / dist) * dot * 1.2;
+          p.vy -= (ny / dist) * dot * 1.2;
+        }
+        p.x = Math.max(4, Math.min(SIZE - 4, p.x));
+        p.y = Math.max(4, Math.min(SIZE - 4, p.y));
 
-        ctx.beginPath();
-        ctx.arc(p.x + t.x, p.y + t.y, p.radius, 0, Math.PI * 2);
+        ctx.save();
+        ctx.translate(p.x + t.x, p.y + t.y);
+        ctx.rotate(p.rotation);
         ctx.fillStyle = colorBase + p.opacity + ")";
-        ctx.fill();
+        if (p.shape === "line") {
+          ctx.strokeStyle = colorBase + p.opacity + ")";
+          ctx.lineWidth = Math.max(0.5, p.size * 0.2);
+          ctx.lineCap = "round";
+          drawShape(ctx, p.shape, p.size);
+          ctx.stroke();
+        } else {
+          drawShape(ctx, p.shape, p.size);
+          ctx.fill();
+        }
+        ctx.restore();
       }
 
       ctx.restore();
