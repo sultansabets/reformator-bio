@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/lib/notifications";
 
@@ -9,13 +10,6 @@ type NotificationPanelProps = {
   hideTitle?: boolean;
   /** When true, content is not scrollable (parent page scrolls) */
   useExternalScroll?: boolean;
-};
-
-const typeLabels: Record<Notification["type"], string> = {
-  nutrition: "Питание",
-  ai: "ИИ",
-  clinic: "Клиника",
-  system: "Система",
 };
 
 function formatDate(ts: number): string {
@@ -35,13 +29,14 @@ export default function NotificationPanel({
   hideTitle,
   useExternalScroll,
 }: NotificationPanelProps) {
+  const { t } = useTranslation();
   const sorted = [...notifications].sort((a, b) => b.date - a.date);
 
   return (
     <>
       {!hideTitle && (
         <div className="shrink-0 px-6 pt-2 pb-2">
-          <h2 className="text-lg font-semibold text-foreground">Уведомления</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("notifications.title")}</h2>
         </div>
       )}
       <div
@@ -52,7 +47,7 @@ export default function NotificationPanel({
         )}
       >
         {sorted.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Нет новых уведомлений</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("notifications.noNew")}</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {sorted.map((n) => (
@@ -69,7 +64,7 @@ export default function NotificationPanel({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      {typeLabels[n.type]}
+                      {t(`notifications.types.${n.type}`)}
                     </span>
                     <span className="text-xs text-muted-foreground">{formatDate(n.date)}</span>
                   </div>

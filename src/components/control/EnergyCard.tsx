@@ -1,5 +1,6 @@
 import React from "react";
 import { Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MetricCard } from "./MetricCard";
 
 export interface EnergyCardProps {
@@ -8,11 +9,12 @@ export interface EnergyCardProps {
 }
 
 export function EnergyCard({ percent, onClick }: EnergyCardProps) {
+  const { t } = useTranslation();
   return (
     <MetricCard
       percent={percent}
       icon={<Zap className="h-5 w-5" />}
-      label="Энергия"
+      label={t("metrics.energy")}
       onClick={onClick}
     />
   );

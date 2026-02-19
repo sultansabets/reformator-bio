@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Drawer,
   DrawerContent,
@@ -21,24 +22,21 @@ interface MetricDetailSheetProps {
   detail: MetricDetail | null;
 }
 
-const METRIC_INFO: Record<
-  MetricKey,
-  { description: string; formula: string; sources: string[] }
-> = {
+const METRIC_KEYS: Record<MetricKey, { desc: string; formula: string; sources: string[] }> = {
   energy: {
-    description: "Итоговый уровень энергии. Формируется из входных факторов.",
-    formula: "0.4×Сон + 0.3×HRV + 0.2×Стресс + 0.1×Восстановление",
-    sources: ["Сон", "HRV", "Стресс", "Восстановление"],
+    desc: "metrics.energyDesc",
+    formula: "metrics.energyFormula",
+    sources: ["systems.sleep", "systems.hrv", "systems.stress", "systems.recovery"],
   },
   hormones: {
-    description: "Гормональный баланс. Формируется из входных факторов.",
-    formula: "Сон + Жир % + Тренировки + Тестостерон",
-    sources: ["Сон", "Жир %", "Тренировки", "Тестостерон (если есть)"],
+    desc: "metrics.hormonesDesc",
+    formula: "metrics.hormonesFormula",
+    sources: ["systems.sleep", "systems.fatPct", "systems.workouts", "systems.testosteroneIfAvailable"],
   },
   strength: {
-    description: "Потенциал силовых нагрузок. Формируется из входных факторов.",
-    formula: "Объём + Интенсивность + Вес + Восстановление",
-    sources: ["Объём тренировок", "Интенсивность", "Вес", "Восстановление"],
+    desc: "metrics.strengthDesc",
+    formula: "metrics.strengthFormula",
+    sources: ["systems.volume", "systems.intensity", "systems.weight", "systems.recovery"],
   },
 };
 
@@ -47,7 +45,8 @@ export function MetricDetailSheet({
   onOpenChange,
   detail,
 }: MetricDetailSheetProps) {
-  const info = detail ? METRIC_INFO[detail.key] : null;
+  const { t } = useTranslation();
+  const info = detail ? METRIC_KEYS[detail.key] : null;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -65,25 +64,25 @@ export function MetricDetailSheet({
                       {detail.percent}%
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {info.description}
+                      {info && t(info.desc)}
                     </p>
                     <div>
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Формула
+                        {t("metrics.detailFormula")}
                       </p>
                       <p className="font-mono text-sm text-foreground">
-                        {info.formula}
+                        {info && t(info.formula)}
                       </p>
                     </div>
                     <div>
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Входные данные
+                        {t("metrics.detailSources")}
                       </p>
                       <ul className="space-y-1.5 text-sm text-muted-foreground">
-                        {info.sources.map((s) => (
-                          <li key={s} className="flex items-center gap-2">
+                        {info?.sources.map((key) => (
+                          <li key={key} className="flex items-center gap-2">
                             <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-                            {s}
+                            {t(key)}
                           </li>
                         ))}
                       </ul>

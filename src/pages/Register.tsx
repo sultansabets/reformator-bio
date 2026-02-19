@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,18 +18,17 @@ import {
 
 const MOCK_CODE = "1111";
 
-const COUNTRIES = [
-  { code: "KZ", name: "Казахстан", dial: "+7", flag: "🇰🇿" },
-  { code: "RU", name: "Россия", dial: "+7", flag: "🇷🇺" },
-  { code: "UZ", name: "Узбекистан", dial: "+998", flag: "🇺🇿" },
-  { code: "KG", name: "Киргизия", dial: "+996", flag: "🇰🇬" },
-  { code: "AE", name: "ОАЭ", dial: "+971", flag: "🇦🇪" },
-  { code: "TR", name: "Турция", dial: "+90", flag: "🇹🇷" },
-  { code: "DE", name: "Германия", dial: "+49", flag: "🇩🇪" },
-  { code: "US", name: "США", dial: "+1", flag: "🇺🇸" },
-] as const;
+const COUNTRY_CODES = ["KZ", "RU", "UZ", "KG", "AE", "TR", "DE", "US"] as const;
+const COUNTRY_DIALS: Record<string, string> = {
+  KZ: "+7", RU: "+7", UZ: "+998", KG: "+996",
+  AE: "+971", TR: "+90", DE: "+49", US: "+1",
+};
+const COUNTRY_FLAGS: Record<string, string> = {
+  KZ: "🇰🇿", RU: "🇷🇺", UZ: "🇺🇿", KG: "🇰🇬",
+  AE: "🇦🇪", TR: "🇹🇷", DE: "🇩🇪", US: "🇺🇸",
+};
 
-const DEFAULT_COUNTRY = COUNTRIES[0];
+const DEFAULT_COUNTRY_CODE = "KZ";
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
@@ -41,18 +41,19 @@ function formatPhoneDisplay(digits: string): string {
 }
 
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated, register } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [countryCode, setCountryCode] = useState<string>(DEFAULT_COUNTRY.code);
+  const [countryCode, setCountryCode] = useState<string>(DEFAULT_COUNTRY_CODE);
   const [phoneDigits, setPhoneDigits] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const selectedCountry = COUNTRIES.find((c) => c.code === countryCode) ?? DEFAULT_COUNTRY;
-  const fullPhone = selectedCountry.dial + digitsOnly(phoneDigits);
+  const dial = COUNTRY_DIALS[countryCode] ?? "+7";
+  const fullPhone = dial + digitsOnly(phoneDigits);
 
   if (isAuthenticated) {
     return <Navigate to="/control" replace />;
@@ -66,7 +67,7 @@ const Register = () => {
     e.preventDefault();
     setError(null);
     if (digitsOnly(phoneDigits).length < 7) {
-      setError("Введите номер телефона (минимум 7 цифр)");
+      setError(t("errors.enterPhone"));
       return;
     }
     setStep(2);
@@ -76,7 +77,7 @@ const Register = () => {
     e.preventDefault();
     setError(null);
     if (code.trim() !== MOCK_CODE) {
-      setError("Неверный код. Введите 1111 для демо.");
+      setError(t("errors.invalidSmsCode"));
       return;
     }
     setStep(3);
@@ -86,11 +87,11 @@ const Register = () => {
     e.preventDefault();
     setError(null);
     if (!nickname.trim()) {
-      setError("Введите никнейм");
+      setError(t("errors.enterNickname"));
       return;
     }
     if (password.length < 6) {
-      setError("Пароль не менее 6 символов");
+      setError(t("errors.passwordMinLength"));
       return;
     }
     const result = register({
@@ -99,7 +100,7 @@ const Register = () => {
       nickname: nickname.trim(),
     });
     if (!result.success) {
-      setError(result.error ?? "Ошибка регистрации");
+      setError(result.error ?? t("errors.registrationError"));
       return;
     }
     navigate("/control", { replace: true });
@@ -120,14 +121,14 @@ const Register = () => {
               REFORMATOR BIO
             </p>
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              Регистрация
+              {t("auth.register")}
             </h1>
           </CardHeader>
           <CardContent className="pb-8">
             {step === 1 && (
               <form onSubmit={handleStep1} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Номер телефона</Label>
+                  <Label htmlFor="phone">{t("auth.phone")}</Label>
                   <div className="flex gap-2">
                     <Select value={countryCode} onValueChange={setCountryCode}>
                       <SelectTrigger
@@ -136,21 +137,21 @@ const Register = () => {
                       >
                         <SelectValue>
                           <span className="flex items-center gap-1.5">
-                            <span className="text-base leading-none">{selectedCountry.flag}</span>
-                            <span className="text-foreground">{selectedCountry.dial}</span>
+                            <span className="text-base leading-none">{COUNTRY_FLAGS[countryCode]}</span>
+                            <span className="text-foreground">{dial}</span>
                           </span>
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="border-border bg-popover">
-                        {COUNTRIES.map((c) => (
+                        {COUNTRY_CODES.map((code) => (
                           <SelectItem
-                            key={c.code}
-                            value={c.code}
+                            key={code}
+                            value={code}
                             className="flex items-center gap-2 focus:bg-accent focus:text-accent-foreground"
                           >
-                            <span className="text-base">{c.flag}</span>
-                            <span>{c.name}</span>
-                            <span className="text-muted-foreground">{c.dial}</span>
+                            <span className="text-base">{COUNTRY_FLAGS[code]}</span>
+                            <span>{t(`countries.${code.toLowerCase()}`)}</span>
+                            <span className="text-muted-foreground">{COUNTRY_DIALS[code]}</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -159,18 +160,18 @@ const Register = () => {
                       id="phone"
                       type="tel"
                       inputMode="numeric"
-                      placeholder="701 123 45 67"
+                      placeholder={t("auth.placeholderPhoneShort")}
                       value={formatPhoneDisplay(phoneDigits)}
                       onChange={handlePhoneChange}
                       className="flex-1 border-border bg-background tabular-nums"
                       autoComplete="tel-national"
                     />
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Минимум 7 цифр после кода страны</p>
+                  <p className="text-[10px] text-muted-foreground">{t("auth.hintPhone")}</p>
                 </div>
                 {error && <p className="text-xs text-destructive">{error}</p>}
                 <Button type="submit" className="w-full">
-                  Подтвердить
+                  {t("auth.confirm")}
                 </Button>
               </form>
             )}
@@ -178,7 +179,7 @@ const Register = () => {
             {step === 2 && (
               <form onSubmit={handleStep2} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="code">Код из SMS</Label>
+                  <Label htmlFor="code">{t("auth.smsCode")}</Label>
                   <Input
                     id="code"
                     type="text"
@@ -190,11 +191,11 @@ const Register = () => {
                     className="border-border bg-background text-center text-lg tracking-[0.5em] tabular-nums"
                     autoComplete="one-time-code"
                   />
-                  <p className="text-[10px] text-muted-foreground">Для демо введите 1111</p>
+                  <p className="text-[10px] text-muted-foreground">{t("auth.hintSmsCode")}</p>
                 </div>
                 {error && <p className="text-xs text-destructive">{error}</p>}
                 <Button type="submit" className="w-full">
-                  Продолжить
+                  {t("common.continue")}
                 </Button>
               </form>
             )}
@@ -202,11 +203,11 @@ const Register = () => {
             {step === 3 && (
               <form onSubmit={handleStep3} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nickname">Никнейм</Label>
+                  <Label htmlFor="nickname">{t("auth.nickname")}</Label>
                   <Input
                     id="nickname"
                     type="text"
-                    placeholder="Как к вам обращаться"
+                    placeholder={t("auth.placeholderNickname")}
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     className="border-border bg-background"
@@ -214,7 +215,7 @@ const Register = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Пароль</Label>
+                  <Label htmlFor="password">{t("auth.password")}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -224,19 +225,19 @@ const Register = () => {
                     autoComplete="new-password"
                     minLength={6}
                   />
-                  <p className="text-[10px] text-muted-foreground">Не менее 6 символов</p>
+                  <p className="text-[10px] text-muted-foreground">{t("auth.hintPassword")}</p>
                 </div>
                 {error && <p className="text-xs text-destructive">{error}</p>}
                 <Button type="submit" className="w-full">
-                  Завершить регистрацию
+                  {t("auth.finishRegistration")}
                 </Button>
               </form>
             )}
 
             <p className="mt-4 text-center text-xs text-muted-foreground">
-              Уже есть аккаунт?{" "}
+              {t("auth.hasAccount")}{" "}
               <Link to="/login" className="font-medium text-foreground underline hover:no-underline">
-                Войти
+                {t("auth.signIn")}
               </Link>
             </p>
           </CardContent>

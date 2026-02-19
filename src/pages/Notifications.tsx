@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import {
   getNotifications,
@@ -10,6 +11,7 @@ import {
 import NotificationPanel from "@/components/notifications/NotificationPanel";
 
 export default function Notifications() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [notifications, setNotificationsState] = useState<Notification[]>(() =>
     getNotifications()
@@ -35,11 +37,11 @@ export default function Notifications() {
           type="button"
           onClick={() => navigate(-1)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Назад"
+          aria-label={t("notifications.ariaBack")}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-foreground">Уведомления</h1>
+        <h1 className="text-lg font-semibold text-foreground">{t("notifications.title")}</h1>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24">
         <NotificationPanel

@@ -1,3 +1,5 @@
+import i18n from "@/i18n";
+
 const RU_MONTHS = [
   "января", "февраля", "марта", "апреля", "мая", "июня",
   "июля", "августа", "сентября", "октября", "ноября", "декабря",
@@ -16,13 +18,13 @@ export function formatDateRu(isoDate: string): string {
 
 /** Validate: valid date and at least 16 years old. Returns error message or null. */
 export function validateBirthDate(value: string): string | null {
-  if (!value || !value.trim()) return "Введите дату рождения";
+  if (!value || !value.trim()) return i18n.t("errors.enterDob");
   const d = new Date(value.trim() + "T12:00:00");
-  if (Number.isNaN(d.getTime())) return "Некорректная дата";
+  if (Number.isNaN(d.getTime())) return i18n.t("errors.invalidDate");
   const today = new Date();
   let age = today.getFullYear() - d.getFullYear();
   const m = today.getMonth() - d.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age -= 1;
-  if (age < 16) return "Должно быть не менее 16 лет";
+  if (age < 16) return i18n.t("errors.minAge");
   return null;
 }

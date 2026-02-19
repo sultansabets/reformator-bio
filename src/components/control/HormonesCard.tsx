@@ -1,5 +1,6 @@
 import React from "react";
 import { Flame } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { MetricCard } from "./MetricCard";
 
 export interface HormonesCardProps {
@@ -8,11 +9,12 @@ export interface HormonesCardProps {
 }
 
 export function HormonesCard({ percent, onClick }: HormonesCardProps) {
+  const { t } = useTranslation();
   return (
     <MetricCard
       percent={percent}
       icon={<Flame className="h-5 w-5" />}
-      label="Гормоны"
+      label={t("metrics.hormones")}
       onClick={onClick}
     />
   );

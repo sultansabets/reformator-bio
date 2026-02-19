@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
@@ -165,8 +166,9 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } 
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
 const ControlCenter = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const displayName = user?.fullName?.trim() || "Пользователь";
+  const displayName = user?.fullName?.trim() || t("common.user");
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
@@ -318,7 +320,7 @@ const ControlCenter = () => {
       {/* Block 2 — Метрики */}
       <motion.div variants={item} className="mb-6">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Метрики
+          {t("metrics.title")}
         </h2>
         <div className="grid grid-cols-3 gap-4">
           <EnergyCard
@@ -326,7 +328,7 @@ const ControlCenter = () => {
             onClick={() =>
               openMetricSheet({
                 key: "energy",
-                title: "Энергия",
+                title: t("metrics.energy"),
                 percent: energyPercent,
               })
             }
@@ -336,7 +338,7 @@ const ControlCenter = () => {
             onClick={() =>
               openMetricSheet({
                 key: "hormones",
-                title: "Гормоны",
+                title: t("metrics.hormones"),
                 percent: hormonesPercent,
               })
             }
@@ -346,7 +348,7 @@ const ControlCenter = () => {
             onClick={() =>
               openMetricSheet({
                 key: "strength",
-                title: "Сила",
+                title: t("metrics.strength"),
                 percent: strengthPercent,
               })
             }
@@ -357,7 +359,7 @@ const ControlCenter = () => {
       {/* Block 4 — Системы ресурса */}
       <motion.div variants={item}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Системы ресурса
+          {t("systems.title")}
         </h2>
         <ResourceSystems
           hormonalPercent={hormonesPercent}

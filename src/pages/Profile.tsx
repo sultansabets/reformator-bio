@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
@@ -36,7 +37,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
-import { NUTRITION_GOAL_LABELS, type NutritionGoal } from "@/lib/health";
+import { type NutritionGoal } from "@/lib/health";
 
 function calculateAge(dob: string): number {
   const d = new Date(dob);
@@ -55,47 +56,33 @@ function getInitials(fullName: string): string {
   return fullName.slice(0, 2).toUpperCase() || "—";
 }
 
-function validateName(value: string): string | null {
-  if (!value || !value.trim()) return "Введите имя";
-  return null;
+function useValidation() {
+  const { t } = useTranslation();
+  return {
+    validateName: (value: string) => (!value?.trim() ? t("errors.enterName") : null),
+    validateEmail: (value: string) => {
+      if (!value?.trim()) return t("errors.enterEmail");
+      if (!value.includes("@")) return t("errors.emailInvalid");
+      return null;
+    },
+    validateHeight: (value: string) => {
+      const n = Number(value);
+      if (value.trim() === "" || Number.isNaN(n)) return t("errors.enterHeight");
+      if (n < 120 || n > 220) return t("errors.heightRange");
+      return null;
+    },
+    validateWeight: (value: string) => {
+      const n = Number(value);
+      if (value.trim() === "" || Number.isNaN(n)) return t("errors.enterWeight");
+      if (n < 40 || n > 200) return t("errors.weightRange");
+      return null;
+    },
+  };
 }
 
-function validateEmail(value: string): string | null {
-  if (!value || !value.trim()) return "Введите email";
-  if (!value.includes("@")) return "Email должен содержать @";
-  return null;
-}
+const CITY_KEYS = ["almaty","astana","shymkent","karaganda","aktobe","taraz","pavlodar","ustKamenogorsk","semey","atyrau","kostanay","kyzylorda","aktau","petropavlovsk","oral","taldykorgan","turkistan"] as const;
 
-const KZ_CITIES = [
-  "Алматы",
-  "Астана",
-  "Шымкент",
-  "Караганда",
-  "Актобе",
-  "Тараз",
-  "Павлодар",
-  "Усть-Каменогорск",
-  "Семей",
-  "Атырау",
-  "Костанай",
-  "Кызылорда",
-  "Актау",
-  "Петропавловск",
-  "Уральск",
-  "Талдыкорган",
-  "Туркестан",
-] as const;
-
-const LAB_RESULT_ITEMS = [
-  "Результаты анализов",
-  "УЗИ",
-  "ЭКГ",
-  "Главный врач",
-  "Уролог",
-  "Спортивный врач",
-  "Реабилитолог",
-  "Психотерапевт",
-] as const;
+const LAB_ITEM_KEYS = ["labResults","uzi","ekg","mainDoctor","urologist","sportDoctor","rehab","psychotherapist"] as const;
 
 const MOCK_HISTORY = [
   {
@@ -124,15 +111,16 @@ const MOCK_SUBSCRIPTIONS = [
 ];
 
 function MedicalTab() {
+  const { t } = useTranslation();
   return (
     <Card className="border border-border">
       <CardContent className="divide-y divide-border p-0">
-        {LAB_RESULT_ITEMS.map((label) => (
+        {LAB_ITEM_KEYS.map((key) => (
           <div
-            key={label}
+            key={key}
             className="flex items-center justify-between px-4 py-3"
           >
-            <span className="text-sm font-medium text-foreground">{label}</span>
+            <span className="text-sm font-medium text-foreground">{t(`profile.${key}`)}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
         ))}
@@ -142,6 +130,8 @@ function MedicalTab() {
 }
 
 function HistoryTab() {
+  const { t } = useTranslation();
+  const statusKey = (s: string) => s === "пришел" ? "statusCame" : s === "планируется" ? "statusPlanned" : "statusNoShow";
   return (
     <div className="space-y-3">
       {MOCK_HISTORY.map((item, i) => (
@@ -152,7 +142,7 @@ function HistoryTab() {
               {item.date}
             </div>
             <div className="text-xs text-muted-foreground">
-              Лечащий врач: {item.doctor}
+              {t("profile.treatingDoctor")}: {item.doctor}
             </div>
             <div
               className={`text-xs font-medium ${
@@ -165,7 +155,7 @@ function HistoryTab() {
                   : "text-status-amber"
               }`}
             >
-              {item.status}
+              {t(`profile.${statusKey(item.status)}`)}
             </div>
           </CardContent>
         </Card>
@@ -313,18 +303,14 @@ function getIntakesForDay(
   return out.sort((a, b) => a.med.time.localeCompare(b.med.time));
 }
 
-const DAY_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-
-const FREQUENCY_OPTIONS = [
-  { value: "daily" as const, label: "Каждый день" },
-  { value: "weekly" as const, label: "Раз в неделю" },
-  { value: "once" as const, label: "Разово" },
-];
+const FREQUENCY_VALUES = ["daily", "weekly", "once"] as const;
 
 function MedicationsTab({ userId }: { userId: string }) {
+  const { t } = useTranslation();
   const [data, setData] = useState<MedicationsData>(() => loadMedicationsData(userId));
   const [selectedDate, setSelectedDate] = useState<string>(() => toDateStr(new Date()));
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const dayLabels = t("profile.dayLabels", { returnObjects: true }) as string[];
 
   useEffect(() => {
     setData(loadMedicationsData(userId));
@@ -384,7 +370,7 @@ function MedicationsTab({ userId }: { userId: string }) {
       >
         {days.map((dateStr) => {
           const d = new Date(dateStr + "T12:00:00");
-          const dayLabel = DAY_LABELS[d.getDay()];
+          const dayLabel = dayLabels[d.getDay()] ?? "";
           const dayNum = d.getDate();
           const active = selectedDate === dateStr;
           const hasIntake = hasIntakesOnDay(dateStr);
@@ -421,7 +407,7 @@ function MedicationsTab({ userId }: { userId: string }) {
         >
           {intakes.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              Нет приёмов на выбранную дату
+              {t("profile.noIntakesForDate")}
             </p>
           ) : (
             intakes.map(({ med, intakeKey }) => (
@@ -431,7 +417,7 @@ function MedicationsTab({ userId }: { userId: string }) {
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-foreground">{med.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {med.time} • кол-во: {med.quantity}
+                        {med.time} • {t("profile.medicationQty")}: {med.quantity}
                       </div>
                     </div>
                     <Button
@@ -440,7 +426,7 @@ function MedicationsTab({ userId }: { userId: string }) {
                       className="shrink-0"
                       onClick={() => toggleTaken(selectedDate, intakeKey)}
                     >
-                      {isTaken(selectedDate, intakeKey) ? "Принято" : "Принял"}
+                      {isTaken(selectedDate, intakeKey) ? t("profile.taken") : t("profile.take")}
                     </Button>
                   </div>
                 </CardContent>
@@ -454,7 +440,7 @@ function MedicationsTab({ userId }: { userId: string }) {
       <div className="sticky bottom-20 px-4 pb-6 pt-4">
         <Button className="w-full rounded-full" onClick={() => setAddModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Добавить приём
+          {t("profile.addMedication")}
         </Button>
       </div>
 
@@ -485,6 +471,7 @@ function AddMedicationModal({
   selectedDate: string;
   onSave: (med: Omit<Medication, "id">) => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [time, setTime] = useState("08:00");
   const [quantity, setQuantity] = useState(1);
@@ -525,28 +512,28 @@ function AddMedicationModal({
         className="fixed inset-0 z-[9999] flex flex-col overflow-x-hidden bg-background"
       >
         <div className="flex items-center justify-between border-b border-border p-4">
-          <h2 className="text-lg font-semibold text-foreground">Добавить приём</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("profile.addMedication")}</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label="Закрыть"
+            aria-label={t("common.close")}
           >
             ✕
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-2">
-            <Label>Название лекарства</Label>
+            <Label>{t("profile.medicationName")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Например: Витамин D"
+              placeholder={t("profile.placeholderMedication")}
               className="h-11 border-border"
             />
           </div>
           <div className="space-y-2">
-            <Label>Время приёма</Label>
+            <Label>{t("profile.medicationTime")}</Label>
             <Input
               type="time"
               value={time}
@@ -555,7 +542,7 @@ function AddMedicationModal({
             />
           </div>
           <div className="space-y-2">
-            <Label>Количество</Label>
+            <Label>{t("profile.medicationQty")}</Label>
             <Input
               type="number"
               min={1}
@@ -565,15 +552,15 @@ function AddMedicationModal({
             />
           </div>
           <div className="space-y-2">
-            <Label>Частота</Label>
+            <Label>{t("profile.medicationFreq")}</Label>
             <Select value={frequency} onValueChange={(v) => setFrequency(v as "daily" | "weekly" | "once")}>
               <SelectTrigger className="h-11 border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {FREQUENCY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                {FREQUENCY_VALUES.map((val) => (
+                  <SelectItem key={val} value={val}>
+                    {t(`profile.freq${val.charAt(0).toUpperCase() + val.slice(1)}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -581,7 +568,7 @@ function AddMedicationModal({
           </div>
           {frequency !== "once" && (
             <div className="space-y-2">
-              <Label>Дата начала</Label>
+              <Label>{t("profile.medicationStartDate")}</Label>
               <Input
                 type="date"
                 value={startDate}
@@ -593,7 +580,7 @@ function AddMedicationModal({
         </div>
         <div className="border-t border-border p-4">
           <Button className="w-full" onClick={handleSave}>
-            Сохранить
+            {t("common.save")}
           </Button>
         </div>
       </motion.div>
@@ -612,24 +599,13 @@ const item = {
 
 type ModalType = "email" | "dob" | "activity" | "lab" | "setting" | null;
 
-function validateHeight(value: string): string | null {
-  const n = Number(value);
-  if (value.trim() === "" || Number.isNaN(n)) return "Введите рост";
-  if (n < 120 || n > 220) return "Рост от 120 до 220 см";
-  return null;
-}
-function validateWeight(value: string): string | null {
-  const n = Number(value);
-  if (value.trim() === "" || Number.isNaN(n)) return "Введите вес";
-  if (n < 40 || n > 200) return "Вес от 40 до 200 кг";
-  return null;
-}
-
 type EditableField = "firstName" | "lastName" | "email" | "dob" | "height" | "weight" | "goal";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { validateName, validateEmail, validateHeight, validateWeight } = useValidation();
   const [modal, setModal] = useState<ModalType>(null);
   const [modalPayload, setModalPayload] = useState<{
     labItem?: string;
@@ -655,10 +631,10 @@ const Profile = () => {
     lastName: user?.lastName?.trim() ?? "",
     email: user?.email?.trim() ?? "",
     dob: user?.dob?.trim() ?? "",
-    activityLevel: user?.activityLevel?.trim() ?? "Авто из тренировок",
+    activityLevel: user?.activityLevel?.trim() ?? "",
     height: user?.height != null ? String(user.height) : "",
     weight: user?.weight != null ? String(user.weight) : "",
-    goal: user?.goal ? NUTRITION_GOAL_LABELS[user.goal] : "",
+    goal: user?.goal ? t(`health.goal${user.goal === "gain" ? "Gain" : user.goal === "maintain" ? "Maintain" : "Lose"}`) : "",
     city: user?.city?.trim() ?? "",
     mentalHealthScore: user?.mentalHealthScore,
     mentalHealthStatus: user?.mentalHealthStatus,
@@ -728,8 +704,8 @@ const Profile = () => {
     if (field === "fullName") err = validateName(editDraft);
     else if (field === "email") err = validateEmail(editDraft);
     else if (field === "dob") err = validateBirthDate(editDraft);
-    else if (field === "height") err = validateHeight(editDraft);
-    else if (field === "weight") err = validateWeight(editDraft);
+    else if (field === "height") err = validateHeight(editDraft) as string | null;
+    else if (field === "weight") err = validateWeight(editDraft) as string | null;
     else if (field === "activity" || field === "goal") err = null;
     if (err) {
       setEditError(err);
@@ -757,14 +733,14 @@ const Profile = () => {
   };
 
   const personalInfoRows: { key: EditableField | "activity"; label: string; value: string; icon: typeof User; editable: boolean }[] = [
-    { key: "firstName", label: "Имя", value: profileDisplay.firstName || "—", icon: User, editable: true },
-    { key: "lastName", label: "Фамилия", value: profileDisplay.lastName || "—", icon: User, editable: true },
-    { key: "email", label: "Email", value: profileDisplay.email || "—", icon: Mail, editable: true },
-    { key: "dob", label: "Дата рождения", value: formatDateRu(profileDisplay.dob) || "—", icon: Calendar, editable: true },
-    { key: "height", label: "Рост", value: profileDisplay.height ? `${profileDisplay.height} см` : "—", icon: Ruler, editable: true },
-    { key: "weight", label: "Вес", value: profileDisplay.weight ? `${profileDisplay.weight} кг` : "—", icon: Scale, editable: true },
-    { key: "activity", label: "Уровень активности", value: profileDisplay.activityLevel || "—", icon: Activity, editable: false },
-    { key: "goal", label: "Цель по питанию", value: profileDisplay.goal || "—", icon: Target, editable: true },
+    { key: "firstName", label: t("profile.firstName"), value: profileDisplay.firstName || "—", icon: User, editable: true },
+    { key: "lastName", label: t("profile.lastName"), value: profileDisplay.lastName || "—", icon: User, editable: true },
+    { key: "email", label: t("profile.email"), value: profileDisplay.email || "—", icon: Mail, editable: true },
+    { key: "dob", label: t("profile.dob"), value: formatDateRu(profileDisplay.dob) || "—", icon: Calendar, editable: true },
+    { key: "height", label: t("profile.height"), value: profileDisplay.height ? `${profileDisplay.height} см` : "—", icon: Ruler, editable: true },
+    { key: "weight", label: t("profile.weight"), value: profileDisplay.weight ? `${profileDisplay.weight} кг` : "—", icon: Scale, editable: true },
+    { key: "activity", label: t("profile.activityLevel"), value: profileDisplay.activityLevel || "—", icon: Activity, editable: false },
+    { key: "goal", label: t("profile.nutritionGoal"), value: profileDisplay.goal || "—", icon: Target, editable: true },
   ];
 
   return (
@@ -796,7 +772,7 @@ const Profile = () => {
           <Avatar className="h-20 w-20 border-2 border-border cursor-pointer hover:opacity-90 transition-opacity">
             <AvatarImage src={user?.avatar} alt="" />
             <AvatarFallback className="bg-primary text-lg font-semibold text-primary-foreground">
-              {getInitials(profileDisplay.fullName || "Имя Фамилия")}
+              {getInitials(profileDisplay.fullName || t("profile.placeholderName"))}
             </AvatarFallback>
           </Avatar>
         </label>
@@ -805,7 +781,7 @@ const Profile = () => {
             <span className="truncate text-lg font-semibold tracking-tight text-foreground">
               {(profileDisplay.firstName || profileDisplay.lastName)
                 ? `${profileDisplay.firstName || ""} ${profileDisplay.lastName || ""}`.trim()
-                : "Имя Фамилия"}
+                : t("profile.placeholderName")}
             </span>
             {user?.isVerified && (
               <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary">
@@ -816,18 +792,18 @@ const Profile = () => {
           <p className="mt-0.5 text-sm text-muted-foreground">
             {user?.nickname
               ? `@${user.nickname.replace(/[^a-zA-Z0-9_.]/g, "") || "user"}`
-              : "@nickname"}
+              : t("profile.placeholderNickname")}
           </p>
           <div className="mt-1 text-xs text-muted-foreground">
             {user?.dob && (
               <span>
-                {calculateAge(user.dob)} лет
+                {calculateAge(user.dob)} {t("profile.years")}
               </span>
             )}
             {user?.city && (
               <span>
                 {" • "}
-                {user.city}
+                {CITY_KEYS.includes(user.city as typeof CITY_KEYS[number]) ? t(`cities.${user.city}`) : user.city}
               </span>
             )}
           </div>
@@ -837,10 +813,10 @@ const Profile = () => {
       {/* Action buttons (one line, like Threads) */}
       <motion.div variants={item} className="mt-4 flex gap-3">
         <Button className="flex-1" onClick={() => setEditOpen(true)}>
-          Редактировать профиль
+          {t("profile.editProfile")}
         </Button>
         <Button variant="outline" className="flex-1" onClick={() => setBookingOpen(true)}>
-          Записаться
+          {t("profile.book")}
         </Button>
       </motion.div>
 
@@ -848,10 +824,10 @@ const Profile = () => {
       <motion.div variants={item} className="mt-6 border-b border-border">
         <div className="flex">
           {[
-            { key: "medical" as const, label: "Медкарта" },
-            { key: "history" as const, label: "Записи" },
-            { key: "subscriptions" as const, label: "Продукты" },
-            { key: "medications" as const, label: "Лекарства" },
+            { key: "medical" as const, labelKey: "profile.medical" },
+            { key: "history" as const, labelKey: "profile.history" },
+            { key: "subscriptions" as const, labelKey: "profile.subscriptions" },
+            { key: "medications" as const, labelKey: "profile.medications" },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -863,7 +839,7 @@ const Profile = () => {
                   : "text-muted-foreground"
               }`}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           ))}
         </div>
@@ -899,16 +875,16 @@ const Profile = () => {
       <motion.div variants={item} className="mt-8">
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Тарифы
+            {t("profile.tariffs")}
           </h2>
           <Card className="border border-border">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-foreground">Premium</div>
-                  <div className="text-xs text-muted-foreground">29$ / месяц</div>
+                  <div className="text-sm font-semibold text-foreground">{t("profile.premium")}</div>
+                  <div className="text-xs text-muted-foreground">{t("profile.pricePerMonth")}</div>
                 </div>
-                <Button size="sm">Подключить</Button>
+                <Button size="sm">{t("profile.connect")}</Button>
               </div>
             </CardContent>
           </Card>
@@ -920,19 +896,19 @@ const Profile = () => {
         <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">
-              {modal === "fullName" && "Имя"}
-              {modal === "email" && "Email"}
-              {modal === "dob" && "Дата рождения"}
-              {modal === "activity" && "Уровень активности"}
+              {modal === "fullName" && t("profile.firstName")}
+              {modal === "email" && t("profile.email")}
+              {modal === "dob" && t("profile.dob")}
+              {modal === "activity" && t("profile.activityLevel")}
               {modal === "lab" && modalPayload?.labItem}
               {modal === "setting" && modalPayload?.settingLabel}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               {modal === "lab" && (
-                <span className="block pt-1">Скоро будет доступно.</span>
+                <span className="block pt-1">{t("profile.modalComingSoon")}</span>
               )}
               {modal === "setting" && (
-                <span className="block pt-1">Только для отображения. Без сохранения на сервере.</span>
+                <span className="block pt-1">{t("profile.modalDemo")}</span>
               )}
             </DialogDescription>
           </DialogHeader>
@@ -943,10 +919,9 @@ const Profile = () => {
       <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
         <DialogContent className="border border-border bg-card">
           <DialogHeader>
-            <DialogTitle>Запись в клинику</DialogTitle>
+            <DialogTitle>{t("profile.bookingTitle")}</DialogTitle>
             <DialogDescription>
-              В ближайшее время здесь будет возможность записаться в клинику.
-              Сейчас это демо-версия.
+              {t("profile.bookingDesc")}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
@@ -963,12 +938,12 @@ const Profile = () => {
             className="fixed inset-0 z-[9999] flex flex-col overflow-x-hidden bg-background w-full max-w-full"
           >
             <div className="flex w-full max-w-full min-w-0 items-center justify-between border-b border-border p-4">
-              <h2 className="text-lg font-semibold text-foreground">Редактировать профиль</h2>
+              <h2 className="text-lg font-semibold text-foreground">{t("profile.editProfile")}</h2>
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
                 className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors"
-                aria-label="Закрыть"
+                aria-label={t("common.close")}
               >
                 ✕
               </button>
@@ -976,7 +951,7 @@ const Profile = () => {
 
             <div className="flex min-w-0 flex-1 flex-col space-y-4 overflow-x-hidden overflow-y-auto p-4">
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="edit-firstName">Имя</Label>
+                <Label htmlFor="edit-firstName">{t("profile.firstName")}</Label>
                 <Input
                   id="edit-firstName"
                   value={editFirstName}
@@ -989,7 +964,7 @@ const Profile = () => {
                 />
               </div>
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="edit-lastName">Фамилия</Label>
+                <Label htmlFor="edit-lastName">{t("profile.lastName")}</Label>
                 <Input
                   id="edit-lastName"
                   value={editLastName}
@@ -1002,7 +977,7 @@ const Profile = () => {
                 />
               </div>
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="edit-nickname">Никнейм</Label>
+                <Label htmlFor="edit-nickname">{t("auth.nickname")}</Label>
                 <Input
                   id="edit-nickname"
                   value={editNickname}
@@ -1013,11 +988,11 @@ const Profile = () => {
                     updateUser({ nickname: sanitized });
                   }}
                   className="h-11 mt-1 w-full min-w-0 border-border bg-background"
-                  placeholder="username"
+                  placeholder={t("profile.placeholderUsername")}
                 />
               </div>
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="edit-dob">Дата рождения</Label>
+                <Label htmlFor="edit-dob">{t("profile.dob")}</Label>
                 <Input
                   id="edit-dob"
                   type="date"
@@ -1031,7 +1006,7 @@ const Profile = () => {
                 />
               </div>
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="edit-age">Возраст</Label>
+                <Label htmlFor="edit-age">{t("profile.age")}</Label>
                 <Input
                   id="edit-age"
                   value={editAge}
@@ -1041,7 +1016,7 @@ const Profile = () => {
               </div>
               <div className="grid min-w-0 grid-cols-2 gap-3">
                 <div className="min-w-0 space-y-2">
-                  <Label htmlFor="edit-height">Рост (см)</Label>
+                  <Label htmlFor="edit-height">{t("profile.height")} (см)</Label>
                   <Input
                     id="edit-height"
                     type="number"
@@ -1058,7 +1033,7 @@ const Profile = () => {
                   />
                 </div>
                 <div className="min-w-0 space-y-2">
-                  <Label htmlFor="edit-weight">Вес (кг)</Label>
+                  <Label htmlFor="edit-weight">{t("profile.weight")} (кг)</Label>
                   <Input
                     id="edit-weight"
                     type="number"
@@ -1076,7 +1051,7 @@ const Profile = () => {
                 </div>
               </div>
               <div className="min-w-0 space-y-2">
-                <Label htmlFor="edit-city">Город</Label>
+                <Label htmlFor="edit-city">{t("profile.city")}</Label>
                 <Select
                   value={editCity}
                   onValueChange={(v) => {
@@ -1088,12 +1063,12 @@ const Profile = () => {
                     id="edit-city"
                     className="h-11 mt-1 w-full min-w-0 border-border bg-background"
                   >
-                    <SelectValue placeholder="Выберите город" />
+                    <SelectValue placeholder={t("profile.chooseCity")} />
                   </SelectTrigger>
                   <SelectContent className="z-[10001] border-border bg-popover" position="popper">
-                    {KZ_CITIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
+                    {CITY_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {t(`cities.${key}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1106,7 +1081,7 @@ const Profile = () => {
                 className="w-full"
                 onClick={() => setEditOpen(false)}
               >
-                Сохранить
+                {t("common.save")}
               </Button>
             </div>
           </motion.div>

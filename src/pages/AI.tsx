@@ -1,31 +1,17 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Send, Sparkles, User, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { AI_QUICK_PROMPTS } from "@/constants/aiPrompts";
+const PROMPT_KEYS = ["recovery", "testosterone", "cortisol", "energy", "labs", "overtrain"] as const;
 
-const MOCK_RESPONSES: Record<string, string> = {
-  "Как улучшить восстановление?":
-    "Восстановление улучшают сон 7–9 ч, питание с достаточным белком, гидратация и дни отдыха. В приложении смотрите блок Факторы влияния и метрики нагрузки.",
-  "Что влияет на тестостерон?":
-    "На уровень тестостерона влияют сон, силовые тренировки, жиры в рационе, витамин D и стресс. Рекомендую раздел Центр → Аналитика для отслеживания трендов.",
-  "Как снизить кортизол?":
-    "Снижению кортизола помогают регулярный сон, умеренные нагрузки, дыхательные практики и снижение кофеина. Отслеживайте стресс в блоке ментального здоровья.",
-  "Как повысить энергию?":
-    "Энергию поддерживают стабильный сон, вода, белок и движение. Проверьте калории и сон в разделе Центр → Питание и Обзор.",
-  "Разбор анализов крови":
-    "Для разбора анализов загрузите результаты в раздел Мед карта (Профиль). В демо-режиме полный разбор будет после подключения сервиса.",
-  "Что делать при переутомлении?":
-    "При переутомлении: снизьте нагрузку, увеличьте сон, пейте достаточно воды. В приложении смотрите блок восстановления и не пропускайте отдых.",
-};
-
-const DEFAULT_MOCK = "Принял. Это демо-режим: полный ответ будет доступен после подключения сервиса.";
 
 type Message = { role: "user" | "assistant"; text: string };
 
 export default function AI() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -40,8 +26,12 @@ export default function AI() {
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
     setInput("");
 
-    const key = AI_QUICK_PROMPTS.find((c) => trimmed.toLowerCase().includes(c.toLowerCase()));
-    const reply = key ? MOCK_RESPONSES[key] ?? DEFAULT_MOCK : DEFAULT_MOCK;
+    const matchedKey = PROMPT_KEYS.find((k) =>
+      trimmed.toLowerCase().includes((t(`ai.prompts.${k}`) as string).toLowerCase())
+    );
+    const reply = matchedKey
+      ? (t(`ai.responses.${matchedKey}`) as string) || (t("ai.demoAccepted") as string)
+      : t("ai.demoAccepted") as string;
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     }, 600);
@@ -70,22 +60,24 @@ export default function AI() {
               <Sparkles className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-base font-medium text-foreground">
-              Здравствуйте. Я Dr.AI. Чем могу помочь?
+              {t("ai.welcome")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Выберите подсказку или напишите вопрос
+              {t("ai.choosePrompt")}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {AI_QUICK_PROMPTS.map((chip) => (
+              {PROMPT_KEYS.map((key) => {
+                const chip = t(`ai.prompts.${key}`) as string;
+                return (
                 <button
-                  key={chip}
+                  key={key}
                   type="button"
                   onClick={() => send(chip)}
                   className="rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   {chip}
                 </button>
-              ))}
+              );})}
             </div>
           </motion.div>
         ) : (
@@ -98,7 +90,7 @@ export default function AI() {
                 className="text-xs text-muted-foreground"
                 onClick={() => setMessages([])}
               >
-                Новый диалог
+                {t("ai.newChat")}
               </Button>
             </div>
             <ul className="space-y-4">
@@ -140,17 +132,17 @@ export default function AI() {
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Прикрепить файл"
+            aria-label={t("ai.ariaAttach")}
           >
             <Paperclip className="h-4 w-4" />
           </button>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Напишите сообщение..."
+            placeholder={t("ai.placeholder")}
             className="flex-1 border-border bg-background"
           />
-          <Button type="submit" size="icon" className="shrink-0" aria-label="Отправить">
+          <Button type="submit" size="icon" className="shrink-0" aria-label={t("ai.ariaSend")}>
             <Send className="h-4 w-4" />
           </Button>
         </div>

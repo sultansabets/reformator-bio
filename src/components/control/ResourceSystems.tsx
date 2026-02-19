@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dna, Zap, Dumbbell, Flame, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -27,42 +28,43 @@ export function ResourceSystems({
   physicalPercent,
   metabolicPercent,
 }: ResourceSystemsProps) {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const systems: ResourceSystem[] = [
     {
       id: "hormonal",
       icon: Dna,
-      label: "Гормональный ресурс",
+      label: t("systems.hormonal"),
       percent: hormonalPercent ?? 72,
-      sources: ["Тестостерон", "Эстрадиол", "SHBG", "Пролактин"],
+      sources: [t("systems.testosterone"), t("systems.estradiol"), t("systems.shbg"), t("systems.prolactin")],
       iconColor: "#FF9F0A",
       iconBg: "rgba(255,159,10,0.15)",
     },
     {
       id: "nervous",
       icon: Zap,
-      label: "Нервная система",
+      label: t("systems.nervous"),
       percent: nervousPercent ?? 65,
-      sources: ["HRV", "Пульс покоя", "Сон", "Стресс"],
+      sources: [t("systems.hrv"), t("systems.restPulse"), t("systems.sleep"), t("systems.stress")],
       iconColor: "#3B82F6",
       iconBg: "rgba(59,130,246,0.15)",
     },
     {
       id: "physical",
       icon: Dumbbell,
-      label: "Физический потенциал",
+      label: t("systems.physical"),
       percent: physicalPercent ?? 58,
-      sources: ["Тренировки", "Восстановление", "Мышечная масса", "Белок"],
+      sources: [t("systems.workouts"), t("systems.recovery"), t("systems.muscleMass"), t("systems.protein")],
       iconColor: "#22C55E",
       iconBg: "rgba(34,197,94,0.15)",
     },
     {
       id: "metabolic",
       icon: Flame,
-      label: "Метаболический контроль",
+      label: t("systems.metabolic"),
       percent: metabolicPercent ?? 70,
-      sources: ["Глюкоза", "Инсулин", "Жир %", "Талия"],
+      sources: [t("systems.glucose"), t("systems.insulin"), t("systems.fatPct"), t("systems.waist")],
       iconColor: "#EF4444",
       iconBg: "rgba(239,68,68,0.15)",
     },
@@ -113,7 +115,7 @@ export function ResourceSystems({
                 >
                   <div className="border-t border-border bg-muted/25 px-3 pb-3 pt-2">
                     <p className="mb-2 text-xs font-medium text-muted-foreground">
-                      Сформировано из:
+                      {t("systems.formedFrom")}
                     </p>
                     <ul className="space-y-1.5 text-sm text-muted-foreground">
                       {s.sources.map((source) => (

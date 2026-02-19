@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Settings, Sun, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -22,40 +23,40 @@ import {
 import BottomNav from "./BottomNav";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
-
-const LANG_OPTIONS = [
-  { id: "ru", label: "Русский" },
-  { id: "kk", label: "Қазақша" },
-  { id: "en", label: "English" },
-] as const;
+import { LANGUAGES, persistLanguage } from "@/i18n";
 
 const SETTINGS_DEVICE_IDS = ["apple", "reformator-band"] as const;
-const SETTINGS_DEVICE_LABELS: Record<(typeof SETTINGS_DEVICE_IDS)[number], string> = {
-  apple: "Apple Watch",
-  "reformator-band": "Reformator Band",
-};
-function buildSettingsDevices(wearable?: string): { id: string; name: string; connected: boolean; lastSync: string; battery: string }[] {
+
+function buildSettingsDevices(
+  wearable: string | undefined,
+  t: (key: string) => string
+): { id: string; name: string; connected: boolean; lastSync: string; battery: string }[] {
   return SETTINGS_DEVICE_IDS.map((id) => ({
     id,
-    name: SETTINGS_DEVICE_LABELS[id],
+    name: id === "apple" ? t("settings.appleWatch") : t("settings.reformatorBand"),
     connected: wearable === id,
-    lastSync: wearable === id ? "2 мин назад" : "—",
+    lastSync: wearable === id ? t("settings.syncedAgo") : "—",
     battery: wearable === id ? "85%" : "—",
   }));
 }
 
 const AppLayout = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { logout, user, updateUser } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [lang, setLang] = useState<string>("ru");
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationList, setNotificationList] = useState<Notification[]>(() => getNotifications());
   const [devicesOpen, setDevicesOpen] = useState(false);
   const [deviceModal, setDeviceModal] = useState<{ id: string; name: string; connected: boolean; lastSync: string; battery: string } | null>(null);
-  const settingsDevices = useMemo(() => buildSettingsDevices(user?.wearable), [user?.wearable]);
+  const settingsDevices = useMemo(() => buildSettingsDevices(user?.wearable, t), [user?.wearable, t]);
+
+  const handleLanguageChange = (code: string) => {
+    i18n.changeLanguage(code);
+    persistLanguage(code);
+  };
 
   useEffect(() => {
     ensureDailyReset(user?.id);
@@ -92,7 +93,7 @@ const AppLayout = () => {
               type="button"
               onClick={toggleTheme}
               className="flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              aria-label="Переключить тему"
+              aria-label={t("settings.ariaTheme")}
             >
               {theme === "light" ? (
                 <Sun className="h-5 w-5" />
@@ -115,7 +116,7 @@ const AppLayout = () => {
               type="button"
               onClick={() => setNotificationsOpen(true)}
               className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              aria-label="Уведомления"
+              aria-label={t("settings.ariaNotifications")}
             >
               <Bell className="h-5 w-5" />
             </button>
@@ -123,7 +124,7 @@ const AppLayout = () => {
               type="button"
               onClick={() => setSettingsOpen((prev) => !prev)}
               className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              aria-label="Настройки"
+              aria-label={t("settings.ariaSettings")}
             >
               <Settings className="h-5 w-5" />
             </button>
@@ -136,23 +137,23 @@ const AppLayout = () => {
           className="h-screen w-full flex flex-col border-border bg-background p-0 sm:max-w-sm"
         >
           <div className="flex-1 overflow-y-auto px-4 pb-24 pt-14">
-            <h2 className="text-lg font-semibold text-foreground">Настройки</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t("settings.title")}</h2>
             <div className="mt-4 space-y-1 rounded-lg border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
                   <Moon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">Тема</span>
+                  <span className="text-sm font-medium text-foreground">{t("settings.theme")}</span>
                 </div>
                 <Switch
                   checked={theme === "dark"}
                   onCheckedChange={toggleTheme}
-                  aria-label="День / ночь"
+                  aria-label={t("settings.themeToggle")}
                 />
               </div>
               <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                 <div className="flex items-center gap-3">
                   <Bell className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">Уведомления</span>
+                  <span className="text-sm font-medium text-foreground">{t("settings.notifications")}</span>
                 </div>
                 <Switch
                   checked={notificationsEnabled}
@@ -160,22 +161,22 @@ const AppLayout = () => {
                     setNotificationsEnabledState(checked);
                     setNotificationsEnabled(checked);
                   }}
-                  aria-label="Включить уведомления"
+                  aria-label={t("settings.notificationsEnable")}
                 />
               </div>
               <div className="px-4 py-3 border-t border-border">
                 <div className="flex items-center gap-3 mb-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">Язык</span>
+                  <span className="text-sm font-medium text-foreground">{t("settings.language")}</span>
                 </div>
-                <div className="flex gap-2 mt-1">
-                  {LANG_OPTIONS.map((o) => (
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {LANGUAGES.map((o) => (
                     <button
-                      key={o.id}
+                      key={o.code}
                       type="button"
-                      onClick={() => setLang(o.id)}
+                      onClick={() => handleLanguageChange(o.code)}
                       className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                        lang === o.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                        i18n.language === o.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {o.label}
@@ -195,7 +196,7 @@ const AppLayout = () => {
                     >
                       <div className="flex items-center gap-3">
                         <Watch className="h-4 w-4 text-muted-foreground" />
-                        <span>Подключенные устройства</span>
+                        <span>{t("settings.devices")}</span>
                       </div>
                       <ChevronDown
                         className={`h-4 w-4 text-muted-foreground transition-transform ${devicesOpen ? "rotate-180" : ""}`}
@@ -220,7 +221,7 @@ const AppLayout = () => {
                                   variant={d.connected ? "default" : "secondary"}
                                   className="text-xs"
                                 >
-                                  {d.connected ? "Подключено" : "Не подключено"}
+                                  {d.connected ? t("settings.connected") : t("settings.notConnected")}
                                 </Badge>
                               </span>
                             </div>
@@ -239,21 +240,21 @@ const AppLayout = () => {
                 className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                Помощь и поддержка
+                {t("settings.help")}
               </button>
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <FileText className="h-4 w-4 text-muted-foreground" />
-                Политика конфиденциальности
+                {t("settings.privacy")}
               </button>
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <Info className="h-4 w-4 text-muted-foreground" />
-                О приложении
+                {t("settings.about")}
               </button>
             </div>
             <button
@@ -262,7 +263,7 @@ const AppLayout = () => {
               className="mt-4 flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-destructive transition-colors hover:bg-muted"
             >
               <LogOut className="h-4 w-4" />
-              Выйти
+              {t("auth.logout")}
             </button>
           </div>
         </SheetContent>
@@ -276,11 +277,11 @@ const AppLayout = () => {
             <DialogDescription className="text-sm text-muted-foreground">
               {deviceModal && (
                 <span className="block pt-1">
-                  Статус: {deviceModal.connected ? "Подключено" : "Не подключено"}
+                  {t("settings.status")}: {deviceModal.connected ? t("settings.connected") : t("settings.notConnected")}
                   <br />
-                  Синхронизация: {deviceModal.lastSync}
+                  {t("settings.sync")}: {deviceModal.lastSync}
                   <br />
-                  Заряд: {deviceModal.battery}
+                  {t("settings.charge")}: {deviceModal.battery}
                   {deviceModal.id === "apple" && !deviceModal.connected && (
                     <>
                       <br />
@@ -288,17 +289,17 @@ const AppLayout = () => {
                         className="mt-3 w-full"
                         size="sm"
                         onClick={() => {
-                          const grant = window.confirm("Разрешить доступ к данным Health? (демо)");
+                          const grant = window.confirm(t("settings.healthAccess"));
                           if (grant) updateUser({ wearable: "apple" });
                           setDeviceModal(null);
                         }}
                       >
-                        Подключить
+                        {t("common.connect")}
                       </Button>
                     </>
                   )}
                   {deviceModal.id === "reformator-band" && !deviceModal.connected && (
-                    <p className="mt-2 text-xs">Подключение пока недоступно.</p>
+                    <p className="mt-2 text-xs">{t("settings.connectionUnavailable")}</p>
                   )}
                 </span>
               )}
@@ -319,14 +320,14 @@ const AppLayout = () => {
         >
           <div className="flex flex-col h-full">
             <div className="shrink-0 border-b border-border px-4 pt-14 pb-4">
-              <h2 className="text-lg font-semibold text-foreground">Уведомления</h2>
+              <h2 className="text-lg font-semibold text-foreground">{t("notifications.title")}</h2>
               {!notificationsEnabled && (
-                <p className="mt-1 text-xs text-muted-foreground">Уведомления отключены</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t("settings.notificationsOff")}</p>
               )}
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4">
               {notificationList.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Пока нет уведомлений</p>
+                <p className="text-sm text-muted-foreground">{t("settings.noNotifications")}</p>
               ) : (
                 notificationList.map((item) => (
                   <div

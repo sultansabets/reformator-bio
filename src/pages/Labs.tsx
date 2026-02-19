@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -9,22 +10,21 @@ function getLabStatus(
   value: number,
   min: number,
   max: number
-): { label: "Норма" | "Ниже нормы" | "Выше нормы"; type: "success" | "warning" | "destructive" } {
-  if (value < min) return { label: "Ниже нормы", type: "destructive" };
-  if (value > max) return { label: "Выше нормы", type: "destructive" };
-  return { label: "Норма", type: "success" };
+): { labelKey: "labs.normal" | "labs.belowNormal" | "labs.aboveNormal"; type: "success" | "warning" | "destructive" } {
+  if (value < min) return { labelKey: "labs.belowNormal", type: "destructive" };
+  if (value > max) return { labelKey: "labs.aboveNormal", type: "destructive" };
+  return { labelKey: "labs.normal", type: "success" };
 }
 
-/** Optional "Низкая граница" when value is in range but in lowest 10% of reference */
 function getLabStatusWithLowBorder(
   value: number,
   min: number,
   max: number
-): { label: "Норма" | "Ниже нормы" | "Выше нормы" | "Низкая граница"; type: "success" | "warning" | "destructive" } {
+): { labelKey: "labs.normal" | "labs.belowNormal" | "labs.aboveNormal" | "labs.lowBoundary"; type: "success" | "warning" | "destructive" } {
   const base = getLabStatus(value, min, max);
-  if (base.label !== "Норма") return base;
+  if (base.labelKey !== "labs.normal") return base;
   const range = max - min;
-  if (range > 0 && value <= min + range * 0.1) return { label: "Низкая граница", type: "warning" };
+  if (range > 0 && value <= min + range * 0.1) return { labelKey: "labs.lowBoundary", type: "warning" };
   return base;
 }
 
@@ -36,7 +36,7 @@ const statusTypeClass = {
 
 interface MockAnalysis {
   id: string;
-  name: string;
+  nameKey: string;
   value: number;
   unit: string;
   refMin: number;
@@ -48,7 +48,7 @@ interface MockAnalysis {
 const MOCK_ANALYSES: MockAnalysis[] = [
   {
     id: "vitamin-d",
-    name: "Витамин D",
+    nameKey: "labs.vitaminD",
     value: 22,
     unit: "ng/mL",
     refMin: 30,
@@ -56,7 +56,7 @@ const MOCK_ANALYSES: MockAnalysis[] = [
   },
   {
     id: "testosterone",
-    name: "Тестостерон (общий)",
+    nameKey: "labs.testosterone",
     value: 14.2,
     unit: "nmol/L",
     refMin: 12,
@@ -64,7 +64,7 @@ const MOCK_ANALYSES: MockAnalysis[] = [
   },
   {
     id: "hemoglobin",
-    name: "Гемоглобин",
+    nameKey: "labs.hemoglobin",
     value: 146,
     unit: "g/L",
     refMin: 130,
@@ -72,7 +72,7 @@ const MOCK_ANALYSES: MockAnalysis[] = [
   },
   {
     id: "ferritin",
-    name: "Ферритин",
+    nameKey: "labs.ferritin",
     value: 38,
     unit: "ng/mL",
     refMin: 30,
@@ -82,6 +82,7 @@ const MOCK_ANALYSES: MockAnalysis[] = [
 ];
 
 export default function Labs() {
+  const { t } = useTranslation();
   return (
     <motion.div
       className="px-5 pt-12 pb-24"
@@ -90,7 +91,7 @@ export default function Labs() {
       animate="show"
     >
       <motion.h1 variants={item} className="mb-6 text-2xl font-bold text-foreground">
-        Анализы
+        {t("labs.title")}
       </motion.h1>
 
       <div className="space-y-3">
@@ -103,14 +104,14 @@ export default function Labs() {
               <Card className="border border-border bg-card shadow-sm">
                 <CardContent className="p-4">
                   <p className="mb-1 text-sm font-semibold text-foreground">
-                    {analysis.name}
+                    {t(analysis.nameKey)}
                   </p>
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
                     <span className="font-medium text-foreground">
                       {analysis.value} {analysis.unit}
                     </span>
                     <span className="text-muted-foreground">
-                      Референс: {analysis.refMin}–{analysis.refMax} {analysis.unit}
+                      {t("labs.reference")} {analysis.refMin}–{analysis.refMax} {analysis.unit}
                     </span>
                   </div>
                   <p
@@ -119,7 +120,7 @@ export default function Labs() {
                       statusTypeClass[status.type]
                     )}
                   >
-                    {status.label}
+                    {t(status.labelKey)}
                   </p>
                 </CardContent>
               </Card>
@@ -129,7 +130,7 @@ export default function Labs() {
       </div>
 
       <p className="mt-6 text-center text-[10px] text-muted-foreground">
-        Только для учёта. Не заменяет консультацию врача.
+        {t("labs.disclaimer")}
       </p>
     </motion.div>
   );

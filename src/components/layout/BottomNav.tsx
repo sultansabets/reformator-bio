@@ -1,20 +1,22 @@
 import { Home, Zap, Sparkles, ShoppingBag, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const LEFT_TABS = [
-  { path: "/control", icon: Home, ariaLabel: "Главная" },
-  { path: "/center", icon: Zap, ariaLabel: "Центр" },
+  { path: "/control", icon: Home, key: "tabs.home" },
+  { path: "/center", icon: Zap, key: "tabs.center" },
 ];
 const AI_PATH = "/ai";
 const RIGHT_TABS = [
-  { path: "/shop", icon: ShoppingBag, ariaLabel: "Магазин" },
-  { path: "/profile", icon: User, ariaLabel: "Профиль", useAvatar: true },
+  { path: "/shop", icon: ShoppingBag, key: "tabs.store" },
+  { path: "/profile", icon: User, key: "tabs.profile", useAvatar: true },
 ];
 
 const BottomNav = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -26,7 +28,7 @@ const BottomNav = () => {
   };
 
   const renderTab = (
-    tab: { path: string; icon: typeof Home; ariaLabel: string; useAvatar?: boolean },
+    tab: { path: string; icon: typeof Home; key: string; useAvatar?: boolean },
     isActive: boolean
   ) => {
     const showAvatar = tab.useAvatar && user?.avatar;
@@ -39,7 +41,7 @@ const BottomNav = () => {
           "flex flex-col items-center justify-center rounded-lg p-2 transition-colors duration-200",
           isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
         )}
-        aria-label={tab.ariaLabel}
+        aria-label={t(tab.key)}
       >
         {showAvatar ? (
           <Avatar className="h-7 w-7 border-2 border-transparent ring-0">
@@ -67,7 +69,7 @@ const BottomNav = () => {
             "bg-neutral-900 dark:bg-neutral-800 text-white",
             "shadow-sm focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
           )}
-          aria-label="ИИ"
+          aria-label={t("tabs.ai")}
         >
           <Sparkles className="h-[22px] w-[22px]" strokeWidth={2} />
         </button>

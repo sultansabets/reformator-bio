@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
@@ -86,6 +87,7 @@ interface HealthOrbProps {
 }
 
 export default function HealthOrb({ score }: HealthOrbProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const particlesRef = useRef<Particle[] | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -255,7 +257,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
           <span className="text-xs uppercase tracking-widest text-muted-foreground">
-            СОСТОЯНИЕ
+            {t("metrics.state")}
           </span>
           <span className="mt-2 text-6xl font-bold tracking-tight text-foreground">
             {displayScore}%
