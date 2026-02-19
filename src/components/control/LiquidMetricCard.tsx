@@ -1,14 +1,14 @@
 import React, { useId } from "react";
 import { cn } from "@/lib/utils";
 
-/** 0–39% red, 40–69% orange, 70–100% green */
+/** 0–40% red, 41–70% orange, 71–100% green — dynamic per percent */
 function getColorsFromPercent(percent: number): {
   gradientFrom: string;
   gradientTo: string;
   glowColor: string;
   reflectionColor: string;
 } {
-  if (percent < 40) {
+  if (percent <= 40) {
     return {
       gradientFrom: "rgba(220, 38, 38, 0.9)",
       gradientTo: "rgba(239, 68, 68, 0.8)",
@@ -16,7 +16,7 @@ function getColorsFromPercent(percent: number): {
       reflectionColor: "rgba(255,255,255,0.25)",
     };
   }
-  if (percent < 70) {
+  if (percent <= 70) {
     return {
       gradientFrom: "rgba(249, 115, 22, 0.9)",
       gradientTo: "rgba(251, 146, 60, 0.8)",
@@ -75,35 +75,30 @@ export function LiquidMetricCard({
             className="absolute inset-0 w-full"
             style={{
               background: `linear-gradient(to top, ${colors.gradientFrom}, ${colors.gradientTo})`,
-              boxShadow: `inset 0 0 24px 2px ${colors.glowColor}, 0 0 16px 1px ${colors.glowColor}`,
+              boxShadow: `inset 0 0 20px 1px ${colors.glowColor}, 0 0 12px 1px ${colors.glowColor}`,
             }}
           />
-          {/* Animated wave — horizontal movement */}
+          {/* Soft wave — small amplitude, slow, smooth easing, light edge blur */}
           <div
-            className="absolute left-0 right-0 top-0 h-6 w-[200%] overflow-visible"
+            className="absolute left-0 right-0 top-0 h-5 w-[200%] [filter:blur(0.5px)]"
             style={{
-              animation: "liquid-wave 3s ease-in-out infinite",
+              animation: "liquid-wave-soft 5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
             }}
           >
             <svg
               className="h-full w-full"
-              viewBox="0 0 200 24"
+              viewBox="0 0 200 20"
               preserveAspectRatio="none"
             >
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
-                  <stop offset="0%" stopColor={colors.gradientTo} stopOpacity="0.9" />
-                  <stop offset="100%" stopColor={colors.reflectionColor} stopOpacity="1" />
+                  <stop offset="0%" stopColor={colors.gradientTo} stopOpacity="0.85" />
+                  <stop offset="100%" stopColor={colors.reflectionColor} stopOpacity="0.95" />
                 </linearGradient>
               </defs>
               <path
                 fill={`url(#${gradientId})`}
-                d="M0,12 Q25,4 50,12 T100,12 T150,12 T200,12 L200,24 L0,24 Z"
-              />
-              <path
-                fill={colors.gradientTo}
-                fillOpacity="0.7"
-                d="M0,14 Q25,8 50,14 T100,14 T150,14 T200,14 L200,24 L0,24 Z"
+                d="M0,10 Q50,6 100,10 T200,10 L200,20 L0,20 Z"
               />
             </svg>
           </div>

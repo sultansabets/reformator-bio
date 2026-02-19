@@ -11,7 +11,7 @@ import { EnergyCard } from "@/components/control/EnergyCard";
 import { HormonesCard } from "@/components/control/HormonesCard";
 import { StrengthCard } from "@/components/control/StrengthCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
-import { InfluenceFactors } from "@/components/control/InfluenceFactors";
+import { ResourceSystems } from "@/components/control/ResourceSystems";
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -354,12 +354,17 @@ const ControlCenter = () => {
         </div>
       </motion.div>
 
-      {/* Block 3 — Факторы влияния */}
+      {/* Block 4 — Системы ресурса */}
       <motion.div variants={item}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Факторы влияния
+          Системы ресурса
         </h2>
-        <InfluenceFactors />
+        <ResourceSystems
+          hormonalPercent={hormonesPercent}
+          nervousPercent={Math.round((energyPercent + Math.max(0, 100 - stressScore)) / 2)}
+          physicalPercent={strengthPercent}
+          metabolicPercent={recoveryScore}
+        />
       </motion.div>
 
       {/* Metric detail sheet */}
