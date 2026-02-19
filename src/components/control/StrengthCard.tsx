@@ -1,6 +1,6 @@
 import React from "react";
 import { Dumbbell } from "lucide-react";
-import { LiquidMetricCard } from "./LiquidMetricCard";
+import { MetricCard } from "./MetricCard";
 
 export interface StrengthCardProps {
   percent: number;
@@ -9,7 +9,7 @@ export interface StrengthCardProps {
 
 export function StrengthCard({ percent, onClick }: StrengthCardProps) {
   return (
-    <LiquidMetricCard
+    <MetricCard
       percent={percent}
       icon={<Dumbbell className="h-5 w-5" />}
       label="Сила"

@@ -1,6 +1,6 @@
 import React from "react";
 import { Zap } from "lucide-react";
-import { LiquidMetricCard } from "./LiquidMetricCard";
+import { MetricCard } from "./MetricCard";
 
 export interface EnergyCardProps {
   percent: number;
@@ -9,7 +9,7 @@ export interface EnergyCardProps {
 
 export function EnergyCard({ percent, onClick }: EnergyCardProps) {
   return (
-    <LiquidMetricCard
+    <MetricCard
       percent={percent}
       icon={<Zap className="h-5 w-5" />}
       label="Энергия"

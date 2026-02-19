@@ -113,16 +113,6 @@
   }
 }
 
-@keyframes liquid-wave {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-25%); }
-}
-
-@keyframes liquid-wave-soft {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-12%); }
-}
-
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
