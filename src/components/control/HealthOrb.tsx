@@ -250,7 +250,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   }, []);
 
   return (
-    <div className="relative flex h-[340px] w-[340px] items-center justify-center overflow-visible">
+    <div className="relative flex h-[300px] w-[340px] items-center justify-center overflow-visible">
       <div className="relative flex h-[320px] w-[320px] shrink-0 items-center justify-center">
         <canvas
           ref={canvasRef}
@@ -261,7 +261,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           <span className="text-xs uppercase tracking-widest text-muted-foreground">
             {t("metrics.state")}
           </span>
-          <span className="mt-2 text-6xl font-bold tracking-tight text-foreground">
+          <span className="mt-2 text-5xl font-bold tracking-tight text-foreground">
             {displayScore}%
           </span>
         </div>
