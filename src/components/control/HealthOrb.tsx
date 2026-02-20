@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
-const PARTICLE_COUNT = 120;
+const PARTICLE_COUNT = 180;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const TEXT_SAFE_RADIUS = 70;
 const MOUNT_DURATION_MS = 2000;
@@ -32,6 +32,8 @@ interface Particle {
   size: number;
   opacity: number;
   maxOpacity: number;
+  satelliteCount: number;
+  satelliteAngleOffset: number;
 }
 
 function createParticle(center: number): Particle {
@@ -46,9 +48,11 @@ function createParticle(center: number): Particle {
     radius: r,
     angle,
     speed: 0.12 + Math.random() * 0.1,
-    size: 1.2 + Math.random() * 1.8,
+    size: 0.7 + Math.random() * 1.0,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
+    satelliteCount: 1 + Math.floor(Math.random() * 3),
+    satelliteAngleOffset: Math.random() * Math.PI * 2,
   };
 }
 
@@ -193,11 +197,40 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
           if (dist > coreRadius) {
             ctx.save();
-            ctx.shadowBlur = p.size * 2;
+            const mainR = p.size * 0.6;
+            const satR = mainR * 0.4;
+            const satDist = p.size * 1.2;
+            const lineOpacity = Math.min(0.3, 0.2 + 0.1 * p.opacity);
+
+            for (let s = 0; s < p.satelliteCount; s++) {
+              const a = p.satelliteAngleOffset + (s / p.satelliteCount) * Math.PI * 2;
+              const sx = p.x + Math.cos(a) * satDist;
+              const sy = p.y + Math.sin(a) * satDist;
+              ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${lineOpacity})`;
+              ctx.lineWidth = 0.5;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(sx, sy);
+              ctx.stroke();
+            }
+
+            for (let s = 0; s < p.satelliteCount; s++) {
+              const a = p.satelliteAngleOffset + (s / p.satelliteCount) * Math.PI * 2;
+              const sx = p.x + Math.cos(a) * satDist;
+              const sy = p.y + Math.sin(a) * satDist;
+              ctx.shadowBlur = satR * 2;
+              ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${p.opacity * 0.4})`;
+              ctx.fillStyle = colorBase + (p.opacity * 0.8) + ")";
+              ctx.beginPath();
+              ctx.arc(sx, sy, satR, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            ctx.shadowBlur = mainR * 2;
             ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${p.opacity * 0.5})`;
             ctx.fillStyle = colorBase + p.opacity + ")";
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, mainR, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
           }
