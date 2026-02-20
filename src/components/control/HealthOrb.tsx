@@ -174,15 +174,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       ctx.fillStyle = "rgba(0,0,0,0.03)";
       ctx.fill();
-      ctx.shadowOffsetY = 0;
-      ctx.shadowBlur = 0;
-
-      ctx.shadowBlur = 14;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.38 * easeOut})`;
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 * easeOut})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
 
       ctx.clip();
 
