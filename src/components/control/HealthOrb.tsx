@@ -172,9 +172,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       });
       ctx.closePath();
 
-      ctx.shadowOffsetY = 10;
-      ctx.shadowBlur = 40;
-      ctx.shadowColor = "rgba(0,0,0,0.4)";
       ctx.fillStyle = "rgba(0,0,0,0.03)";
       ctx.fill();
       ctx.shadowOffsetY = 0;
@@ -182,31 +179,12 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       ctx.shadowBlur = 14;
       ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.38 * easeOut})`;
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.22 * easeOut})`;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 * easeOut})`;
+      ctx.lineWidth = 2;
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 * easeOut})`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
       ctx.clip();
-
-      const inset = 2.5;
-      ctx.beginPath();
-      for (let i = 0; i <= BLOB_SEGMENTS; i++) {
-        const a = (i / BLOB_SEGMENTS) * Math.PI * 2;
-        const dr = getDynamicRadius(a, elapsed) * easeOut - inset;
-        const qx = center + Math.cos(a) * Math.max(2, dr);
-        const qy = center + Math.sin(a) * Math.max(2, dr);
-        if (i === 0) ctx.moveTo(qx, qy);
-        else ctx.lineTo(qx, qy);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 * easeOut})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
 
       if (particles.length > 0) {
         const colorBase = `rgba(${r}, ${g}, ${b}, `;
