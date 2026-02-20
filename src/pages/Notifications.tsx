@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
@@ -9,13 +9,21 @@ import {
   type Notification,
 } from "@/lib/notifications";
 import NotificationPanel from "@/components/notifications/NotificationPanel";
+import { useScrollSource } from "@/contexts/ScrollSourceContext";
 
 export default function Notifications() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const scrollSource = useScrollSource();
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotificationsState] = useState<Notification[]>(() =>
     getNotifications()
   );
+
+  useEffect(() => {
+    scrollSource?.registerScrollRef(scrollRef.current ?? null);
+    return () => scrollSource?.registerScrollRef(null);
+  }, [scrollSource]);
 
   useEffect(() => {
     seedMockIfEmpty();
@@ -43,7 +51,10 @@ export default function Notifications() {
         </button>
         <h1 className="text-lg font-semibold text-foreground">{t("notifications.title")}</h1>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24"
+      >
         <NotificationPanel
           notifications={notifications}
           onMarkRead={handleMarkRead}

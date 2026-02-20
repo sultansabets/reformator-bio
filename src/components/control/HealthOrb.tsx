@@ -180,15 +180,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.shadowOffsetY = 0;
       ctx.shadowBlur = 0;
 
-      ctx.shadowBlur = 26;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.25 * easeOut})`;
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.35 * easeOut})`;
-      ctx.lineWidth = 5;
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.38 * easeOut})`;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.22 * easeOut})`;
+      ctx.lineWidth = 3;
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.9 * easeOut})`;
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.5 * easeOut})`;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       ctx.clip();

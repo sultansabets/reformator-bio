@@ -21,6 +21,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BottomNav from "./BottomNav";
+import { useScrollSource } from "@/contexts/ScrollSourceContext";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
 import { LANGUAGES, persistLanguage } from "@/i18n";
@@ -88,11 +89,12 @@ const AppLayout = () => {
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const [menuBarVisible, setMenuBarVisible] = useState(true);
+  const scrollSource = useScrollSource();
+  const activeEl = scrollSource?.activeScrollElement ?? null;
   const THRESHOLD = 6;
   const TOP_THRESHOLD = 20;
 
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
+  const handleScroll = useCallback((el: HTMLElement) => {
     if (!el) return;
     const currentScrollY = el.scrollTop;
     const dy = currentScrollY - lastScrollY.current;
@@ -114,12 +116,13 @@ const AppLayout = () => {
   }, []);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onScroll = () => handleScroll();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [handleScroll]);
+    const target = activeEl || scrollRef.current;
+    if (!target) return;
+    lastScrollY.current = target.scrollTop;
+    const onScroll = () => handleScroll(target);
+    target.addEventListener("scroll", onScroll, { passive: true });
+    return () => target.removeEventListener("scroll", onScroll);
+  }, [activeEl, handleScroll]);
 
   return (
     <div

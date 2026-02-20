@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useScrollSource } from "@/contexts/ScrollSourceContext";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Send, Sparkles, User, Paperclip } from "lucide-react";
@@ -12,9 +13,15 @@ type Message = { role: "user" | "assistant"; text: string };
 
 export default function AI() {
   const { t } = useTranslation();
+  const scrollSource = useScrollSource();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollSource?.registerScrollRef(scrollRef.current ?? null);
+    return () => scrollSource?.registerScrollRef(null);
+  }, [scrollSource]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

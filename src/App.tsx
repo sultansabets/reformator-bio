@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ScrollSourceProvider } from "@/contexts/ScrollSourceContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/Login";
@@ -31,6 +32,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <ScrollSourceProvider>
             <SplashScreen />
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -49,6 +51,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+            </ScrollSourceProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
