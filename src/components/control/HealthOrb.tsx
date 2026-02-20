@@ -48,7 +48,7 @@ function createParticle(center: number): Particle {
     radius: r,
     angle,
     speed: 0.12 + Math.random() * 0.1,
-    size: 0.85 + Math.random() * 1.25,
+    size: 1.15 + Math.random() * 1.7,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
     satelliteCount: 1 + Math.floor(Math.random() * 3),
@@ -199,7 +199,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
             ctx.save();
             const mainR = p.size * 0.6;
             const satR = mainR * 0.4;
-            const satDist = p.size * 1.2;
+            const satDist = p.size * 1.35;
             const lineOpacity = Math.min(0.3, 0.2 + 0.1 * p.opacity);
 
             for (let s = 0; s < p.satelliteCount; s++) {
