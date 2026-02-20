@@ -4,9 +4,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
-const PARTICLE_COUNT = 180;
+const PARTICLE_COUNT = 280;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const TEXT_SAFE_RADIUS = 70;
+const INNER_RADIUS = TEXT_SAFE_RADIUS + 12;
 const MOUNT_DURATION_MS = 2000;
 const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
@@ -39,16 +40,14 @@ interface Particle {
 
 function createParticle(center: number): Particle {
   const edgeR = BASE_RADIUS * 0.92;
-  const minR = TEXT_SAFE_RADIUS + 2;
-  const maxR = edgeR - 5;
-  const r = minR + Math.random() * (maxR - minR);
   const angle = Math.random() * Math.PI * 2;
+  const r = edgeR - 2 - Math.random() * 4;
   return {
     x: center + Math.cos(angle) * r,
     y: center + Math.sin(angle) * r,
     radius: r,
     angle,
-    speed: 0.17 + Math.random() * 0.14,
+    speed: 0.26 + Math.random() * 0.22,
     size: 1.15 + Math.random() * 1.7,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
@@ -59,32 +58,36 @@ function createParticle(center: number): Particle {
 
 function updateParticle(p: Particle, center: number, mountProgress: number) {
   const edgeR = BASE_RADIUS * 0.92;
-  const fadeStartR = BASE_RADIUS * 0.78;
-  const minR = TEXT_SAFE_RADIUS + 2;
+  const fadeOutStart = INNER_RADIUS + 25;
 
-  p.radius += p.speed;
+  p.radius -= p.speed;
   p.x = center + Math.cos(p.angle) * p.radius;
   p.y = center + Math.sin(p.angle) * p.radius;
 
-  if (p.radius < TEXT_SAFE_RADIUS) {
-    p.radius = minR;
+  if (p.radius < INNER_RADIUS) {
+    p.angle = Math.random() * Math.PI * 2;
+    p.radius = edgeR - 2 - Math.random() * 4;
     p.x = center + Math.cos(p.angle) * p.radius;
     p.y = center + Math.sin(p.angle) * p.radius;
   }
   if (p.radius > edgeR) {
-    p.radius = minR + Math.random() * (edgeR - minR - 5);
     p.angle = Math.random() * Math.PI * 2;
+    p.radius = edgeR - 2 - Math.random() * 4;
     p.x = center + Math.cos(p.angle) * p.radius;
     p.y = center + Math.sin(p.angle) * p.radius;
   }
 
+  let baseOpacity = p.maxOpacity;
   if (mountProgress < 1) {
-    p.opacity = p.maxOpacity * mountProgress * mountProgress;
-  } else if (p.radius > fadeStartR) {
-    p.opacity = p.maxOpacity * (1 - (p.radius - fadeStartR) / (edgeR - fadeStartR));
-  } else {
-    p.opacity = p.maxOpacity;
+    baseOpacity = p.maxOpacity * mountProgress * mountProgress;
+  } else if (p.radius < fadeOutStart) {
+    baseOpacity = p.maxOpacity * Math.max(0, (p.radius - INNER_RADIUS) / (fadeOutStart - INNER_RADIUS));
   }
+  const fadeInZone = 20;
+  if (p.radius > edgeR - fadeInZone) {
+    baseOpacity *= Math.min(1, (edgeR - p.radius) / fadeInZone);
+  }
+  p.opacity = baseOpacity;
 }
 
 interface HealthOrbProps {
