@@ -7,9 +7,7 @@ const BLOB_SEGMENTS = 125;
 const PARTICLE_COUNT = 280;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const TEXT_SAFE_RADIUS = 70;
-const INNER_RADIUS = TEXT_SAFE_RADIUS + 10;
 const MOUNT_DURATION_MS = 2000;
-const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -58,30 +56,32 @@ function createParticle(center: number): Particle {
 
 function updateParticle(p: Particle, center: number, mountProgress: number) {
   const edgeR = BASE_RADIUS * 0.92;
-  const fadeOutStart = INNER_RADIUS + 25;
+  const respawnDist = 12;
+  const fadeOutDist = 35;
 
-  p.radius -= p.speed;
-  p.x = center + Math.cos(p.angle) * p.radius;
-  p.y = center + Math.sin(p.angle) * p.radius;
+  const dx = center - p.x;
+  const dy = center - p.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
 
-  if (p.radius < INNER_RADIUS) {
-    p.angle = Math.random() * Math.PI * 2;
-    p.radius = edgeR - 2 - Math.random() * 4;
-    p.x = center + Math.cos(p.angle) * p.radius;
-    p.y = center + Math.sin(p.angle) * p.radius;
+  if (dist < respawnDist) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = edgeR - 2 - Math.random() * 4;
+    p.x = center + Math.cos(angle) * r;
+    p.y = center + Math.sin(angle) * r;
+  } else {
+    const nx = dx / dist;
+    const ny = dy / dist;
+    p.x += nx * p.speed;
+    p.y += ny * p.speed;
   }
-  if (p.radius > edgeR) {
-    p.angle = Math.random() * Math.PI * 2;
-    p.radius = edgeR - 2 - Math.random() * 4;
-    p.x = center + Math.cos(p.angle) * p.radius;
-    p.y = center + Math.sin(p.angle) * p.radius;
-  }
+
+  p.radius = Math.sqrt((p.x - center) ** 2 + (p.y - center) ** 2);
 
   let baseOpacity = p.maxOpacity;
   if (mountProgress < 1) {
     baseOpacity = p.maxOpacity * mountProgress * mountProgress;
-  } else if (p.radius < fadeOutStart) {
-    baseOpacity = p.maxOpacity * Math.max(0, (p.radius - INNER_RADIUS) / (fadeOutStart - INNER_RADIUS));
+  } else if (dist < fadeOutDist) {
+    baseOpacity = p.maxOpacity * Math.max(0, dist / fadeOutDist);
   }
   const fadeInZone = 20;
   if (p.radius > edgeR - fadeInZone) {
@@ -190,7 +190,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       if (particles.length > 0) {
         const colorBase = `rgba(${r}, ${g}, ${b}, `;
-        const coreRadius = BASE_RADIUS * CORE_RADIUS_RATIO;
 
         for (const p of particles) {
           if (!reducedMotionRef.current) {
@@ -198,11 +197,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           } else {
             p.opacity = p.maxOpacity * 0.6;
           }
-          const dx = p.x - center;
-          const dy = p.y - center;
-          const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist > coreRadius) {
+          if (p.opacity > 0.01) {
             ctx.save();
             const mainR = p.size * 0.6;
             const satR = mainR * 0.4;
