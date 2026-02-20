@@ -48,7 +48,7 @@ function createParticle(center: number): Particle {
     radius: r,
     angle,
     speed: 0.12 + Math.random() * 0.1,
-    size: 0.7 + Math.random() * 1.0,
+    size: 0.85 + Math.random() * 1.25,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
     satelliteCount: 1 + Math.floor(Math.random() * 3),
