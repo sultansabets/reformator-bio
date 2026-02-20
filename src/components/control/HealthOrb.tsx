@@ -47,7 +47,7 @@ function createParticle(center: number): Particle {
     y: center + Math.sin(angle) * r,
     radius: r,
     angle,
-    speed: 0.12 + Math.random() * 0.1,
+    speed: 0.17 + Math.random() * 0.14,
     size: 1.15 + Math.random() * 1.7,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
