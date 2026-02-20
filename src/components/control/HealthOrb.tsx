@@ -7,7 +7,7 @@ const BLOB_SEGMENTS = 125;
 const PARTICLE_COUNT = 280;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const TEXT_SAFE_RADIUS = 70;
-const INNER_RADIUS = TEXT_SAFE_RADIUS + 12;
+const INNER_RADIUS = TEXT_SAFE_RADIUS + 10;
 const MOUNT_DURATION_MS = 2000;
 const CORE_RADIUS_RATIO = 0.35;
 const LIQUID_CYCLE_MS = 8000;
@@ -48,7 +48,7 @@ function createParticle(center: number): Particle {
     radius: r,
     angle,
     speed: 0.26 + Math.random() * 0.22,
-    size: 1.15 + Math.random() * 1.7,
+    size: 1.5 + Math.random() * 2.2,
     opacity: 0,
     maxOpacity: 0.3 + Math.random() * 0.7,
     satelliteCount: 1 + Math.floor(Math.random() * 3),
