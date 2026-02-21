@@ -137,6 +137,25 @@
     "intensity": "Интенсивность",
     "weight": "Вес"
   },
+  "factors": {
+    "title": "Факторы влияния",
+    "pressure": "Давление",
+    "pulse": "Пульс",
+    "steps": "Шаги",
+    "recovery": "Восстановление",
+    "basedOn": "Основано на:",
+    "systolic": "Систолическое",
+    "diastolic": "Диастолическое",
+    "deviation": "Отклонение от нормы",
+    "restPulse": "Пульс покоя",
+    "optimalRange": "Оптимальный диапазон 55–75",
+    "bpmDeviation": "Отклонение уд/мин",
+    "dailySteps": "Дневные шаги",
+    "target10k": "Цель: 10 000 шагов",
+    "hrv": "Вариабельность пульса (HRV)",
+    "sleepQuality": "Качество сна",
+    "yesterdayLoad": "Нагрузка вчера"
+  },
   "bodyState": {
     "optimal": "Оптимальное",
     "good": "Хорошее",
@@ -294,6 +313,7 @@
     "min": "мин",
     "kcal": "ккал",
     "sleepTrends": "Тренды сна",
+    "sleepQuality": "Качество сна",
     "load": "Нагрузка",
     "workoutHistory": "История тренировок",
     "breakfast": "Завтрак",

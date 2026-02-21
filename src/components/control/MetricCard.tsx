@@ -1,22 +1,23 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
-/** 0–40 red, 41–70 orange, 71–100 green */
+/** 0–40 red, 41–60 orange, 61–75 yellow, 76–100 green */
 export function getColorFromPercent(percent: number): string {
   if (percent <= 40) return "rgb(220, 38, 38)";
-  if (percent <= 70) return "rgb(249, 115, 22)";
+  if (percent <= 60) return "rgb(249, 115, 22)";
+  if (percent <= 75) return "rgb(234, 179, 8)";
   return "rgb(34, 197, 94)";
 }
 
-/** Glow color with opacity 0.4–0.5 for soft shadow */
 function getGlowColorFromPercent(percent: number): string {
-  if (percent <= 40) return "rgba(220, 38, 38, 0.5)";
-  if (percent <= 70) return "rgba(249, 115, 22, 0.5)";
-  return "rgba(34, 197, 94, 0.5)";
+  if (percent <= 40) return "rgba(220, 38, 38, 0.4)";
+  if (percent <= 60) return "rgba(249, 115, 22, 0.4)";
+  if (percent <= 75) return "rgba(234, 179, 8, 0.4)";
+  return "rgba(34, 197, 94, 0.4)";
 }
 
 export interface MetricCardProps {
-  /** 0–100, color derived from this */
   percent: number;
   icon: React.ReactNode;
   label: string;
@@ -35,30 +36,71 @@ export function MetricCard({
   const color = getColorFromPercent(clamped);
   const glowColor = getGlowColorFromPercent(clamped);
 
+  const size = 56;
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference - (clamped / 100) * circumference;
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full flex-col items-center justify-center rounded-2xl border border-border bg-card px-4 py-5",
-        "min-h-[88px] transition-shadow duration-200 hover:shadow-md",
+        "flex w-full flex-col items-center justify-center rounded-2xl border border-border bg-card px-3 py-4",
+        "min-h-[120px] transition-shadow duration-200 hover:shadow-md",
         "active:scale-[0.98]",
         className,
       )}
     >
-      <span
-        className="transition-all duration-300 ease-out"
-        style={{
-          color,
-          filter: `drop-shadow(0 0 12px ${glowColor})`,
-        }}
-      >
-        {icon}
-      </span>
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          className="absolute left-0 top-0"
+        >
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="hsl(var(--border))"
+            strokeWidth={strokeWidth}
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: dashOffset }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span
+            className="transition-colors duration-300"
+            style={{ color }}
+          >
+            {icon}
+          </span>
+        </div>
+      </div>
       <span className="mt-2 text-center text-xs font-medium text-foreground">
         {label}
       </span>
-      <span className="mt-1 text-base font-bold tabular-nums text-foreground">
+      <span
+        className="mt-0.5 text-sm font-bold tabular-nums"
+        style={{ color }}
+      >
         {clamped}%
       </span>
     </button>

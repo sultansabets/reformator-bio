@@ -18,8 +18,9 @@ function hexToRgb(hex: string): [number, number, number] {
 
 function getColorFromScore(score: number): string {
   const s = Math.min(100, Math.max(0, score));
-  if (s >= 70) return "#34c759";
-  if (s >= 40) return "#ff9f0a";
+  if (s >= 76) return "#34c759";
+  if (s >= 61) return "#facc15";
+  if (s >= 41) return "#ff9f0a";
   return "#ff3b30";
 }
 
@@ -158,6 +159,13 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       ctx.fillStyle = isLightRef.current ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.03)";
       ctx.fill();
+
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.5)`;
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
 
       ctx.restore();
 

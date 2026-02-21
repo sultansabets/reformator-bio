@@ -131,6 +131,25 @@
     "weight": "Weight",
     "testosteroneIfAvailable": "Testosterone (if available)"
   },
+  "factors": {
+    "title": "Influence Factors",
+    "pressure": "Pressure",
+    "pulse": "Pulse",
+    "steps": "Steps",
+    "recovery": "Recovery",
+    "basedOn": "Based on:",
+    "systolic": "Systolic",
+    "diastolic": "Diastolic",
+    "deviation": "Deviation from norm",
+    "restPulse": "Resting pulse",
+    "optimalRange": "Optimal range 55–75",
+    "bpmDeviation": "BPM deviation",
+    "dailySteps": "Daily steps",
+    "target10k": "Target: 10,000 steps",
+    "hrv": "Heart rate variability (HRV)",
+    "sleepQuality": "Sleep quality",
+    "yesterdayLoad": "Yesterday's load"
+  },
   "bodyState": {
     "optimal": "Optimal",
     "good": "Good",
@@ -283,6 +302,7 @@
     "min": "min",
     "kcal": "kcal",
     "sleepTrends": "Sleep trends",
+    "sleepQuality": "Sleep quality",
     "load": "Load",
     "workoutHistory": "Workout history",
     "breakfast": "Breakfast",
