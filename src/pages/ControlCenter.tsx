@@ -259,8 +259,8 @@ const ControlCenter = () => {
         </div>
       </motion.div>
 
-      <motion.div variants={item} className="mb-6">
-        <div className="grid grid-cols-3 gap-4">
+      <motion.div variants={item} className="mb-4">
+        <div className="grid grid-cols-3 gap-3">
           <SleepCard
             percent={sleepPercent}
             onClick={() =>
@@ -295,9 +295,6 @@ const ControlCenter = () => {
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("factors.title")}
-        </h2>
         <InfluenceFactors
           systolic={125}
           diastolic={82}

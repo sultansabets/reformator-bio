@@ -13,7 +13,7 @@ export function LoadCard({ percent, onClick }: LoadCardProps) {
   return (
     <MetricCard
       percent={percent}
-      icon={<Activity className="h-5 w-5" />}
+      icon={<Activity className="h-7 w-7" />}
       label={t("center.load")}
       onClick={onClick}
     />

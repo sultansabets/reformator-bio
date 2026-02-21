@@ -11,8 +11,8 @@ export interface TestosteroneCardProps {
 }
 
 const MAX_VALUE = 35;
-const CIRCLE_SIZE = 64;
-const STROKE_WIDTH = 4;
+const CIRCLE_SIZE = 76;
+const STROKE_WIDTH = 3;
 
 function getColorFromValue(nmolL: number): string {
   if (nmolL < 10) return "rgb(220, 38, 38)";
@@ -49,8 +49,8 @@ export function TestosteroneCard({ value, onClick, className }: TestosteroneCard
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full flex-col items-center justify-center px-2 py-4",
-        "min-h-[120px] transition-transform duration-200",
+        "flex w-full flex-col items-center justify-center px-2 py-3",
+        "min-h-[130px] transition-transform duration-200",
         "active:scale-[0.96] hover:opacity-80",
         className,
       )}
@@ -91,16 +91,16 @@ export function TestosteroneCard({ value, onClick, className }: TestosteroneCard
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <Dna 
-            className="h-6 w-6 transition-colors duration-300" 
+            className="h-7 w-7 transition-colors duration-300" 
             style={{ color }} 
           />
         </div>
       </div>
-      <span className="mt-2.5 text-center text-xs font-medium text-foreground">
+      <span className="mt-2 text-center text-xs font-medium text-foreground">
         {t("center.testosterone")}
       </span>
       <span
-        className="mt-1 flex items-baseline gap-1 text-sm font-bold tabular-nums"
+        className="mt-0.5 flex items-baseline gap-1 text-sm font-bold tabular-nums"
         style={{ color }}
       >
         {hasValue ? displayValue.toFixed(1) : "—"}

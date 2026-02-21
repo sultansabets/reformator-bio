@@ -13,7 +13,7 @@ export function SleepCard({ percent, onClick }: SleepCardProps) {
   return (
     <MetricCard
       percent={percent}
-      icon={<Moon className="h-5 w-5" />}
+      icon={<Moon className="h-7 w-7" />}
       label={t("center.sleep")}
       onClick={onClick}
     />

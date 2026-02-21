@@ -25,8 +25,8 @@ export interface MetricCardProps {
   className?: string;
 }
 
-const CIRCLE_SIZE = 64;
-const STROKE_WIDTH = 4;
+const CIRCLE_SIZE = 76;
+const STROKE_WIDTH = 3;
 
 export function MetricCard({
   percent,
@@ -48,8 +48,8 @@ export function MetricCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full flex-col items-center justify-center px-2 py-4",
-        "min-h-[120px] transition-transform duration-200",
+        "flex w-full flex-col items-center justify-center px-2 py-3",
+        "min-h-[130px] transition-transform duration-200",
         "active:scale-[0.96] hover:opacity-80",
         className,
       )}
@@ -95,11 +95,11 @@ export function MetricCard({
           </span>
         </div>
       </div>
-      <span className="mt-2.5 text-center text-xs font-medium text-foreground">
+      <span className="mt-2 text-center text-xs font-medium text-foreground">
         {label}
       </span>
       <span
-        className="mt-1 text-sm font-bold tabular-nums"
+        className="mt-0.5 text-sm font-bold tabular-nums"
         style={{ color }}
       >
         {clamped}%
