@@ -25,7 +25,6 @@ export interface InfluenceFactorsProps {
   steps?: number;
   recoveryPercent?: number;
   testosteroneStatus?: TestosteroneStatus;
-  testosteroneGlowing?: boolean;
 }
 
 function MarsIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -70,7 +69,6 @@ export function InfluenceFactors({
   steps = 8500,
   recoveryPercent = 55,
   testosteroneStatus = "normal",
-  testosteroneGlowing = false,
 }: InfluenceFactorsProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -204,39 +202,24 @@ export function InfluenceFactors({
           className="flex w-full items-center gap-3 p-3 text-left"
           onClick={() => setExpandedId(isTestosteroneExpanded ? null : "testosterone")}
         >
-          <motion.div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-300"
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
             style={{ backgroundColor: testosteroneBg }}
-            animate={testosteroneGlowing ? {
-              boxShadow: [
-                `0 0 0px ${testosteroneColor}40`,
-                `0 0 16px ${testosteroneColor}60`,
-                `0 0 0px ${testosteroneColor}40`,
-              ]
-            } : {}}
-            transition={{ duration: 1.5, repeat: testosteroneGlowing ? Infinity : 0 }}
           >
             <MarsIcon 
-              className="h-5 w-5 transition-colors duration-300" 
+              className="h-5 w-5" 
               style={{ color: testosteroneColor }} 
             />
-          </motion.div>
+          </div>
 
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">{t("factors.testosterone")}</p>
-            <AnimatePresence mode="wait">
-              <motion.p 
-                key={testosteroneStatus}
-                initial={{ y: 5, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -5, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-lg font-bold uppercase tracking-wide"
-                style={{ color: testosteroneColor }}
-              >
-                {t(`testosterone.${testosteroneStatus}`)}
-              </motion.p>
-            </AnimatePresence>
+            <p 
+              className="text-lg font-bold uppercase tracking-wide"
+              style={{ color: testosteroneColor }}
+            >
+              {t(`testosterone.${testosteroneStatus}`)}
+            </p>
           </div>
 
           {isTestosteroneExpanded ? (

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
@@ -22,7 +22,7 @@ import { getStorageKey } from "@/lib/userStorage";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
-import { StressCard, type StressLevel } from "@/components/control/StressCard";
+import { StressCard } from "@/components/control/StressCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { InfluenceFactors, type TestosteroneStatus } from "@/components/control/InfluenceFactors";
 
@@ -196,28 +196,7 @@ const ControlCenter = () => {
 
   const recoveryScore = metrics.recoveryScore;
   
-  const [testosteroneStatus, setTestosteroneStatus] = useState<TestosteroneStatus>("normal");
-  const [testosteroneGlowing, setTestosteroneGlowing] = useState(false);
-  const prevStressLevelRef = useRef<StressLevel>("medium");
-
-  const handleStressChange = useCallback((_percent: number, level: StressLevel) => {
-    if (prevStressLevelRef.current !== level) {
-      let newTestoStatus: TestosteroneStatus;
-      
-      if (level === "high") {
-        newTestoStatus = "low";
-      } else if (level === "low") {
-        newTestoStatus = "high";
-        setTestosteroneGlowing(true);
-        setTimeout(() => setTestosteroneGlowing(false), 2000);
-      } else {
-        newTestoStatus = "normal";
-      }
-      
-      setTestosteroneStatus(newTestoStatus);
-      prevStressLevelRef.current = level;
-    }
-  }, []);
+  const testosteroneStatus: TestosteroneStatus = "normal";
 
   const sleepPercent = useMemo(() => {
     const actual = SLEEP_AVG_HOURS;
@@ -237,22 +216,6 @@ const ControlCenter = () => {
     const stepsPart = (steps / targetSteps) * 50;
     return clamp(Math.round(kcalPart + stepsPart), 0, 100);
   }, [todayWorkout.caloriesBurned]);
-
-  const stressPercent = useMemo(() => {
-    const hrvBase = 60;
-    const hrvCurrent = 45;
-    const hrvFactor = Math.max(0, (hrvBase - hrvCurrent) / hrvBase) * 100 * 0.4;
-    
-    const restingHR = 62;
-    const pulseFactor = restingHR > 75 ? ((restingHR - 75) / 25) * 100 * 0.3 : 0;
-    
-    const loadFactor = (loadPercent / 100) * 100 * 0.2;
-    
-    const sleepHours = SLEEP_AVG_HOURS;
-    const sleepFactor = sleepHours < 7 ? ((7 - sleepHours) / 3) * 100 * 0.1 : 0;
-    
-    return clamp(Math.round(hrvFactor + pulseFactor + loadFactor + sleepFactor), 0, 100);
-  }, [loadPercent]);
 
   const recoveryPercent = useMemo(() => {
     const sleepPart = sleepPercent * 0.4;
@@ -318,13 +281,11 @@ const ControlCenter = () => {
             }
           />
           <StressCard
-            basePercent={stressPercent}
-            onStressChange={handleStressChange}
             onClick={() =>
               openMetricSheet({
                 key: "stress",
                 title: t("center.stress"),
-                percent: stressPercent,
+                percent: 50,
               })
             }
           />
@@ -339,7 +300,6 @@ const ControlCenter = () => {
           steps={8500}
           recoveryPercent={recoveryPercent}
           testosteroneStatus={testosteroneStatus}
-          testosteroneGlowing={testosteroneGlowing}
         />
       </motion.div>
 

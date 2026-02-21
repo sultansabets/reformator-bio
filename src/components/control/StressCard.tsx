@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export type StressLevel = "low" | "medium" | "high";
 
 export interface StressCardProps {
-  basePercent: number;
-  onStressChange?: (percent: number, level: StressLevel) => void;
   onClick?: () => void;
   className?: string;
 }
@@ -15,13 +13,9 @@ export interface StressCardProps {
 const CIRCLE_SIZE = 76;
 const STROKE_WIDTH = 3;
 
-const FLUCTUATION_INTERVAL = 2500;
-const FLUCTUATION_RANGE = 4;
-
-function getStressLevel(percent: number): StressLevel {
-  if (percent <= 35) return "low";
-  if (percent <= 65) return "medium";
-  return "high";
+function getRandomLevel(): StressLevel {
+  const levels: StressLevel[] = ["low", "medium", "high"];
+  return levels[Math.floor(Math.random() * 3)];
 }
 
 function getColorFromLevel(level: StressLevel): string {
@@ -32,11 +26,11 @@ function getColorFromLevel(level: StressLevel): string {
   }
 }
 
-function getGlowColorFromLevel(level: StressLevel): string {
+function getPercentFromLevel(level: StressLevel): number {
   switch (level) {
-    case "low": return "rgba(34, 197, 94, 0.5)";
-    case "medium": return "rgba(245, 158, 11, 0.5)";
-    case "high": return "rgba(239, 68, 68, 0.6)";
+    case "low": return 25;
+    case "medium": return 55;
+    case "high": return 85;
   }
 }
 
@@ -75,58 +69,16 @@ function StressIcon({ level, color }: { level: StressLevel; color: string }) {
   );
 }
 
-export function StressCard({ basePercent, onStressChange, onClick, className }: StressCardProps) {
+export function StressCard({ onClick, className }: StressCardProps) {
   const { t } = useTranslation();
-  const [displayPercent, setDisplayPercent] = useState(basePercent);
-  const [prevLevel, setPrevLevel] = useState<StressLevel | null>(null);
-  const [isLevelChanging, setIsLevelChanging] = useState(false);
-  const fluctuationRef = useRef<number>(0);
-  const animationFrameRef = useRef<number | null>(null);
-
-  const currentLevel = getStressLevel(displayPercent);
-  const color = getColorFromLevel(currentLevel);
-  const glowColor = getGlowColorFromLevel(currentLevel);
-
-  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-
-  const updateFluctuation = useCallback(() => {
-    const delta = (Math.random() - 0.5) * FLUCTUATION_RANGE * 2;
-    fluctuationRef.current = clamp(fluctuationRef.current + delta, -FLUCTUATION_RANGE, FLUCTUATION_RANGE);
-    const newPercent = clamp(Math.round(basePercent + fluctuationRef.current), 0, 100);
-    
-    setDisplayPercent((prev) => {
-      const newLevel = getStressLevel(newPercent);
-      const oldLevel = getStressLevel(prev);
-      
-      if (newLevel !== oldLevel) {
-        setPrevLevel(oldLevel);
-        setIsLevelChanging(true);
-        setTimeout(() => setIsLevelChanging(false), 600);
-      }
-      
-      return newPercent;
-    });
-  }, [basePercent]);
-
-  useEffect(() => {
-    fluctuationRef.current = 0;
-    setDisplayPercent(basePercent);
-  }, [basePercent]);
-
-  useEffect(() => {
-    const interval = setInterval(updateFluctuation, FLUCTUATION_INTERVAL);
-    return () => clearInterval(interval);
-  }, [updateFluctuation]);
-
-  useEffect(() => {
-    if (onStressChange) {
-      onStressChange(displayPercent, currentLevel);
-    }
-  }, [displayPercent, currentLevel, onStressChange]);
+  const [level] = useState<StressLevel>(getRandomLevel);
+  
+  const color = getColorFromLevel(level);
+  const percent = getPercentFromLevel(level);
 
   const radius = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference - (displayPercent / 100) * circumference;
+  const dashOffset = circumference - (percent / 100) * circumference;
 
   return (
     <button
@@ -139,12 +91,7 @@ export function StressCard({ basePercent, onStressChange, onClick, className }: 
         className,
       )}
     >
-      <motion.div 
-        className="relative" 
-        style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
-        animate={isLevelChanging ? { scale: [1, 1.08, 1] } : {}}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
+      <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
         <svg
           width={CIRCLE_SIZE}
           height={CIRCLE_SIZE}
@@ -171,53 +118,26 @@ export function StressCard({ basePercent, onStressChange, onClick, className }: 
             strokeDasharray={circumference}
             transform={`rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})`}
             initial={{ strokeDashoffset: circumference }}
-            animate={{ 
-              strokeDashoffset: dashOffset,
-              filter: `drop-shadow(0 0 ${isLevelChanging ? 12 : 6}px ${glowColor})`
-            }}
-            transition={{ 
-              strokeDashoffset: { duration: 0.8, ease: "easeOut" },
-              filter: { duration: 0.3 }
-            }}
+            animate={{ strokeDashoffset: dashOffset }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </svg>
         
-        <motion.div 
-          className="absolute inset-0 flex items-center justify-center"
-          animate={isLevelChanging ? { rotate: [0, -5, 5, 0] } : {}}
-          transition={{ duration: 0.4 }}
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentLevel}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              <StressIcon level={currentLevel} color={color} />
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
-      </motion.div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <StressIcon level={level} color={color} />
+        </div>
+      </div>
 
       <span className="mt-2 text-center text-xs font-medium text-foreground">
         {t("center.stress")}
       </span>
       
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={currentLevel}
-          initial={{ y: 5, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -5, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="mt-0.5 text-sm font-bold uppercase tracking-wide"
-          style={{ color }}
-        >
-          {getLevelLabel(currentLevel, t)}
-        </motion.span>
-      </AnimatePresence>
+      <span
+        className="mt-0.5 text-sm font-bold uppercase tracking-wide"
+        style={{ color }}
+      >
+        {getLevelLabel(level, t)}
+      </span>
     </button>
   );
 }
