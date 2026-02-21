@@ -4,10 +4,9 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
-const PARTICLE_COUNT = 60;
+const PARTICLE_COUNT = 45;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
-const TEXT_SAFE_RADIUS = 70;
-const INNER_RADIUS = TEXT_SAFE_RADIUS - 5;
+const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;
 const LIQUID_CYCLE_MS = 8000;
 
@@ -27,69 +26,32 @@ function getColorFromScore(score: number): string {
 interface Particle {
   x: number;
   y: number;
+  dirX: number;
+  dirY: number;
   speed: number;
-  baseSize: number;
   size: number;
   opacity: number;
   maxOpacity: number;
-  satelliteCount: number;
-  satelliteAngle: number;
 }
 
 function spawnParticle(center: number): Particle {
-  const edgeR = BASE_RADIUS * 0.92;
+  const spawnRadius = BASE_RADIUS - 2;
   const angle = Math.random() * Math.PI * 2;
+  const x = center + Math.cos(angle) * spawnRadius;
+  const y = center + Math.sin(angle) * spawnRadius;
+  const dx = center - x;
+  const dy = center - y;
+  const len = Math.sqrt(dx * dx + dy * dy);
   return {
-    x: center + Math.cos(angle) * edgeR,
-    y: center + Math.sin(angle) * edgeR,
-    speed: 0.6 + Math.random() * 0.3,
-    baseSize: 4 + Math.random() * 3,
-    size: 4 + Math.random() * 3,
+    x,
+    y,
+    dirX: dx / len,
+    dirY: dy / len,
+    speed: 0.5 + Math.random() * 0.3,
+    size: 4 + Math.random() * 2,
     opacity: 0,
-    maxOpacity: 0.7 + Math.random() * 0.3,
-    satelliteCount: 1 + Math.floor(Math.random() * 2),
-    satelliteAngle: Math.random() * Math.PI * 2,
+    maxOpacity: 0.75 + Math.random() * 0.25,
   };
-}
-
-function updateParticle(p: Particle, center: number, dt: number): boolean {
-  const dx = center - p.x;
-  const dy = center - p.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-
-  if (dist <= INNER_RADIUS) {
-    return true;
-  }
-
-  const nx = dx / dist;
-  const ny = dy / dist;
-  const moveSpeed = p.speed * dt * 60;
-  p.x += nx * moveSpeed;
-  p.y += ny * moveSpeed;
-
-  const edgeR = BASE_RADIUS * 0.92;
-  const fadeInZone = 10;
-  const fadeOutZone = 20;
-
-  let targetOpacity = p.maxOpacity;
-
-  const newDist = Math.sqrt((p.x - center) ** 2 + (p.y - center) ** 2);
-
-  if (newDist > edgeR - fadeInZone) {
-    targetOpacity *= Math.min(1, (edgeR - newDist) / fadeInZone);
-  }
-
-  if (newDist < INNER_RADIUS + fadeOutZone) {
-    const t = (newDist - INNER_RADIUS) / fadeOutZone;
-    targetOpacity *= Math.max(0, t);
-    p.size = p.baseSize * (0.3 + 0.7 * Math.max(0, t));
-  } else {
-    p.size = p.baseSize;
-  }
-
-  p.opacity = targetOpacity;
-
-  return false;
 }
 
 interface HealthOrbProps {
@@ -105,7 +67,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const particlesRef = useRef<Particle[] | null>(null);
   const rafRef = useRef<number | null>(null);
   const colorRef = useRef<string>("#34c759");
-  const timeRef = useRef(0);
   const mountStartRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number>(0);
   const rotationRef = useRef(0);
@@ -136,6 +97,10 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     canvas.width = VISUAL_SIZE * dpr;
     canvas.height = VISUAL_SIZE * dpr;
 
+    const spawnRadius = BASE_RADIUS - 2;
+    const fadeInStart = spawnRadius - 15;
+    const fadeOutStart = INNER_RADIUS + 25;
+
     const getDynamicRadius = (angle: number, t: number) => {
       const phase = (t / LIQUID_CYCLE_MS) * Math.PI * 2;
       return (
@@ -151,7 +116,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         lastFrameRef.current = timestamp;
       }
 
-      const dt = Math.min((timestamp - lastFrameRef.current) / 16.67, 2.5);
+      const frameDelta = timestamp - lastFrameRef.current;
+      const dt = Math.min(frameDelta / 16.67, 2);
       lastFrameRef.current = timestamp;
 
       const elapsed = timestamp - mountStartRef.current;
@@ -159,8 +125,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const easeOut = 1 - Math.pow(1 - mountProgress, 1.3);
 
       if (!reducedMotionRef.current) {
-        timeRef.current = elapsed * 0.001;
-        rotationRef.current += 0.0012 * dt;
+        rotationRef.current += 0.001 * dt;
       }
 
       const hex = colorRef.current;
@@ -168,6 +133,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const rot = rotationRef.current;
 
       ctx.clearRect(0, 0, VISUAL_SIZE * dpr, VISUAL_SIZE * dpr);
+
       ctx.save();
       ctx.scale(dpr, dpr);
       ctx.translate(center, center);
@@ -193,17 +159,41 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.fillStyle = isLightRef.current ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.03)";
       ctx.fill();
 
+      ctx.restore();
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      ctx.beginPath();
+      ctx.arc(center, center, BASE_RADIUS, 0, Math.PI * 2);
       ctx.clip();
 
       ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-      ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
         if (!reducedMotionRef.current) {
-          const shouldRespawn = updateParticle(p, center, dt);
-          if (shouldRespawn) {
+          p.x += p.dirX * p.speed * dt;
+          p.y += p.dirY * p.speed * dt;
+
+          const dx = p.x - center;
+          const dy = p.y - center;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          let targetOpacity = p.maxOpacity;
+
+          if (dist > fadeInStart) {
+            targetOpacity *= Math.max(0, (spawnRadius - dist) / (spawnRadius - fadeInStart));
+          }
+
+          if (dist < fadeOutStart) {
+            targetOpacity *= Math.max(0, (dist - INNER_RADIUS) / (fadeOutStart - INNER_RADIUS));
+          }
+
+          p.opacity = targetOpacity;
+
+          if (dist <= INNER_RADIUS) {
             particles[i] = spawnParticle(center);
             continue;
           }
@@ -212,37 +202,11 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         }
 
         const op = p.opacity * mountProgress;
-        if (op < 0.02) continue;
-
-        const mainR = p.size * 0.5;
-        const satR = mainR * 0.35;
-        const satDist = p.size * 1.0;
-
-        ctx.globalAlpha = op * 0.2;
-        ctx.lineWidth = 0.5;
-        for (let s = 0; s < p.satelliteCount; s++) {
-          const a = p.satelliteAngle + (s / p.satelliteCount) * Math.PI * 2;
-          const sx = p.x + Math.cos(a) * satDist;
-          const sy = p.y + Math.sin(a) * satDist;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(sx, sy);
-          ctx.stroke();
-        }
-
-        ctx.globalAlpha = op * 0.6;
-        for (let s = 0; s < p.satelliteCount; s++) {
-          const a = p.satelliteAngle + (s / p.satelliteCount) * Math.PI * 2;
-          const sx = p.x + Math.cos(a) * satDist;
-          const sy = p.y + Math.sin(a) * satDist;
-          ctx.beginPath();
-          ctx.arc(sx, sy, satR, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        if (op < 0.03) continue;
 
         ctx.globalAlpha = op;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, mainR, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
