@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ function MoonAnimation() {
     canvas.height = size * dpr;
 
     const center = size / 2;
-    const baseRadius = 60;
+    const baseRadius = 55;
     let startTime: number | null = null;
 
     const draw = (timestamp: number) => {
@@ -35,46 +35,57 @@ function MoonAnimation() {
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      const breathe = Math.sin(elapsed / 2000) * 0.08 + 1;
-      const glowIntensity = Math.sin(elapsed / 3000) * 0.15 + 0.85;
+      const breathe = Math.sin(elapsed / 3000) * 0.05 + 1;
+      const glowIntensity = Math.sin(elapsed / 4000) * 0.1 + 0.9;
       const radius = baseRadius * breathe;
 
-      const gradient = ctx.createRadialGradient(
-        center,
-        center,
-        radius * 0.3,
-        center,
-        center,
-        radius * 2.5
+      const floatX = Math.sin(elapsed / 5000) * 2;
+      const floatY = Math.cos(elapsed / 6000) * 1.5;
+      const moonCenterX = center + floatX;
+      const moonCenterY = center + floatY;
+
+      const glowGradient = ctx.createRadialGradient(
+        moonCenterX,
+        moonCenterY,
+        radius * 0.5,
+        moonCenterX,
+        moonCenterY,
+        radius * 3
       );
-      gradient.addColorStop(0, `rgba(253, 224, 71, ${0.2 * glowIntensity})`);
-      gradient.addColorStop(0.4, `rgba(253, 224, 71, ${0.08 * glowIntensity})`);
-      gradient.addColorStop(1, "rgba(253, 224, 71, 0)");
-      ctx.fillStyle = gradient;
+      glowGradient.addColorStop(0, `rgba(253, 224, 71, ${0.15 * glowIntensity})`);
+      glowGradient.addColorStop(0.3, `rgba(253, 224, 71, ${0.06 * glowIntensity})`);
+      glowGradient.addColorStop(1, "rgba(253, 224, 71, 0)");
+      ctx.fillStyle = glowGradient;
       ctx.fillRect(0, 0, size, size);
 
       ctx.beginPath();
-      ctx.arc(center, center, radius, 0, Math.PI * 2);
+      ctx.arc(moonCenterX, moonCenterY, radius, 0, Math.PI * 2);
       const moonGradient = ctx.createRadialGradient(
-        center - radius * 0.3,
-        center - radius * 0.3,
+        moonCenterX - radius * 0.25,
+        moonCenterY - radius * 0.25,
         0,
-        center,
-        center,
+        moonCenterX,
+        moonCenterY,
         radius
       );
-      moonGradient.addColorStop(0, "#fef3c7");
-      moonGradient.addColorStop(0.5, "#fde68a");
-      moonGradient.addColorStop(1, "#fcd34d");
+      moonGradient.addColorStop(0, "#fefce8");
+      moonGradient.addColorStop(0.4, "#fef08a");
+      moonGradient.addColorStop(1, "#facc15");
       ctx.fillStyle = moonGradient;
-      ctx.shadowBlur = 30 * glowIntensity;
-      ctx.shadowColor = "rgba(253, 224, 71, 0.6)";
+      ctx.shadowBlur = 25 * glowIntensity;
+      ctx.shadowColor = "rgba(250, 204, 21, 0.5)";
       ctx.fill();
       ctx.shadowBlur = 0;
 
       ctx.globalCompositeOperation = "destination-out";
       ctx.beginPath();
-      ctx.arc(center + radius * 0.35, center - radius * 0.15, radius * 0.75, 0, Math.PI * 2);
+      ctx.arc(
+        moonCenterX + radius * 0.32,
+        moonCenterY - radius * 0.12,
+        radius * 0.72,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.globalCompositeOperation = "source-over";
 
@@ -95,6 +106,27 @@ function MoonAnimation() {
   );
 }
 
+function CurrentTime() {
+  const [time, setTime] = useState(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      setTime(`${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <p className="text-6xl font-extralight text-white/90 tabular-nums tracking-wider">
+      {time}
+    </p>
+  );
+}
+
 export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
   const { t } = useTranslation();
 
@@ -110,28 +142,37 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0a0a0f]"
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="fixed inset-0 z-[9999] flex flex-col bg-[#050508]"
     >
-      <div className="flex flex-1 flex-col items-center justify-center px-8">
+      <div className="flex flex-1 flex-col items-center justify-center px-5">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+          transition={{ delay: 0.15, duration: 0.5, ease: "easeOut" }}
         >
           <MoonAnimation />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="mt-12 text-center"
+          transition={{ delay: 0.35, duration: 0.4 }}
+          className="mt-10 text-center"
         >
-          <p className="text-sm text-gray-500 uppercase tracking-widest">
+          <CurrentTime />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="mt-6 text-center"
+        >
+          <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">
             {t("sleepMode.wakeAt")}
           </p>
-          <p className="mt-2 text-5xl font-light text-white tabular-nums tracking-wide">
+          <p className="text-2xl font-light text-gray-400 tabular-nums">
             {wakeTime}
           </p>
         </motion.div>
@@ -140,12 +181,12 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.5 }}
-        className="w-full px-8 pb-12"
+        transition={{ delay: 0.7, duration: 0.4 }}
+        className="w-full px-5 pb-10"
       >
         <Button
           variant="ghost"
-          className="w-full h-12 text-gray-500 hover:text-white hover:bg-white/5 transition-colors duration-300"
+          className="w-full h-12 text-gray-500 hover:text-white hover:bg-white/5 transition-colors duration-200"
           onClick={onCancel}
         >
           {t("sleepMode.cancel")}

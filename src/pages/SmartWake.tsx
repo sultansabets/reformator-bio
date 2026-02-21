@@ -1,72 +1,130 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { X, AlarmClock, Moon, TrendingUp, Heart } from "lucide-react";
+import { X, AlarmClock, Moon, Activity, Zap, Battery } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SleepMode from "@/components/SleepMode";
 
+type WakeMode = "recovery" | "standard" | "performance";
+
+const STORAGE_KEY = "smartWake_mode";
+const ALARM_STORAGE_KEY = "smartWake_alarm";
+
 const sleepData = [
-  { day: "Пн", hours: 7.2 },
-  { day: "Вт", hours: 6.8 },
-  { day: "Ср", hours: 7.5 },
-  { day: "Чт", hours: 8.0 },
-  { day: "Пт", hours: 6.5 },
-  { day: "Сб", hours: 7.8 },
-  { day: "Вс", hours: 7.4 },
+  { day: "Пн", hours: 7.2, quality: 72 },
+  { day: "Вт", hours: 6.8, quality: 65 },
+  { day: "Ср", hours: 7.5, quality: 78 },
+  { day: "Чт", hours: 8.0, quality: 85 },
+  { day: "Пт", hours: 6.5, quality: 58 },
+  { day: "Сб", hours: 7.8, quality: 80 },
+  { day: "Вс", hours: 7.4, quality: 75 },
 ];
 
-function calculateOptimalWakeTime(): { recommended: string; current: string; analysis: string[] } {
-  const avgSleep = sleepData.reduce((sum, d) => sum + d.hours, 0) / sleepData.length;
-  const avgBedtime = 23.5;
-  const stressLevel = 35;
-  const recoveryScore = 72;
+const SLEEP_CYCLE_MINUTES = 90;
+const AVG_BEDTIME_HOUR = 23.5;
 
-  let baseDuration = 8;
-  if (avgSleep < 6.5) baseDuration += 0.5;
-  if (stressLevel > 50) baseDuration += 0.33;
-  if (recoveryScore > 75) baseDuration = 8;
-
-  const wakeHour = avgBedtime + baseDuration;
-  const normalizedHour = wakeHour >= 24 ? wakeHour - 24 : wakeHour;
-  const hours = Math.floor(normalizedHour);
-  const minutes = Math.round((normalizedHour - hours) * 60);
-
-  const recommended = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-
-  const analysis: string[] = [];
-  if (avgSleep < 7) {
-    analysis.push("Средний сон за неделю ниже нормы — добавлено время");
-  }
-  if (stressLevel > 50) {
-    analysis.push("Повышенный уровень стресса — рекомендуется больше отдыха");
-  }
-  if (recoveryScore > 75) {
-    analysis.push("Хорошее восстановление — стандартный режим");
-  }
-
-  return { recommended, current: "08:00", analysis };
+interface SleepMetrics {
+  avgSleep: number;
+  avgQuality: number;
+  recoveryScore: number;
+  sleepCycles: number;
 }
 
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
-const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
+function getMetrics(): SleepMetrics {
+  const avgSleep = sleepData.reduce((sum, d) => sum + d.hours, 0) / sleepData.length;
+  const avgQuality = sleepData.reduce((sum, d) => sum + d.quality, 0) / sleepData.length;
+  const recoveryScore = 55;
+  const sleepCycles = Math.round((avgSleep * 60) / SLEEP_CYCLE_MINUTES);
+  return { avgSleep, avgQuality, recoveryScore, sleepCycles };
+}
+
+function calculateOptimalWakeTime(
+  mode: WakeMode,
+  currentAlarm: string,
+  metrics: SleepMetrics
+): string {
+  const { avgSleep, avgQuality, recoveryScore } = metrics;
+
+  let targetCycles: number;
+  switch (mode) {
+    case "recovery":
+      targetCycles = 6;
+      break;
+    case "performance":
+      targetCycles = 5;
+      break;
+    default:
+      targetCycles = 5;
+  }
+
+  let baseDurationMinutes = targetCycles * SLEEP_CYCLE_MINUTES;
+
+  if (avgSleep < 6.5) baseDurationMinutes += 30;
+  if (avgQuality < 60) baseDurationMinutes += 20;
+  if (recoveryScore < 60) baseDurationMinutes += 15;
+
+  const bedtimeMinutes = AVG_BEDTIME_HOUR * 60;
+  const wakeMinutes = bedtimeMinutes + baseDurationMinutes;
+  const normalizedMinutes = wakeMinutes >= 1440 ? wakeMinutes - 1440 : wakeMinutes;
+
+  const [alarmH, alarmM] = currentAlarm.split(":").map(Number);
+  const alarmMinutes = alarmH * 60 + alarmM;
+
+  const diff = Math.abs(normalizedMinutes - alarmMinutes);
+  if (diff <= 30) {
+    return currentAlarm;
+  }
+
+  const hours = Math.floor(normalizedMinutes / 60);
+  const minutes = Math.round(normalizedMinutes % 60);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
+const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.25 } } };
 
 export default function SmartWake() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  const [mode, setMode] = useState<WakeMode>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return (saved as WakeMode) || "standard";
+  });
+  
+  const [wakeTime, setWakeTime] = useState(() => {
+    return localStorage.getItem(ALARM_STORAGE_KEY) || "08:00";
+  });
+  
   const [sleepModeActive, setSleepModeActive] = useState(false);
-  const [wakeTime, setWakeTime] = useState("08:00");
 
-  const { recommended, analysis } = useMemo(() => calculateOptimalWakeTime(), []);
+  const metrics = useMemo(() => getMetrics(), []);
+  const recommended = useMemo(
+    () => calculateOptimalWakeTime(mode, wakeTime, metrics),
+    [mode, wakeTime, metrics]
+  );
 
-  const avgSleep = useMemo(() => {
-    const avg = sleepData.reduce((sum, d) => sum + d.hours, 0) / sleepData.length;
-    return avg.toFixed(1);
-  }, []);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, mode);
+  }, [mode]);
+
+  useEffect(() => {
+    localStorage.setItem(ALARM_STORAGE_KEY, wakeTime);
+  }, [wakeTime]);
 
   const handleActivateSleepMode = () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
     setSleepModeActive(true);
+  };
+
+  const modeConfig = {
+    recovery: { icon: Battery, label: t("smartWake.modeRecovery"), cycles: 6 },
+    standard: { icon: Moon, label: t("smartWake.modeStandard"), cycles: 5 },
+    performance: { icon: Zap, label: t("smartWake.modePerformance"), cycles: 5 },
   };
 
   if (sleepModeActive) {
@@ -80,7 +138,7 @@ export default function SmartWake() {
       initial="hidden"
       animate="show"
     >
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-4">
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-5">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -92,80 +150,108 @@ export default function SmartWake() {
         <div className="w-10" />
       </header>
 
-      <div className="px-5 py-6 space-y-6">
-        <motion.div variants={item} className="text-center">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-            <AlarmClock className="h-10 w-10 text-primary" />
-          </div>
-          <p className="text-sm text-muted-foreground">{t("smartWake.subtitle")}</p>
-        </motion.div>
-
-        <motion.div variants={item}>
-          <Card className="border border-border bg-card p-5">
-            <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {t("smartWake.recommended")}
-            </p>
-            <p className="text-4xl font-bold text-primary tabular-nums">{recommended}</p>
-            <div className="mt-4 space-y-2">
-              {analysis.map((text, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <TrendingUp className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-                  <span>{text}</span>
-                </div>
-              ))}
+      <div className="mx-auto max-w-lg px-5 py-6">
+        <div className="space-y-6">
+          <motion.div variants={item} className="flex flex-col items-center text-center">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <AlarmClock className="h-8 w-8 text-primary" />
             </div>
-          </Card>
-        </motion.div>
+            <p className="text-sm text-muted-foreground max-w-[280px]">
+              {t("smartWake.subtitle")}
+            </p>
+          </motion.div>
 
-        <motion.div variants={item}>
-          <Card className="border border-border bg-card p-5">
+          <motion.div variants={item}>
+            <Card className="border border-border bg-card p-5">
+              <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t("smartWake.recommended")}
+              </p>
+              <p className="text-4xl font-bold text-primary tabular-nums">{recommended}</p>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={item}>
+            <Card className="border border-border bg-card p-5">
+              <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t("smartWake.currentAlarm")}
+              </p>
+              <input
+                type="time"
+                value={wakeTime}
+                onChange={(e) => setWakeTime(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-2xl font-semibold text-foreground tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </Card>
+          </motion.div>
+
+          <motion.div variants={item}>
             <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {t("smartWake.currentAlarm")}
+              {t("smartWake.selectMode")}
             </p>
-            <input
-              type="time"
-              value={wakeTime}
-              onChange={(e) => setWakeTime(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-2xl font-semibold text-foreground tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </Card>
-        </motion.div>
-
-        <motion.div variants={item}>
-          <Card className="border border-border bg-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
-                <Moon className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">{t("smartWake.avgSleep")}</p>
-                <p className="text-xs text-muted-foreground">{t("smartWake.last7days")}</p>
-              </div>
-              <span className="text-lg font-bold text-foreground tabular-nums">{avgSleep}ч</span>
+            <div className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-card p-1.5">
+              {(["recovery", "standard", "performance"] as WakeMode[]).map((m) => {
+                const config = modeConfig[m];
+                const Icon = config.icon;
+                const isActive = mode === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={`flex flex-col items-center gap-1 rounded-lg px-2 py-3 text-center transition-all duration-200 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="text-[11px] font-medium leading-tight">{config.label}</span>
+                  </button>
+                );
+              })}
             </div>
-          </Card>
-        </motion.div>
+          </motion.div>
 
-        <motion.div variants={item}>
-          <Card className="border border-border bg-card p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/10">
-                <Heart className="h-5 w-5 text-red-500" />
+          <motion.div variants={item}>
+            <Card className="border border-border bg-card p-5">
+              <p className="mb-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t("smartWake.analysisTitle")}
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t("smartWake.avgSleep")}</span>
+                  <span className="text-sm font-semibold text-foreground tabular-nums">
+                    {metrics.avgSleep.toFixed(1)}ч
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t("smartWake.sleepQuality")}</span>
+                  <span className="text-sm font-semibold text-foreground tabular-nums">
+                    {Math.round(metrics.avgQuality)}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t("smartWake.recoveryLabel")}</span>
+                  <span className="text-sm font-semibold text-foreground tabular-nums">
+                    {metrics.recoveryScore}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t("smartWake.sleepCycles")}</span>
+                  <span className="text-sm font-semibold text-foreground tabular-nums">
+                    {modeConfig[mode].cycles} {t("smartWake.cyclesUnit")}
+                  </span>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">{t("smartWake.hrv")}</p>
-                <p className="text-xs text-muted-foreground">{t("smartWake.hrvDesc")}</p>
-              </div>
-              <span className="text-lg font-bold text-foreground tabular-nums">45 ms</span>
-            </div>
-          </Card>
-        </motion.div>
+            </Card>
+          </motion.div>
 
-        <motion.div variants={item} className="pt-4">
-          <Button className="w-full h-12 text-base" onClick={handleActivateSleepMode}>
-            {t("smartWake.activateSleepMode")}
-          </Button>
-        </motion.div>
+          <motion.div variants={item}>
+            <Button className="w-full h-12 text-base" onClick={handleActivateSleepMode}>
+              {t("smartWake.activateSleepMode")}
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );

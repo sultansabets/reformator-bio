@@ -445,14 +445,23 @@
   },
   "smartWake": {
     "title": "Умный подъем",
-    "subtitle": "Рекомендация времени подъема на основе анализа сна",
+    "subtitle": "Рекомендация времени подъема на основе анализа сна и циклов",
     "recommended": "Рекомендовано",
     "currentAlarm": "Текущее время",
     "avgSleep": "Средний сон",
     "last7days": "За последние 7 дней",
     "hrv": "Вариабельность пульса",
     "hrvDesc": "Показатель восстановления",
-    "activateSleepMode": "Включить режим сна"
+    "activateSleepMode": "Включить режим сна",
+    "selectMode": "Режим",
+    "modeRecovery": "Восстановление",
+    "modeStandard": "Стандарт",
+    "modePerformance": "Продуктивность",
+    "analysisTitle": "Причина рекомендации",
+    "sleepQuality": "Качество сна",
+    "recoveryLabel": "Восстановление",
+    "sleepCycles": "Циклы сна",
+    "cyclesUnit": "циклов"
   },
   "sleepMode": {
     "wakeAt": "Подъем в",

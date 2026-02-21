@@ -413,14 +413,23 @@
   },
   "smartWake": {
     "title": "Smart Wake",
-    "subtitle": "Wake time recommendation based on sleep analysis",
+    "subtitle": "Wake time recommendation based on sleep analysis and cycles",
     "recommended": "Recommended",
     "currentAlarm": "Current time",
     "avgSleep": "Average sleep",
     "last7days": "Last 7 days",
     "hrv": "Heart rate variability",
     "hrvDesc": "Recovery indicator",
-    "activateSleepMode": "Activate sleep mode"
+    "activateSleepMode": "Activate sleep mode",
+    "selectMode": "Mode",
+    "modeRecovery": "Recovery",
+    "modeStandard": "Standard",
+    "modePerformance": "Performance",
+    "analysisTitle": "Why this time",
+    "sleepQuality": "Sleep quality",
+    "recoveryLabel": "Recovery",
+    "sleepCycles": "Sleep cycles",
+    "cyclesUnit": "cycles"
   },
   "sleepMode": {
     "wakeAt": "Wake at",
