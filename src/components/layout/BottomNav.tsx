@@ -1,9 +1,10 @@
-import { Home, Zap, Sparkles, ShoppingBag, User } from "lucide-react";
+import { Home, Zap, ShoppingBag, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ReformatorLogo } from "@/components/icons/ReformatorLogo";
 
 const LEFT_TABS = [
   { path: "/control", icon: Home, key: "tabs.home" },
@@ -73,12 +74,15 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
           onClick={handleAIClick}
           className={cn(
             "flex h-14 w-14 -translate-y-2 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
-            "bg-neutral-900 dark:bg-neutral-800 text-white",
+            "bg-neutral-900 dark:bg-neutral-800",
             "shadow-sm focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
           )}
           aria-label={t("tabs.ai")}
         >
-          <Sparkles className="h-[22px] w-[22px]" strokeWidth={2} />
+          <ReformatorLogo
+            className="h-6 w-6"
+            color={location.pathname === AI_PATH ? "#34c759" : "#9CA3AF"}
+          />
         </button>
 
         {RIGHT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
