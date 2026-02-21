@@ -884,7 +884,7 @@ export default function Center() {
         nutritionKey={storageKeys?.nutrition || null}
       />
 
-      {/* Fullscreen search modal */}
+      {/* Fullscreen add product modal */}
       <AnimatePresence>
         {searchModalOpen && (
           <motion.div
@@ -892,208 +892,221 @@ export default function Center() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[9999] bg-black/60"
-            onClick={() => !selectedProduct && setSearchModalOpen(false)}
+            className="fixed inset-0 z-[9999] flex flex-col overflow-hidden bg-background"
           >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 left-0 right-0 max-h-[90vh] overflow-hidden rounded-t-3xl bg-background"
-              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {!selectedProduct ? (
-                <>
-                  {/* Search header */}
-                  <div className="sticky top-0 z-10 bg-background px-5 pt-4 pb-3">
-                    <div className="mb-3 flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">Добавить продукт</h2>
-                      <button
-                        type="button"
-                        onClick={() => setSearchModalOpen(false)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        ref={searchInputRef}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Поиск продукта..."
-                        className="h-11 rounded-xl border-border bg-muted/50 pl-10 text-base"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Products list */}
-                  <div className="max-h-[60vh] overflow-y-auto px-5 pb-5">
-                    {filteredProducts.length === 0 ? (
-                      <div className="py-12 text-center">
-                        <p className="text-sm text-muted-foreground">Ничего не найдено</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {filteredProducts.map((product) => (
-                          <button
-                            key={product.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setGrams(100);
-                            }}
-                            className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
-                          >
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-foreground">{product.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {FOOD_CATEGORIES[product.category] || product.category}
-                              </p>
-                            </div>
-                            <div className="ml-3 text-right">
-                              <p className="text-sm font-semibold tabular-nums text-foreground">
-                                {product.calories_per_100g}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground">ккал/100г</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Product detail view */}
-                  <div className="px-5 pt-4 pb-5">
-                    {/* Back button */}
+            {!selectedProduct ? (
+              <>
+                {/* Search header with safe area */}
+                <div 
+                  className="shrink-0 bg-background px-5 pb-3"
+                  style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Добавить продукт</h2>
                     <button
                       type="button"
-                      onClick={() => setSelectedProduct(null)}
-                      className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                      onClick={() => setSearchModalOpen(false)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
                     >
-                      <ChevronLeft className="h-4 w-4" />
-                      Назад
+                      <X className="h-5 w-5" />
                     </button>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      ref={searchInputRef}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Поиск продукта..."
+                      className="h-12 rounded-xl border-border bg-muted/50 pl-10 text-base"
+                    />
+                  </div>
+                </div>
 
-                    {/* Product info */}
-                    <div className="mb-6 text-center">
-                      <h3 className="text-xl font-semibold text-foreground">{selectedProduct.name}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {FOOD_CATEGORIES[selectedProduct.category] || selectedProduct.category}
-                      </p>
+                {/* Products list - scrollable */}
+                <div 
+                  className="flex-1 overflow-y-auto overscroll-contain px-5"
+                  style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
+                >
+                  {filteredProducts.length === 0 ? (
+                    <div className="py-16 text-center">
+                      <p className="text-sm text-muted-foreground">Ничего не найдено</p>
                     </div>
-
-                    {/* Per 100g info */}
-                    <div className="mb-6 rounded-2xl border border-border bg-muted/30 p-4">
-                      <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        На 100 грамм
-                      </p>
-                      <div className="grid grid-cols-4 gap-2 text-center">
-                        <div>
-                          <p className="text-lg font-bold text-foreground">{selectedProduct.calories_per_100g}</p>
-                          <p className="text-[10px] text-muted-foreground">ккал</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-red-500">{selectedProduct.protein_per_100g}</p>
-                          <p className="text-[10px] text-muted-foreground">белки</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-amber-500">{selectedProduct.carbs_per_100g}</p>
-                          <p className="text-[10px] text-muted-foreground">углеводы</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-green-500">{selectedProduct.fat_per_100g}</p>
-                          <p className="text-[10px] text-muted-foreground">жиры</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Grams input */}
-                    <div className="mb-6">
-                      <p className="mb-3 text-center text-sm text-muted-foreground">Укажите количество</p>
-                      <div className="flex items-center justify-center gap-4">
+                  ) : (
+                    <div className="space-y-1">
+                      {filteredProducts.map((product) => (
                         <button
+                          key={product.id}
                           type="button"
-                          onClick={() => setGrams(Math.max(10, grams - 10))}
-                          className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted active:scale-95"
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setGrams(100);
+                          }}
+                          className="flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-left transition-colors hover:bg-muted/50 active:bg-muted"
                         >
-                          <Minus className="h-5 w-5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {FOOD_CATEGORIES[product.category] || product.category}
+                            </p>
+                          </div>
+                          <div className="ml-3 text-right">
+                            <p className="text-sm font-semibold tabular-nums text-foreground">
+                              {product.calories_per_100g}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">ккал/100г</p>
+                          </div>
                         </button>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            inputMode="numeric"
-                            min={1}
-                            max={2000}
-                            value={grams}
-                            onChange={(e) => {
-                              const v = parseInt(e.target.value) || 0;
-                              setGrams(Math.min(2000, Math.max(0, v)));
-                            }}
-                            className="h-14 w-28 rounded-2xl border-border bg-card text-center text-2xl font-bold tabular-nums"
-                          />
-                          <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
-                            грамм
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setGrams(Math.min(2000, grams + 10))}
-                          className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted active:scale-95"
-                        >
-                          <Plus className="h-5 w-5" />
-                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Product detail header */}
+                <div 
+                  className="shrink-0 bg-background px-5"
+                  style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProduct(null)}
+                    className="flex h-10 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                    Назад к поиску
+                  </button>
+                </div>
+
+                {/* Product detail content - scrollable */}
+                <div 
+                  className="flex-1 overflow-y-auto overscroll-contain px-5"
+                  style={{ paddingBottom: 120 }}
+                >
+                  {/* Product info */}
+                  <div className="mb-6 pt-4 text-center">
+                    <h3 className="text-xl font-semibold text-foreground">{selectedProduct.name}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {FOOD_CATEGORIES[selectedProduct.category] || selectedProduct.category}
+                    </p>
+                  </div>
+
+                  {/* Per 100g info */}
+                  <div className="mb-6 rounded-2xl border border-border bg-muted/30 p-4">
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      На 100 грамм
+                    </p>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p className="text-lg font-bold text-foreground">{selectedProduct.calories_per_100g}</p>
+                        <p className="text-[10px] text-muted-foreground">ккал</p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-red-500">{selectedProduct.protein_per_100g}</p>
+                        <p className="text-[10px] text-muted-foreground">белки</p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-amber-500">{selectedProduct.carbs_per_100g}</p>
+                        <p className="text-[10px] text-muted-foreground">углеводы</p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-green-500">{selectedProduct.fat_per_100g}</p>
+                        <p className="text-[10px] text-muted-foreground">жиры</p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Calculated nutrients */}
-                    <motion.div
-                      key={grams}
-                      initial={{ scale: 0.98, opacity: 0.5 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.15 }}
-                      className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4"
-                    >
-                      <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-primary">
-                        Итого за {grams}г
-                      </p>
-                      <div className="grid grid-cols-4 gap-2 text-center">
-                        <div>
-                          <p className="text-xl font-bold text-foreground">{calculatedNutrients.calories}</p>
-                          <p className="text-[10px] text-muted-foreground">ккал</p>
-                        </div>
-                        <div>
-                          <p className="text-xl font-bold text-red-500">{calculatedNutrients.protein}</p>
-                          <p className="text-[10px] text-muted-foreground">белки</p>
-                        </div>
-                        <div>
-                          <p className="text-xl font-bold text-amber-500">{calculatedNutrients.carbs}</p>
-                          <p className="text-[10px] text-muted-foreground">углеводы</p>
-                        </div>
-                        <div>
-                          <p className="text-xl font-bold text-green-500">{calculatedNutrients.fats}</p>
-                          <p className="text-[10px] text-muted-foreground">жиры</p>
-                        </div>
+                  {/* Grams input */}
+                  <div className="mb-8">
+                    <p className="mb-3 text-center text-sm text-muted-foreground">Укажите количество</p>
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setGrams(Math.max(10, grams - 10))}
+                        className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted active:scale-95"
+                      >
+                        <Minus className="h-5 w-5" />
+                      </button>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={2000}
+                          value={grams}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            setGrams(Math.min(2000, Math.max(0, v)));
+                          }}
+                          className="h-14 w-28 rounded-2xl border-border bg-card text-center text-2xl font-bold tabular-nums"
+                        />
+                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
+                          грамм
+                        </span>
                       </div>
-                    </motion.div>
+                      <button
+                        type="button"
+                        onClick={() => setGrams(Math.min(2000, grams + 10))}
+                        className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted active:scale-95"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
 
-                    {/* Add button */}
+                  {/* Calculated nutrients */}
+                  <motion.div
+                    key={grams}
+                    initial={{ scale: 0.98, opacity: 0.5 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.15 }}
+                    className="rounded-2xl border border-primary/30 bg-primary/5 p-4"
+                  >
+                    <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-primary">
+                      Итого за {grams}г
+                    </p>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p className="text-xl font-bold text-foreground">{calculatedNutrients.calories}</p>
+                        <p className="text-[10px] text-muted-foreground">ккал</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-red-500">{calculatedNutrients.protein}</p>
+                        <p className="text-[10px] text-muted-foreground">белки</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-amber-500">{calculatedNutrients.carbs}</p>
+                        <p className="text-[10px] text-muted-foreground">углеводы</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-green-500">{calculatedNutrients.fats}</p>
+                        <p className="text-[10px] text-muted-foreground">жиры</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Fixed add button at bottom */}
+                <div 
+                  className="pointer-events-none absolute bottom-0 left-0 right-0"
+                  style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+                >
+                  <div 
+                    className="pointer-events-auto px-5 pb-4 pt-10"
+                    style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
+                  >
                     <Button
-                      className="h-14 w-full rounded-2xl text-base font-medium"
+                      className="h-14 w-full rounded-[18px] text-base font-medium"
                       onClick={addProductEntry}
                       disabled={grams <= 0}
                     >
                       Добавить
                     </Button>
                   </div>
-                </>
-              )}
-            </motion.div>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
