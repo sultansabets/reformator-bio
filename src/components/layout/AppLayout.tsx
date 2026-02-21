@@ -128,10 +128,11 @@ const AppLayout = () => {
   }, [activeEl, handleScroll]);
 
   return (
-    <div
-      ref={scrollRef}
-      className="mx-auto h-screen max-w-md overflow-x-hidden overflow-y-auto overscroll-contain bg-background transition-colors duration-300 [-webkit-overflow-scrolling:touch]"
-    >
+    <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden bg-background transition-colors duration-300">
+      <div
+        ref={scrollRef}
+        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+      >
       <header className="sticky top-0 z-40 bg-background">
         <div className="relative flex h-14 items-center justify-between px-4">
           {isProfilePage ? (
@@ -379,9 +380,10 @@ const AppLayout = () => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-      <main className="pb-20 transition-colors duration-300">
-        <Outlet />
-      </main>
+        <main className="flex-1 pb-4 transition-colors duration-300">
+          <Outlet />
+        </main>
+      </div>
       <BottomNav visible={menuBarVisible} />
 
       {/* Уведомления: fullscreen Sheet справа налево */}
@@ -415,7 +417,7 @@ const AppLayout = () => {
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+      </div>
   );
 };
 

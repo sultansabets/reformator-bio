@@ -65,10 +65,11 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background will-change-transform transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-      style={{ transform: visible ? "translateY(0)" : "translateY(100%)" }}
+      className={`shrink-0 border-t border-border bg-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+      }`}
     >
-      <div className="mx-auto flex max-w-md items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom)]">
         {LEFT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
 
         <button

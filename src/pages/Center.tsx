@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Plus,
   Trash2,
@@ -531,7 +531,7 @@ export default function Center() {
 
   return (
     <motion.div
-      className="min-h-screen px-5 py-6 pb-28"
+      className="px-5 py-6 pb-6"
       variants={container}
       initial="hidden"
       animate="show"
@@ -552,15 +552,12 @@ export default function Center() {
         ))}
       </motion.div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === "Питание" ? (
-          <motion.div
-            key="nutrition"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
+      {/* Питание tab - always mounted, hidden via CSS */}
+      <div
+        className={`transition-opacity duration-200 ${
+          activeTab === "Питание" ? "block opacity-100" : "hidden opacity-0"
+        }`}
+      >
             {/* Week selector + calendar */}
             <motion.div variants={itemAnim} className="mb-6">
               <div className="flex items-center gap-1">
@@ -699,16 +696,14 @@ export default function Center() {
                 <Plus className="h-6 w-6" />
               </button>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="sport"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
+      </div>
+
+      {/* Спорт tab - always mounted, hidden via CSS */}
+      <div
+        className={`space-y-6 transition-opacity duration-200 ${
+          activeTab === "Спорт" ? "block opacity-100" : "hidden opacity-0"
+        }`}
+      >
             {/* Strength */}
             <div>
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -833,9 +828,7 @@ export default function Center() {
                 </div>
               </div>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
 
       {/* Calendar popup */}
       <CalendarPopup
