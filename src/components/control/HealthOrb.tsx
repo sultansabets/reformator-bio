@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const VISUAL_SIZE = 320;
-const ATOM_COUNT = 35;
+const ATOM_COUNT = 42;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;

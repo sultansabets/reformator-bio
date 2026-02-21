@@ -1,8 +1,31 @@
 import React from "react";
-import { Dna } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+
+interface MarsIconProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+function MarsIcon({ className, style }: MarsIconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+    >
+      <circle cx="10" cy="14" r="6" />
+      <path d="M14.5 9.5L21 3" />
+      <path d="M16 3h5v5" />
+    </svg>
+  );
+}
 
 export interface TestosteroneCardProps {
   value?: number | null;
@@ -18,14 +41,16 @@ function getColorFromValue(nmolL: number): string {
   if (nmolL < 10) return "rgb(220, 38, 38)";
   if (nmolL < 18) return "rgb(249, 115, 22)";
   if (nmolL < 25) return "rgb(234, 179, 8)";
-  return "rgb(34, 197, 94)";
+  if (nmolL <= 35) return "rgb(34, 197, 94)";
+  return "rgb(20, 184, 166)";
 }
 
 function getGlowColorFromValue(nmolL: number): string {
   if (nmolL < 10) return "rgba(220, 38, 38, 0.4)";
   if (nmolL < 18) return "rgba(249, 115, 22, 0.4)";
   if (nmolL < 25) return "rgba(234, 179, 8, 0.4)";
-  return "rgba(34, 197, 94, 0.4)";
+  if (nmolL <= 35) return "rgba(34, 197, 94, 0.4)";
+  return "rgba(20, 184, 166, 0.4)";
 }
 
 export function TestosteroneCard({ value, onClick, className }: TestosteroneCardProps) {
@@ -34,7 +59,9 @@ export function TestosteroneCard({ value, onClick, className }: TestosteroneCard
   const displayValue = value ?? 0;
   
   const percent = hasValue 
-    ? Math.min(100, Math.max(0, (displayValue / MAX_VALUE) * 100))
+    ? displayValue > MAX_VALUE 
+      ? 100 
+      : Math.min(100, Math.max(0, (displayValue / MAX_VALUE) * 100))
     : 0;
   
   const color = hasValue ? getColorFromValue(displayValue) : "rgb(156, 163, 175)";
@@ -90,7 +117,7 @@ export function TestosteroneCard({ value, onClick, className }: TestosteroneCard
           )}
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Dna 
+          <MarsIcon 
             className="h-7 w-7 transition-colors duration-300" 
             style={{ color }} 
           />

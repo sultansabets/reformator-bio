@@ -196,7 +196,7 @@ const ControlCenter = () => {
 
   const stressScore = metrics.stressScore;
   const recoveryScore = metrics.recoveryScore;
-  const testosteroneValue = latestLab?.testosterone;
+  const testosteroneValue = 56;
   const testosteroneStatusKey = testosteroneValue != null ? getTestosteroneStatus(testosteroneValue) : null;
 
   const sleepPercent = useMemo(() => {
