@@ -24,7 +24,7 @@ import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
 import { StressCard } from "@/components/control/StressCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
-import { InfluenceFactors, type TestosteroneStatus } from "@/components/control/InfluenceFactors";
+import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -195,8 +195,6 @@ const ControlCenter = () => {
   }, [user?.height, user?.weight, storageKeys]);
 
   const recoveryScore = metrics.recoveryScore;
-  
-  const testosteroneStatus: TestosteroneStatus = "normal";
 
   const sleepPercent = useMemo(() => {
     const actual = SLEEP_AVG_HOURS;
@@ -299,7 +297,8 @@ const ControlCenter = () => {
           pulse={62}
           steps={8500}
           recoveryPercent={recoveryPercent}
-          testosteroneStatus={testosteroneStatus}
+          testosteroneValue={56}
+          testosteroneDate="12.03.2026"
         />
       </motion.div>
 

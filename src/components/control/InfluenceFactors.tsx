@@ -4,8 +4,6 @@ import { Gauge, Heart, Footprints, BatteryCharging, ChevronDown, ChevronUp } fro
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
-export type TestosteroneStatus = "low" | "normal" | "high";
-
 interface InfluenceFactor {
   id: string;
   icon: React.ElementType;
@@ -16,6 +14,7 @@ interface InfluenceFactor {
   sources: string[];
   iconColor: string;
   iconBg: string;
+  valueColor?: string;
 }
 
 export interface InfluenceFactorsProps {
@@ -24,7 +23,8 @@ export interface InfluenceFactorsProps {
   pulse?: number;
   steps?: number;
   recoveryPercent?: number;
-  testosteroneStatus?: TestosteroneStatus;
+  testosteroneValue?: number | null;
+  testosteroneDate?: string;
 }
 
 function MarsIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -46,20 +46,18 @@ function MarsIcon({ className, style }: { className?: string; style?: React.CSSP
   );
 }
 
-function getTestosteroneColor(status: TestosteroneStatus): string {
-  switch (status) {
-    case "low": return "#EF4444";
-    case "normal": return "#22C55E";
-    case "high": return "#3B82F6";
-  }
+function getTestosteroneColor(value: number): string {
+  if (value <= 10) return "#EF4444";
+  if (value <= 18) return "#F97316";
+  if (value <= 35) return "#22C55E";
+  return "#14B8A6";
 }
 
-function getTestosteroneBgColor(status: TestosteroneStatus): string {
-  switch (status) {
-    case "low": return "rgba(239, 68, 68, 0.15)";
-    case "normal": return "rgba(34, 197, 94, 0.15)";
-    case "high": return "rgba(59, 130, 246, 0.15)";
-  }
+function getTestosteroneBgColor(value: number): string {
+  if (value <= 10) return "rgba(239, 68, 68, 0.15)";
+  if (value <= 18) return "rgba(249, 115, 22, 0.15)";
+  if (value <= 35) return "rgba(34, 197, 94, 0.15)";
+  return "rgba(20, 184, 166, 0.15)";
 }
 
 export function InfluenceFactors({
@@ -68,14 +66,16 @@ export function InfluenceFactors({
   pulse = 62,
   steps = 8500,
   recoveryPercent = 55,
-  testosteroneStatus = "normal",
+  testosteroneValue = 56,
+  testosteroneDate = "12.03.2026",
 }: InfluenceFactorsProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const recoveryIndex = Math.max(0, Math.min(100, Math.round(recoveryPercent)));
-  const testosteroneColor = getTestosteroneColor(testosteroneStatus);
-  const testosteroneBg = getTestosteroneBgColor(testosteroneStatus);
+  const hasTestosterone = testosteroneValue != null;
+  const testosteroneColor = hasTestosterone ? getTestosteroneColor(testosteroneValue) : "#6B7280";
+  const testosteroneBgColor = hasTestosterone ? getTestosteroneBgColor(testosteroneValue) : "rgba(107, 114, 128, 0.15)";
 
   const factors: InfluenceFactor[] = [
     {
@@ -146,7 +146,10 @@ export function InfluenceFactors({
 
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground">{f.label}</p>
-                <p className="flex items-baseline gap-1.5 text-lg font-bold text-foreground tabular-nums">
+                <p 
+                  className="flex items-baseline gap-1.5 text-lg font-bold tabular-nums"
+                  style={{ color: f.valueColor || "hsl(var(--foreground))" }}
+                >
                   {f.mainValue}
                   {f.unit && (
                     <span className="text-xs font-normal text-muted-foreground">
@@ -204,7 +207,7 @@ export function InfluenceFactors({
         >
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            style={{ backgroundColor: testosteroneBg }}
+            style={{ backgroundColor: testosteroneBgColor }}
           >
             <MarsIcon 
               className="h-5 w-5" 
@@ -214,12 +217,28 @@ export function InfluenceFactors({
 
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">{t("factors.testosterone")}</p>
-            <p 
-              className="text-lg font-bold uppercase tracking-wide"
-              style={{ color: testosteroneColor }}
-            >
-              {t(`testosterone.${testosteroneStatus}`)}
-            </p>
+            {hasTestosterone ? (
+              <>
+                <p 
+                  className="flex items-baseline gap-1.5 text-lg font-bold tabular-nums"
+                  style={{ color: testosteroneColor }}
+                >
+                  {testosteroneValue}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    нмоль/л
+                  </span>
+                </p>
+                {testosteroneDate && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {t("factors.asOf")} {testosteroneDate}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-lg font-bold text-muted-foreground">
+                {t("factors.noData")}
+              </p>
+            )}
           </div>
 
           {isTestosteroneExpanded ? (
@@ -244,15 +263,11 @@ export function InfluenceFactors({
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
-                    {t("testosterone.stressCorrelation")}
+                    {t("factors.labAnalysis")}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
-                    {t("testosterone.sleepQuality")}
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
-                    {t("testosterone.recovery")}
+                    {t("factors.hormoneBalance")}
                   </li>
                 </ul>
               </div>

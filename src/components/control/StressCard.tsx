@@ -3,8 +3,6 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
-export type StressLevel = "low" | "medium" | "high";
-
 export interface StressCardProps {
   onClick?: () => void;
   className?: string;
@@ -13,68 +11,50 @@ export interface StressCardProps {
 const CIRCLE_SIZE = 76;
 const STROKE_WIDTH = 3;
 
-function getRandomLevel(): StressLevel {
-  const levels: StressLevel[] = ["low", "medium", "high"];
-  return levels[Math.floor(Math.random() * 3)];
+function getRandomPercent(): number {
+  return Math.floor(Math.random() * 101);
 }
 
-function getColorFromLevel(level: StressLevel): string {
-  switch (level) {
-    case "low": return "rgb(34, 197, 94)";
-    case "medium": return "rgb(245, 158, 11)";
-    case "high": return "rgb(239, 68, 68)";
-  }
+function getColorFromPercent(percent: number): string {
+  if (percent <= 30) return "rgb(34, 197, 94)";
+  if (percent <= 60) return "rgb(234, 179, 8)";
+  if (percent <= 80) return "rgb(249, 115, 22)";
+  return "rgb(239, 68, 68)";
 }
 
-function getPercentFromLevel(level: StressLevel): number {
-  switch (level) {
-    case "low": return 25;
-    case "medium": return 55;
-    case "high": return 85;
-  }
-}
-
-function getLevelLabel(level: StressLevel, t: (key: string) => string): string {
-  switch (level) {
-    case "low": return t("stress.low");
-    case "medium": return t("stress.medium");
-    case "high": return t("stress.high");
-  }
-}
-
-function StressIcon({ level, color }: { level: StressLevel; color: string }) {
-  if (level === "low") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
-        <circle cx="12" cy="12" r="8" stroke={color} strokeWidth="2" />
-        <path d="M8 12h8" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  
-  if (level === "medium") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
-        <circle cx="12" cy="12" r="8" stroke={color} strokeWidth="2" />
-        <path d="M8 10h8M8 14h8" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  
+function ScribbleIcon({ color }: { color: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
-      <circle cx="12" cy="12" r="8" stroke={color} strokeWidth="2" />
-      <path d="M8 9h8M8 12h8M8 15h8" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path 
+        d="M12 4c-2 0-4 1-5 3-1 2 0 4 1 5s3 2 4 4c1 2 0 4-2 5"
+        stroke={color} 
+        strokeWidth="2" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path 
+        d="M8 8c2-1 4 0 5 2s0 4-2 5-4 0-4-2"
+        stroke={color} 
+        strokeWidth="2" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path 
+        d="M14 12c1 1 2 3 1 4s-3 1-4 0"
+        stroke={color} 
+        strokeWidth="2" 
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   );
 }
 
 export function StressCard({ onClick, className }: StressCardProps) {
   const { t } = useTranslation();
-  const [level] = useState<StressLevel>(getRandomLevel);
+  const [percent] = useState(getRandomPercent);
   
-  const color = getColorFromLevel(level);
-  const percent = getPercentFromLevel(level);
+  const color = getColorFromPercent(percent);
 
   const radius = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -124,7 +104,7 @@ export function StressCard({ onClick, className }: StressCardProps) {
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center">
-          <StressIcon level={level} color={color} />
+          <ScribbleIcon color={color} />
         </div>
       </div>
 
@@ -133,10 +113,10 @@ export function StressCard({ onClick, className }: StressCardProps) {
       </span>
       
       <span
-        className="mt-0.5 text-sm font-bold uppercase tracking-wide"
+        className="mt-0.5 text-sm font-bold tabular-nums"
         style={{ color }}
       >
-        {getLevelLabel(level, t)}
+        {percent}%
       </span>
     </button>
   );
