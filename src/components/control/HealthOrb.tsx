@@ -47,7 +47,7 @@ function spawnParticle(center: number): Particle {
     y,
     dirX: dx / len,
     dirY: dy / len,
-    speed: 0.5 + Math.random() * 0.3,
+    speed: 0.4 + Math.random() * 0.15,
     size: 4 + Math.random() * 2,
     opacity: 0,
     maxOpacity: 0.75 + Math.random() * 0.25,
@@ -165,7 +165,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.scale(dpr, dpr);
 
       ctx.beginPath();
-      ctx.arc(center, center, BASE_RADIUS, 0, Math.PI * 2);
+      for (let i = 0; i <= BLOB_SEGMENTS; i++) {
+        const angle = (i / BLOB_SEGMENTS) * Math.PI * 2;
+        const dynamicRadius = getDynamicRadius(angle, elapsed);
+        const px = center + Math.cos(angle + rot) * Math.max(2, dynamicRadius * easeOut);
+        const py = center + Math.sin(angle + rot) * Math.max(2, dynamicRadius * easeOut);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
       ctx.clip();
 
       ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
