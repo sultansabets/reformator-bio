@@ -260,10 +260,7 @@ const ControlCenter = () => {
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("metrics.title")}
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-4">
           <SleepCard
             percent={sleepPercent}
             onClick={() =>
