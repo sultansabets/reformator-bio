@@ -8,7 +8,7 @@ const PARTICLE_COUNT = 45;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;
-const LIQUID_CYCLE_MS = 8000;
+const LIQUID_CYCLE_MS = 12000;
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -104,10 +104,12 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
     const getDynamicRadius = (angle: number, t: number) => {
       const phase = (t / LIQUID_CYCLE_MS) * Math.PI * 2;
+      const slowPhase = phase * 0.4;
       return (
         BASE_RADIUS +
-        Math.sin(angle * 3 + phase) * 3.08 +
-        Math.cos(angle * 2 - phase * 0.7) * 2.45
+        Math.sin(angle * 2.5 + slowPhase) * 5.2 +
+        Math.cos(angle * 1.8 - slowPhase * 0.6) * 3.8 +
+        Math.sin(angle * 4 + slowPhase * 1.3) * 1.5
       );
     };
 

@@ -154,7 +154,9 @@
     "target10k": "Цель: 10 000 шагов",
     "hrv": "Вариабельность пульса (HRV)",
     "sleepQuality": "Качество сна",
-    "yesterdayLoad": "Нагрузка вчера"
+    "yesterdayLoad": "Нагрузка вчера",
+    "normIndex": "Индекс",
+    "completion": "Выполнение"
   },
   "bodyState": {
     "optimal": "Оптимальное",

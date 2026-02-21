@@ -148,7 +148,9 @@
     "target10k": "Target: 10,000 steps",
     "hrv": "Heart rate variability (HRV)",
     "sleepQuality": "Sleep quality",
-    "yesterdayLoad": "Yesterday's load"
+    "yesterdayLoad": "Yesterday's load",
+    "normIndex": "Index",
+    "completion": "Completion"
   },
   "bodyState": {
     "optimal": "Optimal",

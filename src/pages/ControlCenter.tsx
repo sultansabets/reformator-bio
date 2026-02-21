@@ -226,31 +226,6 @@ const ControlCenter = () => {
     return clamp(Math.round(100 - stressFactor - sleepDeficit - pulseFactor), 0, 100);
   }, [stressScore]);
 
-  const pressurePercent = useMemo(() => {
-    const systolic = 125;
-    const diastolic = 82;
-    const sysDeviation = Math.abs(systolic - 120);
-    const diaDeviation = Math.abs(diastolic - 80);
-    const totalDeviation = sysDeviation + diaDeviation;
-    const penalty = Math.floor(totalDeviation / 5) * 10;
-    return clamp(100 - penalty, 0, 100);
-  }, []);
-
-  const pulsePercent = useMemo(() => {
-    const restPulse = 62;
-    const optMin = 55;
-    const optMax = 75;
-    if (restPulse >= optMin && restPulse <= optMax) return 100;
-    const deviation = restPulse < optMin ? optMin - restPulse : restPulse - optMax;
-    const penalty = Math.floor(deviation / 5) * 5;
-    return clamp(100 - penalty, 0, 100);
-  }, []);
-
-  const stepsPercent = useMemo(() => {
-    const steps = 6500;
-    return clamp(Math.round((steps / 10000) * 100), 0, 100);
-  }, []);
-
   const recoveryPercent = useMemo(() => {
     const sleepPart = sleepPercent * 0.4;
     const hrvValue = 45;
@@ -335,9 +310,10 @@ const ControlCenter = () => {
           {t("factors.title")}
         </h2>
         <InfluenceFactors
-          pressurePercent={pressurePercent}
-          pulsePercent={pulsePercent}
-          stepsPercent={stepsPercent}
+          systolic={125}
+          diastolic={82}
+          pulse={62}
+          steps={8500}
           recoveryPercent={recoveryPercent}
         />
       </motion.div>
