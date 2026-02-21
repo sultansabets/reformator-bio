@@ -3,10 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import logoLight from "@/assets/logo-light.png";
-import logoDark from "@/assets/logo-dark.png";
+import { ParticleButton } from "./ParticleButton";
 
 const LEFT_TABS = [
   { path: "/control", icon: Home, key: "tabs.home" },
@@ -27,8 +25,8 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { theme } = useTheme();
   const isAIActive = location.pathname === AI_PATH;
+  
   const handleAIClick = () => {
     if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
       navigator.vibrate(10);
@@ -77,22 +75,15 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
         <button
           onClick={handleAIClick}
           className={cn(
-            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 overflow-hidden",
             isAIActive 
-              ? "bg-primary" 
+              ? "bg-neutral-900 dark:bg-neutral-800 ring-2 ring-primary/50" 
               : "bg-neutral-900 dark:bg-neutral-800",
             "focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
           )}
           aria-label={t("tabs.ai")}
         >
-          <img
-            src={theme === "dark" ? logoDark : logoLight}
-            alt="Reformator"
-            className={cn(
-              "h-5 w-auto object-contain transition-all duration-200",
-              !isAIActive && "opacity-60 grayscale"
-            )}
-          />
+          <ParticleButton size={40} isActive={isAIActive} />
         </button>
 
         {RIGHT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
