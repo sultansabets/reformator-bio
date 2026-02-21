@@ -25,7 +25,6 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isAIActive = location.pathname === AI_PATH;
   
   const handleAIClick = () => {
     if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
@@ -74,16 +73,10 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
 
         <button
           onClick={handleAIClick}
-          className={cn(
-            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 overflow-hidden",
-            isAIActive 
-              ? "bg-neutral-900 dark:bg-neutral-800 ring-2 ring-primary/50" 
-              : "bg-neutral-900 dark:bg-neutral-800",
-            "focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
-          )}
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-neutral-900 dark:bg-neutral-800 overflow-hidden transition-transform duration-200 active:scale-95 focus:outline-none"
           aria-label={t("tabs.ai")}
         >
-          <ParticleButton size={40} isActive={isAIActive} />
+          <ParticleButton size={40} />
         </button>
 
         {RIGHT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}

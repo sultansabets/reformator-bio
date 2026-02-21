@@ -2,10 +2,10 @@ import React, { useRef, useEffect } from "react";
 
 interface ParticleButtonProps {
   size?: number;
-  isActive?: boolean;
 }
 
-const PARTICLE_COUNT = 8;
+const PARTICLE_COUNT = 10;
+const GREEN_COLOR = "#34c759";
 
 interface Particle {
   x: number;
@@ -18,23 +18,23 @@ interface Particle {
 
 function createParticle(center: number, radius: number): Particle {
   const angle = Math.random() * Math.PI * 2;
-  const dist = Math.random() * radius * 0.6 + radius * 0.2;
+  const dist = Math.random() * radius * 0.7 + radius * 0.1;
   return {
     x: center + Math.cos(angle) * dist,
     y: center + Math.sin(angle) * dist,
-    vx: (Math.random() - 0.5) * 0.3,
-    vy: (Math.random() - 0.5) * 0.3,
-    size: Math.random() * 1.5 + 1,
-    opacity: Math.random() * 0.4 + 0.4,
+    vx: (Math.random() - 0.5) * 0.2,
+    vy: (Math.random() - 0.5) * 0.2,
+    size: Math.random() * 1.2 + 0.8,
+    opacity: Math.random() * 0.3 + 0.5,
   };
 }
 
-export function ParticleButton({ size = 40, isActive = false }: ParticleButtonProps) {
+export function ParticleButton({ size = 40 }: ParticleButtonProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
   const center = size / 2;
-  const radius = size * 0.35;
+  const radius = size * 0.38;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,12 +63,10 @@ export function ParticleButton({ size = 40, isActive = false }: ParticleButtonPr
       ctx.clearRect(0, 0, size, size);
 
       const particles = particlesRef.current;
-      const activeColor = isActive ? "rgba(34, 197, 94, " : "rgba(156, 163, 175, ";
-      const glowColor = isActive ? "rgba(34, 197, 94, 0.3)" : "rgba(156, 163, 175, 0.2)";
 
       for (const p of particles) {
-        p.x += p.vx * (delta * 0.05);
-        p.y += p.vy * (delta * 0.05);
+        p.x += p.vx * (delta * 0.04);
+        p.y += p.vy * (delta * 0.04);
 
         const dx = p.x - center;
         const dy = p.y - center;
@@ -79,29 +77,29 @@ export function ParticleButton({ size = 40, isActive = false }: ParticleButtonPr
           const ny = dy / dist;
           p.x = center + nx * radius;
           p.y = center + ny * radius;
-          p.vx = -p.vx * 0.8 + (Math.random() - 0.5) * 0.2;
-          p.vy = -p.vy * 0.8 + (Math.random() - 0.5) * 0.2;
+          p.vx = -p.vx * 0.7 + (Math.random() - 0.5) * 0.1;
+          p.vy = -p.vy * 0.7 + (Math.random() - 0.5) * 0.1;
         }
 
-        if (Math.random() < 0.01) {
-          p.vx += (Math.random() - 0.5) * 0.15;
-          p.vy += (Math.random() - 0.5) * 0.15;
+        if (Math.random() < 0.008) {
+          p.vx += (Math.random() - 0.5) * 0.1;
+          p.vy += (Math.random() - 0.5) * 0.1;
         }
 
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 0.5) {
-          p.vx *= 0.95;
-          p.vy *= 0.95;
+        if (speed > 0.4) {
+          p.vx *= 0.92;
+          p.vy *= 0.92;
         }
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size + 1, 0, Math.PI * 2);
-        ctx.fillStyle = glowColor;
+        ctx.arc(p.x, p.y, p.size + 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(52, 199, 89, 0.25)`;
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = activeColor + (isActive ? p.opacity + 0.2 : p.opacity * 0.7) + ")";
+        ctx.fillStyle = `rgba(52, 199, 89, ${p.opacity})`;
         ctx.fill();
       }
 
@@ -115,7 +113,7 @@ export function ParticleButton({ size = 40, isActive = false }: ParticleButtonPr
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [size, isActive, center, radius]);
+  }, [size, center, radius]);
 
   return (
     <canvas
