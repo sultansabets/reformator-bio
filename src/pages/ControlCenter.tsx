@@ -218,13 +218,9 @@ const ControlCenter = () => {
     return clamp(Math.round(kcalPart + stepsPart), 0, 100);
   }, [todayWorkout.caloriesBurned]);
 
-  const testosteronePercent = useMemo(() => {
-    const stressFactor = stressScore * 0.4;
-    const sleepDeficit = Math.max(0, 8 - SLEEP_AVG_HOURS) * 10 * 0.3;
-    const restPulse = 62;
-    const pulseFactor = restPulse > 75 ? (restPulse - 75) * 2 * 0.3 : 0;
-    return clamp(Math.round(100 - stressFactor - sleepDeficit - pulseFactor), 0, 100);
-  }, [stressScore]);
+  const testosteroneValue = useMemo(() => {
+    return 22.4;
+  }, []);
 
   const recoveryPercent = useMemo(() => {
     const sleepPart = sleepPercent * 0.4;
@@ -293,12 +289,12 @@ const ControlCenter = () => {
             }
           />
           <TestosteroneCard
-            percent={testosteronePercent}
+            value={testosteroneValue}
             onClick={() =>
               openMetricSheet({
                 key: "testosterone",
                 title: t("center.testosterone"),
-                percent: testosteronePercent,
+                percent: 0,
               })
             }
           />

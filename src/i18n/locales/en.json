@@ -1,4 +1,10 @@
 {
+  "testosterone": {
+    "low": "Low",
+    "optimal": "Optimal",
+    "high": "High",
+    "elevated": "Elevated"
+  },
   "common": {
     "save": "Save",
     "close": "Close",

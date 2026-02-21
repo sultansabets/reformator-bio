@@ -3,8 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ReformatorLogo } from "@/components/icons/ReformatorLogo";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 
 const LEFT_TABS = [
   { path: "/control", icon: Home, key: "tabs.home" },
@@ -25,6 +27,8 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isAIActive = location.pathname === AI_PATH;
   const handleAIClick = () => {
     if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
       navigator.vibrate(10);
@@ -74,14 +78,20 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
           onClick={handleAIClick}
           className={cn(
             "flex h-14 w-14 -translate-y-2 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
-            "bg-neutral-900 dark:bg-neutral-800",
-            "shadow-sm focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
+            isAIActive 
+              ? "bg-primary" 
+              : "bg-neutral-900 dark:bg-neutral-800",
+            "focus:outline-none focus:ring-2 focus:ring-muted-foreground/30 focus:ring-offset-2 focus:ring-offset-background"
           )}
           aria-label={t("tabs.ai")}
         >
-          <ReformatorLogo
-            className="h-6 w-6"
-            color={location.pathname === AI_PATH ? "#34c759" : "#9CA3AF"}
+          <img
+            src={theme === "dark" ? logoDark : logoLight}
+            alt="Reformator"
+            className={cn(
+              "h-6 w-auto object-contain transition-all duration-200",
+              !isAIActive && "opacity-60 grayscale"
+            )}
           />
         </button>
 

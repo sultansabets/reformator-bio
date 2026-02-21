@@ -47,9 +47,9 @@ export function MetricCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full flex-col items-center justify-center rounded-2xl border border-border bg-card px-3 py-4",
-        "min-h-[120px] transition-shadow duration-200 hover:shadow-md",
-        "active:scale-[0.98]",
+        "flex w-full flex-col items-center justify-center px-2 py-3",
+        "min-h-[100px] transition-transform duration-200",
+        "active:scale-[0.96] hover:opacity-80",
         className,
       )}
     >

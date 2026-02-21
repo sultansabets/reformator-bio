@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/contexts/ThemeContext";
 
 const VISUAL_SIZE = 320;
 const ATOM_COUNT = 35;
@@ -152,9 +151,6 @@ interface HealthOrbProps {
 
 export default function HealthOrb({ score }: HealthOrbProps) {
   const { t } = useTranslation();
-  const { theme } = useTheme();
-  const isLightRef = useRef(theme === "light");
-  isLightRef.current = theme === "light";
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const atomsRef = useRef<Atom[] | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -235,17 +231,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       }
 
       ctx.clearRect(0, 0, VISUAL_SIZE * dpr, VISUAL_SIZE * dpr);
-
-      ctx.save();
-      ctx.scale(dpr, dpr);
-
-      drawSmoothBlob(ctx, center, controlRadii, rot);
-      ctx.fillStyle = isLightRef.current 
-        ? `rgba(${r}, ${g}, ${b}, 0.03)` 
-        : `rgba(${r}, ${g}, ${b}, 0.02)`;
-      ctx.fill();
-
-      ctx.restore();
 
       ctx.save();
       ctx.scale(dpr, dpr);
