@@ -4,7 +4,7 @@ interface ParticleButtonProps {
   size?: number;
 }
 
-const PARTICLE_COUNT = 10;
+const PARTICLE_COUNT = 12;
 const GREEN_COLOR = "#34c759";
 
 interface Particle {
