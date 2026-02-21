@@ -19,6 +19,7 @@ import Labs from "@/pages/Labs";
 import Store from "@/pages/Store";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
+import SmartWake from "@/pages/SmartWake";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/shop" element={<Store />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/smart-wake" element={<SmartWake />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -410,5 +410,20 @@
     "ariaClose": "Close",
     "ariaPrev": "Previous story",
     "ariaNext": "Next story"
+  },
+  "smartWake": {
+    "title": "Smart Wake",
+    "subtitle": "Wake time recommendation based on sleep analysis",
+    "recommended": "Recommended",
+    "currentAlarm": "Current time",
+    "avgSleep": "Average sleep",
+    "last7days": "Last 7 days",
+    "hrv": "Heart rate variability",
+    "hrvDesc": "Recovery indicator",
+    "activateSleepMode": "Activate sleep mode"
+  },
+  "sleepMode": {
+    "wakeAt": "Wake at",
+    "cancel": "Cancel"
   }
 }
