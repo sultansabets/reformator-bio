@@ -15,61 +15,58 @@ function getRandomPercent(): number {
   return Math.floor(Math.random() * 101);
 }
 
-function getColorFromPercent(percent: number): string {
+function getStressColor(percent: number): string {
   if (percent <= 30) return "rgb(34, 197, 94)";
-  if (percent <= 60) return "rgb(234, 179, 8)";
-  if (percent <= 80) return "rgb(249, 115, 22)";
+  if (percent <= 55) return "rgb(234, 179, 8)";
+  if (percent <= 75) return "rgb(249, 115, 22)";
   return "rgb(239, 68, 68)";
 }
 
-function TangledBallIcon({ color }: { color: string }) {
+function getStressGlowColor(percent: number): string {
+  if (percent <= 30) return "rgba(34, 197, 94, 0.4)";
+  if (percent <= 55) return "rgba(234, 179, 8, 0.4)";
+  if (percent <= 75) return "rgba(249, 115, 22, 0.4)";
+  return "rgba(239, 68, 68, 0.4)";
+}
+
+function TangledBallIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8">
-      {/* Outer tangled loops */}
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className={className}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Main chaotic loop - asymmetric scribble */}
       <path 
-        d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6-2.7 6-6 6"
-        stroke={color} 
-        strokeWidth="2.2" 
-        strokeLinecap="round"
-        fill="none"
+        d="M7 10c1-2.5 4-3.5 6-2s2.5 4 1 6-4 2.5-5.5 1"
+        stroke="currentColor" 
+        strokeWidth="2"
       />
-      {/* Inner chaotic loops */}
+      {/* Secondary tangle crossing over */}
       <path 
-        d="M9 9c1.5-1 3.5-0.5 4.5 1s0.5 3.5-1 4.5-3.5 0.5-4.5-1"
-        stroke={color} 
-        strokeWidth="2.2" 
-        strokeLinecap="round"
-        fill="none"
+        d="M16 9c-1 2-3.5 3-5.5 2s-2-3-0.5-4.5 4-1 5 1"
+        stroke="currentColor" 
+        strokeWidth="2"
       />
+      {/* Inner knot detail */}
       <path 
-        d="M14 8c1 1.5 0.5 3.5-1 4.5s-3.5 0.5-4-1"
-        stroke={color} 
-        strokeWidth="2.2" 
-        strokeLinecap="round"
-        fill="none"
+        d="M10 13c1.5 1 3.5 0 4-1.5s-0.5-3-2-3.5"
+        stroke="currentColor" 
+        strokeWidth="2"
       />
-      {/* Cross tangles */}
+      {/* Outer loop fragment */}
       <path 
-        d="M8 14c2 1 4 0.5 5-1s0.5-4-1.5-5"
-        stroke={color} 
-        strokeWidth="2.2" 
-        strokeLinecap="round"
-        fill="none"
+        d="M6 14c0.5 1.5 2.5 2.5 4.5 2s3-2 2.5-3.5"
+        stroke="currentColor" 
+        strokeWidth="2"
       />
+      {/* Cross thread */}
       <path 
-        d="M15 11c0 2-1.5 3.5-3.5 3.5s-3-1-3-2.5 1.5-2.5 3-2.5"
-        stroke={color} 
-        strokeWidth="2.2" 
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* Center knot */}
-      <path 
-        d="M11 11c0.5-0.5 1.5-0.5 2 0s0.5 1.5 0 2-1.5 0.5-2 0"
-        stroke={color} 
-        strokeWidth="2.2" 
-        strokeLinecap="round"
-        fill="none"
+        d="M14 7c0.5 1 0.5 2.5-0.5 3.5"
+        stroke="currentColor" 
+        strokeWidth="2"
       />
     </svg>
   );
@@ -79,7 +76,8 @@ export function StressCard({ onClick, className }: StressCardProps) {
   const { t } = useTranslation();
   const [percent] = useState(getRandomPercent);
   
-  const color = getColorFromPercent(percent);
+  const color = getStressColor(percent);
+  const glowColor = getStressGlowColor(percent);
 
   const radius = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -92,7 +90,7 @@ export function StressCard({ onClick, className }: StressCardProps) {
       className={cn(
         "flex w-full flex-col items-center justify-center px-2 py-3",
         "min-h-[130px] transition-transform duration-200",
-        "active:scale-[0.96] hover:opacity-90",
+        "active:scale-[0.96] hover:opacity-80",
         className,
       )}
     >
@@ -110,7 +108,6 @@ export function StressCard({ onClick, className }: StressCardProps) {
             fill="none"
             stroke="hsl(var(--border))"
             strokeWidth={STROKE_WIDTH}
-            opacity={0.4}
           />
           <motion.circle
             cx={CIRCLE_SIZE / 2}
@@ -124,12 +121,18 @@ export function StressCard({ onClick, className }: StressCardProps) {
             transform={`rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})`}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashOffset }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
           />
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center">
-          <TangledBallIcon color={color} />
+          <span
+            className="transition-colors duration-300"
+            style={{ color }}
+          >
+            <TangledBallIcon className="h-7 w-7" />
+          </span>
         </div>
       </div>
 
