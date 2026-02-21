@@ -236,7 +236,8 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.5 }}
-        className="relative w-full px-5 pb-12"
+        className="relative w-full px-5"
+        style={{ paddingBottom: "calc(48px + env(safe-area-inset-bottom))" }}
       >
         <Button
           variant="ghost"

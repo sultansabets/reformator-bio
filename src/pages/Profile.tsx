@@ -16,6 +16,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import FullscreenModal from "@/components/FullscreenModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -502,19 +503,11 @@ function AddMedicationModal({
     });
   };
 
-  if (!open) return null;
-
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] flex flex-col bg-background"
-        style={{
-          paddingTop: "env(safe-area-inset-top)",
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
+    <FullscreenModal open={open} onClose={onClose}>
+      <div 
+        className="flex h-full w-full flex-col"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         {/* Header */}
         <header className="flex h-14 shrink-0 items-center px-5">
@@ -532,7 +525,10 @@ function AddMedicationModal({
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 pb-6">
+        <div 
+          className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5"
+          style={{ paddingBottom: 100 }}
+        >
           <div className="space-y-5">
             <div>
               <Label className="text-xs text-muted-foreground">{t("profile.medicationName")}</Label>
@@ -568,7 +564,7 @@ function AddMedicationModal({
                 <SelectTrigger className="mt-1.5 h-12 rounded-xl border-border bg-card text-base">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-[10001]">
+                <SelectContent className="z-[100000]">
                   {FREQUENCY_VALUES.map((val) => (
                     <SelectItem key={val} value={val}>
                       {t(`profile.freq${val.charAt(0).toUpperCase() + val.slice(1)}`)}
@@ -592,13 +588,21 @@ function AddMedicationModal({
         </div>
 
         {/* Fixed button */}
-        <div className="shrink-0 border-t border-border px-5 py-4">
-          <Button className="w-full h-12 text-base" onClick={handleSave}>
-            {t("common.save")}
-          </Button>
+        <div 
+          className="pointer-events-none absolute bottom-0 left-0 right-0"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div 
+            className="pointer-events-auto px-5 pb-4 pt-8"
+            style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
+          >
+            <Button className="w-full h-14 rounded-[18px] text-base font-medium" onClick={handleSave}>
+              {t("common.save")}
+            </Button>
+          </div>
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </FullscreenModal>
   );
 }
 
@@ -941,229 +945,213 @@ const Profile = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Full-screen edit profile panel */}
-      <AnimatePresence>
-        {editOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[9999] overflow-hidden bg-background"
-          >
-            {/* Main container - centered with max width */}
-            <div 
-              className="mx-auto flex h-full max-w-[480px] flex-col overflow-hidden"
-              style={{
-                paddingTop: "env(safe-area-inset-top)",
-              }}
+      {/* Full-screen edit profile panel - rendered via Portal at document.body */}
+      <FullscreenModal open={editOpen} onClose={() => setEditOpen(false)}>
+        {/* Main container - centered with max width */}
+        <div 
+          className="mx-auto flex h-full max-w-[480px] w-full flex-col overflow-hidden"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          {/* Header with close button */}
+          <header className="flex h-14 shrink-0 items-center px-5">
+            <button
+              type="button"
+              onClick={() => setEditOpen(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted -ml-2"
+              aria-label={t("common.close")}
             >
-              {/* Header with close button */}
-              <header className="flex h-14 shrink-0 items-center px-5">
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted -ml-2"
-                  aria-label={t("common.close")}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-                <h2 className="ml-2 text-base font-semibold text-foreground">
-                  {t("profile.editProfile")}
-                </h2>
-              </header>
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="ml-2 text-base font-semibold text-foreground">
+              {t("profile.editProfile")}
+            </h2>
+          </header>
 
-              {/* Scrollable content */}
-              <div 
-                className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
-                style={{ paddingBottom: 120 }}
-              >
-                <div className="px-5">
-                  <div className="space-y-4">
-                    {/* First Name */}
-                    <div>
-                      <Label htmlFor="edit-firstName" className="text-xs text-muted-foreground">
-                        {t("profile.firstName")}
-                      </Label>
-                      <Input
-                        id="edit-firstName"
-                        value={editFirstName}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setEditFirstName(v);
-                          updateUser({ firstName: v });
-                        }}
-                        className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
-                      />
-                    </div>
+          {/* Scrollable content */}
+          <div 
+            className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
+            style={{ paddingBottom: 120 }}
+          >
+            <div className="px-5">
+              <div className="space-y-4">
+                {/* First Name */}
+                <div>
+                  <Label htmlFor="edit-firstName" className="text-xs text-muted-foreground">
+                    {t("profile.firstName")}
+                  </Label>
+                  <Input
+                    id="edit-firstName"
+                    value={editFirstName}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEditFirstName(v);
+                      updateUser({ firstName: v });
+                    }}
+                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                  />
+                </div>
 
-                    {/* Last Name */}
-                    <div>
-                      <Label htmlFor="edit-lastName" className="text-xs text-muted-foreground">
-                        {t("profile.lastName")}
-                      </Label>
-                      <Input
-                        id="edit-lastName"
-                        value={editLastName}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setEditLastName(v);
-                          updateUser({ lastName: v });
-                        }}
-                        className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
-                      />
-                    </div>
+                {/* Last Name */}
+                <div>
+                  <Label htmlFor="edit-lastName" className="text-xs text-muted-foreground">
+                    {t("profile.lastName")}
+                  </Label>
+                  <Input
+                    id="edit-lastName"
+                    value={editLastName}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEditLastName(v);
+                      updateUser({ lastName: v });
+                    }}
+                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                  />
+                </div>
 
-                    {/* Nickname */}
-                    <div>
-                      <Label htmlFor="edit-nickname" className="text-xs text-muted-foreground">
-                        {t("auth.nickname")}
-                      </Label>
-                      <Input
-                        id="edit-nickname"
-                        value={editNickname}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          const sanitized = raw.toLowerCase().replace(/[^a-z0-9_.]/g, "");
-                          setEditNickname(sanitized);
-                          updateUser({ nickname: sanitized });
-                        }}
-                        className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
-                        placeholder={t("profile.placeholderUsername")}
-                      />
-                    </div>
+                {/* Nickname */}
+                <div>
+                  <Label htmlFor="edit-nickname" className="text-xs text-muted-foreground">
+                    {t("auth.nickname")}
+                  </Label>
+                  <Input
+                    id="edit-nickname"
+                    value={editNickname}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      const sanitized = raw.toLowerCase().replace(/[^a-z0-9_.]/g, "");
+                      setEditNickname(sanitized);
+                      updateUser({ nickname: sanitized });
+                    }}
+                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    placeholder={t("profile.placeholderUsername")}
+                  />
+                </div>
 
-                    {/* Date of Birth */}
-                    <div>
-                      <Label htmlFor="edit-dob" className="text-xs text-muted-foreground">
-                        {t("profile.dob")}
-                      </Label>
-                      <Input
-                        id="edit-dob"
-                        type="date"
-                        value={editDob}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setEditDob(v);
-                          updateUser({ dob: v });
-                        }}
-                        className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base text-left [&::-webkit-calendar-picker-indicator]:opacity-50"
-                      />
-                    </div>
+                {/* Date of Birth */}
+                <div>
+                  <Label htmlFor="edit-dob" className="text-xs text-muted-foreground">
+                    {t("profile.dob")}
+                  </Label>
+                  <Input
+                    id="edit-dob"
+                    type="date"
+                    value={editDob}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEditDob(v);
+                      updateUser({ dob: v });
+                    }}
+                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base text-left [&::-webkit-calendar-picker-indicator]:opacity-50"
+                  />
+                </div>
 
-                    {/* Age (readonly) */}
-                    <div>
-                      <Label htmlFor="edit-age" className="text-xs text-muted-foreground">
-                        {t("profile.age")}
-                      </Label>
-                      <Input
-                        id="edit-age"
-                        value={editAge}
-                        readOnly
-                        className="mt-1.5 h-14 w-full rounded-2xl border-border bg-muted px-4 text-base text-muted-foreground"
-                      />
-                    </div>
+                {/* Age (readonly) */}
+                <div>
+                  <Label htmlFor="edit-age" className="text-xs text-muted-foreground">
+                    {t("profile.age")}
+                  </Label>
+                  <Input
+                    id="edit-age"
+                    value={editAge}
+                    readOnly
+                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-muted px-4 text-base text-muted-foreground"
+                  />
+                </div>
 
-                    {/* Height & Weight in 2 columns */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="edit-height" className="text-xs text-muted-foreground">
-                          {t("profile.height")} (см)
-                        </Label>
-                        <Input
-                          id="edit-height"
-                          type="number"
-                          inputMode="numeric"
-                          min={120}
-                          max={220}
-                          value={editHeight}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setEditHeight(v);
-                            const n = Number(v);
-                            if (!Number.isNaN(n)) updateUser({ height: n });
-                          }}
-                          className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-weight" className="text-xs text-muted-foreground">
-                          {t("profile.weight")} (кг)
-                        </Label>
-                        <Input
-                          id="edit-weight"
-                          type="number"
-                          inputMode="numeric"
-                          min={40}
-                          max={200}
-                          value={editWeight}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setEditWeight(v);
-                            const n = Number(v);
-                            if (!Number.isNaN(n)) updateUser({ weight: n });
-                          }}
-                          className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
-                        />
-                      </div>
-                    </div>
-
-                    {/* City */}
-                    <div>
-                      <Label htmlFor="edit-city" className="text-xs text-muted-foreground">
-                        {t("profile.city")}
-                      </Label>
-                      <Select
-                        value={editCity}
-                        onValueChange={(v) => {
-                          setEditCity(v);
-                          updateUser({ city: v });
-                        }}
-                      >
-                        <SelectTrigger
-                          id="edit-city"
-                          className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
-                        >
-                          <SelectValue placeholder={t("profile.chooseCity")} />
-                        </SelectTrigger>
-                        <SelectContent className="z-[10001] border-border bg-popover" position="popper">
-                          {CITY_KEYS.map((key) => (
-                            <SelectItem key={key} value={key}>
-                              {t(`cities.${key}`)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                {/* Height & Weight in 2 columns */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="edit-height" className="text-xs text-muted-foreground">
+                      {t("profile.height")} (см)
+                    </Label>
+                    <Input
+                      id="edit-height"
+                      type="number"
+                      inputMode="numeric"
+                      min={120}
+                      max={220}
+                      value={editHeight}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setEditHeight(v);
+                        const n = Number(v);
+                        if (!Number.isNaN(n)) updateUser({ height: n });
+                      }}
+                      className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-weight" className="text-xs text-muted-foreground">
+                      {t("profile.weight")} (кг)
+                    </Label>
+                    <Input
+                      id="edit-weight"
+                      type="number"
+                      inputMode="numeric"
+                      min={40}
+                      max={200}
+                      value={editWeight}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setEditWeight(v);
+                        const n = Number(v);
+                        if (!Number.isNaN(n)) updateUser({ weight: n });
+                      }}
+                      className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    />
                   </div>
                 </div>
-              </div>
 
-              {/* Fixed bottom save button */}
-              <div 
-                className="pointer-events-none absolute bottom-0 left-0 right-0"
-                style={{
-                  paddingBottom: "env(safe-area-inset-bottom)",
-                }}
-              >
-                <div 
-                  className="mx-auto max-w-[480px] px-5 pb-4 pt-8 pointer-events-auto"
-                  style={{
-                    background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)",
-                  }}
-                >
-                  <Button
-                    className="h-14 w-full rounded-[18px] text-base font-medium"
-                    onClick={() => setEditOpen(false)}
+                {/* City */}
+                <div>
+                  <Label htmlFor="edit-city" className="text-xs text-muted-foreground">
+                    {t("profile.city")}
+                  </Label>
+                  <Select
+                    value={editCity}
+                    onValueChange={(v) => {
+                      setEditCity(v);
+                      updateUser({ city: v });
+                    }}
                   >
-                    {t("common.save")}
-                  </Button>
+                    <SelectTrigger
+                      id="edit-city"
+                      className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    >
+                      <SelectValue placeholder={t("profile.chooseCity")} />
+                    </SelectTrigger>
+                    <SelectContent className="z-[100000] border-border bg-popover" position="popper">
+                      {CITY_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {t(`cities.${key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+
+          {/* Fixed bottom save button */}
+          <div 
+            className="pointer-events-none absolute bottom-0 left-0 right-0"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            <div 
+              className="mx-auto max-w-[480px] px-5 pb-4 pt-8 pointer-events-auto"
+              style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
+            >
+              <Button
+                className="h-14 w-full rounded-[18px] text-base font-medium"
+                onClick={() => setEditOpen(false)}
+              >
+                {t("common.save")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </FullscreenModal>
     </motion.div>
   );
 };

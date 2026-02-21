@@ -590,7 +590,10 @@ export default function SmartWake() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between px-5">
+      <header 
+        className="flex h-14 shrink-0 items-center justify-between px-5"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -774,14 +777,20 @@ export default function SmartWake() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="absolute bottom-0 left-0 right-0 px-5 pb-10 pt-4 bg-gradient-to-t from-background via-background to-transparent"
+        className="pointer-events-none absolute bottom-0 left-0 right-0"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <Button
-          className="w-full h-14 text-base font-medium"
-          onClick={handleActivateSleepMode}
+        <div 
+          className="pointer-events-auto px-5 pb-4 pt-10"
+          style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
         >
-          Включить умный подъем
-        </Button>
+          <Button
+            className="w-full h-14 rounded-[18px] text-base font-medium"
+            onClick={handleActivateSleepMode}
+          >
+            Включить умный подъем
+          </Button>
+        </div>
       </motion.div>
 
       {/* Calendar modal */}
