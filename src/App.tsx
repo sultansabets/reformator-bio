@@ -49,8 +49,9 @@ const App = () => (
               <Route path="/shop" element={<Store />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/smart-wake" element={<SmartWake />} />
             </Route>
+            {/* Standalone pages without AppLayout */}
+            <Route path="/smart-wake" element={<ProtectedRoute><SmartWake /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
             </ScrollSourceProvider>
