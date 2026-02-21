@@ -634,7 +634,7 @@ export default function SmartWake() {
             className="text-center mt-4 mb-2"
           >
             <p className="text-xs text-muted-foreground uppercase tracking-widest">
-              Подъем в
+              {t("smartWake.wakeAt")}
             </p>
           </motion.div>
 
@@ -788,7 +788,7 @@ export default function SmartWake() {
             className="w-full h-14 rounded-[18px] text-base font-medium"
             onClick={handleActivateSleepMode}
           >
-            Включить умный подъем
+            {t("smartWake.activateSleepMode")}
           </Button>
         </div>
       </motion.div>

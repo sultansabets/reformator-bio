@@ -8,11 +8,7 @@ import { Input } from "@/components/ui/input";
 
 const PROMPT_KEYS = ["recovery", "testosterone", "cortisol", "energy", "labs", "overtrain"] as const;
 
-const EXAMPLE_QUERIES = [
-  "Разобрать анализ крови",
-  "Как снизить стресс",
-  "Как поднять тестостерон",
-];
+const EXAMPLE_KEYS = ["labs", "stress", "testosterone"] as const;
 
 type Message = { role: "user" | "assistant"; text: string };
 
@@ -228,18 +224,18 @@ export default function AI() {
               className="rounded-xl border border-border bg-card/50 p-4"
             >
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">
-                Попробуйте спросить
+                {t("ai.tryAsking")}
               </p>
               <div className="space-y-2">
-                {EXAMPLE_QUERIES.map((query, i) => (
+                {EXAMPLE_KEYS.map((key) => (
                   <button
-                    key={i}
+                    key={key}
                     type="button"
-                    onClick={() => send(query)}
+                    onClick={() => send(t(`ai.examples.${key}`))}
                     className="flex w-full items-center gap-2 text-left text-sm text-foreground/80 hover:text-foreground transition-colors"
                   >
                     <span className="text-muted-foreground">•</span>
-                    <span>{query}</span>
+                    <span>{t(`ai.examples.${key}`)}</span>
                   </button>
                 ))}
               </div>

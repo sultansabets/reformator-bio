@@ -91,13 +91,13 @@ const MOCK_HISTORY = [
     service: "IV-терапия Майерс",
     doctor: "Др. Ахметов",
     date: "15 февр. 2026",
-    status: "пришел",
+    statusKey: "statusCame",
   },
   {
     service: "Консультация уролога",
     doctor: "Др. Сабиров",
     date: "22 февр. 2026",
-    status: "планируется",
+    statusKey: "statusPlanned",
   },
 ];
 
@@ -133,7 +133,6 @@ function MedicalTab() {
 
 function HistoryTab() {
   const { t } = useTranslation();
-  const statusKey = (s: string) => s === "пришел" ? "statusCame" : s === "планируется" ? "statusPlanned" : "statusNoShow";
   return (
     <div className="space-y-3">
       {MOCK_HISTORY.map((item, i) => (
@@ -148,16 +147,16 @@ function HistoryTab() {
             </div>
             <div
               className={`text-xs font-medium ${
-                item.status === "пришел"
+                item.statusKey === "statusCame"
                   ? "text-status-green"
-                  : item.status === "планируется"
+                  : item.statusKey === "statusPlanned"
                   ? "text-primary"
-                  : item.status === "не пришел"
+                  : item.statusKey === "statusNoShow"
                   ? "text-status-red"
                   : "text-status-amber"
               }`}
             >
-              {t(`profile.${statusKey(item.status)}`)}
+              {t(`profile.${item.statusKey}`)}
             </div>
           </CardContent>
         </Card>

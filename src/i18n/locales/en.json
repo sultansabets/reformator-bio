@@ -244,6 +244,12 @@
     "ariaAttach": "Attach file",
     "ariaSend": "Send",
     "demoAccepted": "Got it. Demo mode: full response will be available after connecting the service.",
+    "tryAsking": "Try asking",
+    "examples": {
+      "labs": "Analyze blood test",
+      "stress": "How to reduce stress",
+      "testosterone": "How to boost testosterone"
+    },
     "prompts": {
       "recovery": "How to improve recovery?",
       "testosterone": "What affects testosterone?",
@@ -309,7 +315,12 @@
   "center": {
     "overview": "Overview",
     "nutrition": "Nutrition",
+    "sport": "Sport",
     "workouts": "Workouts",
+    "cardio": "Cardio",
+    "continue": "Continue",
+    "searchProduct": "Search product...",
+    "dayLabels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     "sleep": "Sleep",
     "recovery": "Recovery",
     "testosterone": "Testosterone",
@@ -344,8 +355,11 @@
     "kcalPer100": "Kcal per 100g (optional)",
     "orManualKcal": "Or enter kcal manually",
     "protein": "Protein (g)",
+    "proteinShort": "Protein",
     "fats": "Fats (g)",
+    "fatsShort": "Fats",
     "carbs": "Carbs (g)",
+    "carbsShort": "Carbs",
     "startWorkout": "Start workout",
     "pulse": "Pulse",
     "bpm": "bpm",
@@ -449,7 +463,8 @@
     "sleepQuality": "Sleep quality",
     "recoveryLabel": "Recovery",
     "sleepCycles": "Sleep cycles",
-    "cyclesUnit": "cycles"
+    "cyclesUnit": "cycles",
+    "wakeAt": "Wake at"
   },
   "sleepMode": {
     "wakeAt": "Wake at",

@@ -41,18 +41,12 @@ interface FoodProduct {
 const FOOD_PRODUCTS: FoodProduct[] = foodDatabase.products;
 const FOOD_CATEGORIES: Record<string, string> = foodDatabase.categories;
 
-const TABS = ["Питание", "Спорт"] as const;
-type Tab = (typeof TABS)[number];
+const TAB_KEYS = ["nutrition", "sport"] as const;
+type Tab = (typeof TAB_KEYS)[number];
 
 const BODY_PARTS = ["chest", "back", "legs", "shoulders", "arms", "abs"] as const;
 const CARDIO_TYPES = ["run", "swim", "bike", "hiit", "other"] as const;
-const WORKOUT_CARDIO_MAP: Record<string, string> = {
-  run: "Бег",
-  swim: "Плавание",
-  bike: "Велосипед",
-  hiit: "HIIT",
-  other: "Другое",
-};
+const WORKOUT_CARDIO_KEYS = ["run", "swim", "bike", "hiit", "other"] as const;
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -63,13 +57,12 @@ function getDateString(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function getWeekDays(): { date: Date; dayName: string; dateStr: string; isToday: boolean }[] {
+function getWeekDays(dayLabels: string[]): { date: Date; dayName: string; dateStr: string; isToday: boolean }[] {
   const today = new Date();
   const dayOfWeek = today.getDay();
   const monday = new Date(today);
   monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
   
-  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const result = [];
   
   for (let i = 0; i < 7; i++) {
@@ -77,7 +70,7 @@ function getWeekDays(): { date: Date; dayName: string; dateStr: string; isToday:
     date.setDate(monday.getDate() + i);
     result.push({
       date,
-      dayName: days[i],
+      dayName: dayLabels[i] || "",
       dateStr: getDateString(date),
       isToday: getDateString(date) === getTodayDateString(),
     });
@@ -366,8 +359,9 @@ export default function Center() {
     };
   }, [user?.id]);
 
-  const [activeTab, setActiveTab] = useState<Tab>("Питание");
-  const weekDays = useMemo(() => getWeekDays(), []);
+  const [activeTab, setActiveTab] = useState<Tab>("nutrition");
+  const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
+  const weekDays = useMemo(() => getWeekDays(dayLabels), [dayLabels]);
   const [selectedDate, setSelectedDate] = useState(getTodayDateString());
   const [dayData, setDayData] = useState<DayData>({ entries: [] });
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -582,16 +576,16 @@ export default function Center() {
     >
       {/* Tab switcher */}
       <motion.div variants={itemAnim} className="mb-5 flex gap-1 rounded-xl bg-muted p-1">
-        {TABS.map((tab) => (
+        {TAB_KEYS.map((tabKey) => (
           <button
-            key={tab}
+            key={tabKey}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActiveTab(tabKey)}
             className={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-              activeTab === tab ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              activeTab === tabKey ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab}
+            {t(`center.${tabKey}`)}
           </button>
         ))}
       </motion.div>
@@ -599,7 +593,7 @@ export default function Center() {
       {/* Питание tab - always mounted, hidden via CSS */}
       <div
         className={`transition-opacity duration-200 ${
-          activeTab === "Питание" ? "block opacity-100" : "hidden opacity-0"
+          activeTab === "nutrition" ? "block opacity-100" : "hidden opacity-0"
         }`}
       >
             {/* Week selector + calendar */}
@@ -666,21 +660,21 @@ export default function Center() {
               <div className="flex justify-around">
                 <MacroCircle
                   icon={Beef}
-                  label="Белок"
+                  label={t("center.proteinShort")}
                   remaining={proteinRemaining}
                   goal={proteinGoal}
                   color="#EF4444"
                 />
                 <MacroCircle
                   icon={Wheat}
-                  label="Углеводы"
+                  label={t("center.carbsShort")}
                   remaining={carbsRemaining}
                   goal={carbsGoal}
                   color="#F59E0B"
                 />
                 <MacroCircle
                   icon={Droplet}
-                  label="Жиры"
+                  label={t("center.fatsShort")}
                   remaining={fatsRemaining}
                   goal={fatsGoal}
                   color="#22C55E"
@@ -747,7 +741,7 @@ export default function Center() {
       {/* Спорт tab - always mounted, hidden via CSS */}
       <div
         className={`space-y-6 transition-opacity duration-200 ${
-          activeTab === "Спорт" ? "block opacity-100" : "hidden opacity-0"
+          activeTab === "sport" ? "block opacity-100" : "hidden opacity-0"
         }`}
       >
             {/* Strength */}
@@ -816,11 +810,11 @@ export default function Center() {
                     <div className="flex gap-2">
                       <Button variant="outline" className="flex-1 gap-2" onClick={pauseWorkout}>
                         {workoutPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                        {workoutPaused ? "Продолжить" : "Пауза"}
+                        {workoutPaused ? t("center.continue") : t("center.pause")}
                       </Button>
                       <Button variant="destructive" className="flex-1 gap-2" onClick={stopWorkout}>
                         <Square className="h-4 w-4" />
-                        Стоп
+                        {t("center.stop")}
                       </Button>
                     </div>
                   </div>
@@ -910,7 +904,7 @@ export default function Center() {
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Поиск продукта..."
+                  placeholder={t("center.searchProduct")}
                   className="h-12 rounded-xl border-border bg-muted/50 pl-10 text-base"
                 />
               </div>
@@ -923,7 +917,7 @@ export default function Center() {
             >
               {filteredProducts.length === 0 ? (
                 <div className="py-16 text-center">
-                  <p className="text-sm text-muted-foreground">Ничего не найдено</p>
+                  <p className="text-sm text-muted-foreground">{t("factors.noData")}</p>
                 </div>
               ) : (
                 <div className="space-y-1">

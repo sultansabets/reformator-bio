@@ -29,7 +29,7 @@ function getStressGlowColor(percent: number): string {
   return "rgba(239, 68, 68, 0.4)";
 }
 
-function HeadLightningIcon({ className, isHighStress }: { className?: string; isHighStress?: boolean }) {
+function StressIcon({ className, isHighStress }: { className?: string; isHighStress?: boolean }) {
   return (
     <motion.svg 
       viewBox="0 0 24 24" 
@@ -38,24 +38,40 @@ function HeadLightningIcon({ className, isHighStress }: { className?: string; is
       animate={isHighStress ? { opacity: [1, 0.6, 1] } : undefined}
       transition={isHighStress ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" } : undefined}
     >
-      {/* Head - simple rounded shape */}
+      {/* Head - circle outline */}
       <circle 
-        cx="10" 
-        cy="13" 
-        r="6"
+        cx="12" 
+        cy="14" 
+        r="4"
         stroke="currentColor" 
         strokeWidth="2"
       />
-      {/* Neck hint */}
+      {/* Shoulders - simple curved arc */}
       <path 
-        d="M7 18v2M13 18v2"
+        d="M5 23 Q12 19 19 23"
         stroke="currentColor" 
         strokeWidth="2"
         strokeLinecap="round"
       />
-      {/* Lightning bolt - positioned at temple/top */}
+      {/* Lightning bolt 1 - left */}
       <path 
-        d="M17 3l-2 4h3l-2.5 5"
+        d="M6 1 L7.5 3.5 L5.5 3.5 L7 6"
+        stroke="currentColor" 
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Lightning bolt 2 - center */}
+      <path 
+        d="M11.5 1 L13 3.5 L11 3.5 L12.5 6"
+        stroke="currentColor" 
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Lightning bolt 3 - right */}
+      <path 
+        d="M17 1 L18.5 3.5 L16.5 3.5 L18 6"
         stroke="currentColor" 
         strokeWidth="2"
         strokeLinecap="round"
@@ -124,7 +140,7 @@ export function StressCard({ onClick, className }: StressCardProps) {
             className="transition-colors duration-300"
             style={{ color }}
           >
-            <HeadLightningIcon className="h-7 w-7" isHighStress={percent > 70} />
+            <StressIcon className="h-7 w-7" isHighStress={percent > 70} />
           </span>
         </div>
       </div>

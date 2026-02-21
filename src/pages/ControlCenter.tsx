@@ -95,42 +95,42 @@ function workoutIntensityFromToday(durationSec: number, caloriesBurned: number):
   return Math.round(Math.min(10, intensityFromDuration + intensityFromCal * 0.5));
 }
 
-const sleepData = [
-  { day: "Пн", hours: 7.2, quality: 80 },
-  { day: "Вт", hours: 6.8, quality: 65 },
-  { day: "Ср", hours: 7.5, quality: 85 },
-  { day: "Чт", hours: 8.0, quality: 90 },
-  { day: "Пт", hours: 6.5, quality: 60 },
-  { day: "Сб", hours: 7.8, quality: 82 },
-  { day: "Вс", hours: 7.4, quality: 78 },
+const sleepDataRaw = [
+  { dayIdx: 0, hours: 7.2, quality: 80 },
+  { dayIdx: 1, hours: 6.8, quality: 65 },
+  { dayIdx: 2, hours: 7.5, quality: 85 },
+  { dayIdx: 3, hours: 8.0, quality: 90 },
+  { dayIdx: 4, hours: 6.5, quality: 60 },
+  { dayIdx: 5, hours: 7.8, quality: 82 },
+  { dayIdx: 6, hours: 7.4, quality: 78 },
 ];
-const loadData = [
-  { day: "Пн", load: 8.2 },
-  { day: "Вт", load: 14.5 },
-  { day: "Ср", load: 10.1 },
-  { day: "Чт", load: 16.3 },
-  { day: "Пт", load: 6.8 },
-  { day: "Сб", load: 12.4 },
-  { day: "Вс", load: 9.7 },
+const loadDataRaw = [
+  { dayIdx: 0, load: 8.2 },
+  { dayIdx: 1, load: 14.5 },
+  { dayIdx: 2, load: 10.1 },
+  { dayIdx: 3, load: 16.3 },
+  { dayIdx: 4, load: 6.8 },
+  { dayIdx: 5, load: 12.4 },
+  { dayIdx: 6, load: 9.7 },
 ];
-const recoveryData = [
-  { day: "Пн", score: 72 },
-  { day: "Вт", score: 65 },
-  { day: "Ср", score: 78 },
-  { day: "Чт", score: 85 },
-  { day: "Пт", score: 60 },
-  { day: "Сб", score: 80 },
-  { day: "Вс", score: 82 },
+const recoveryDataRaw = [
+  { dayIdx: 0, score: 72 },
+  { dayIdx: 1, score: 65 },
+  { dayIdx: 2, score: 78 },
+  { dayIdx: 3, score: 85 },
+  { dayIdx: 4, score: 60 },
+  { dayIdx: 5, score: 80 },
+  { dayIdx: 6, score: 82 },
 ];
 
-const sleepLast3Days = [
-  { day: "Позавчера", hours: 7.2 },
-  { day: "Вчера", hours: 6.8 },
-  { day: "Сегодня", hours: 7.5 },
+const sleepLast3DaysRaw = [
+  { dayKey: "dayBeforeYesterday", hours: 7.2 },
+  { dayKey: "yesterday", hours: 6.8 },
+  { dayKey: "today", hours: 7.5 },
 ];
 
 const SLEEP_AVG_HOURS =
-  (sleepLast3Days[0].hours + sleepLast3Days[1].hours + sleepLast3Days[2].hours) / 3;
+  (sleepLast3DaysRaw[0].hours + sleepLast3DaysRaw[1].hours + sleepLast3DaysRaw[2].hours) / 3;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -143,6 +143,12 @@ const ControlCenter = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const displayName = user?.fullName?.trim() || t("common.user");
+
+  const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
+  const sleepData = sleepDataRaw.map(d => ({ ...d, day: dayLabels[d.dayIdx] }));
+  const loadData = loadDataRaw.map(d => ({ ...d, day: dayLabels[d.dayIdx] }));
+  const recoveryData = recoveryDataRaw.map(d => ({ ...d, day: dayLabels[d.dayIdx] }));
+  const sleepLast3Days = sleepLast3DaysRaw.map(d => ({ ...d, day: t(`days.${d.dayKey}`) }));
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
