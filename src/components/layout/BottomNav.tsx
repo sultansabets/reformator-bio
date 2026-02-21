@@ -77,7 +77,7 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
         <button
           onClick={handleAIClick}
           className={cn(
-            "flex h-14 w-14 -translate-y-2 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
             isAIActive 
               ? "bg-primary" 
               : "bg-neutral-900 dark:bg-neutral-800",
@@ -89,7 +89,7 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
             src={theme === "dark" ? logoDark : logoLight}
             alt="Reformator"
             className={cn(
-              "h-6 w-auto object-contain transition-all duration-200",
+              "h-5 w-auto object-contain transition-all duration-200",
               !isAIActive && "opacity-60 grayscale"
             )}
           />

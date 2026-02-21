@@ -143,6 +143,7 @@
     "pulse": "Pulse",
     "steps": "Steps",
     "recovery": "Recovery",
+    "testosterone": "Testosterone",
     "basedOn": "Based on:",
     "systolic": "Systolic",
     "diastolic": "Diastolic",
@@ -156,7 +157,11 @@
     "sleepQuality": "Sleep quality",
     "yesterdayLoad": "Yesterday's load",
     "normIndex": "Index",
-    "completion": "Completion"
+    "completion": "Completion",
+    "noData": "No data",
+    "asOf": "As of:",
+    "labAnalysis": "Lab analysis",
+    "hormoneBalance": "Hormone balance"
   },
   "bodyState": {
     "optimal": "Optimal",

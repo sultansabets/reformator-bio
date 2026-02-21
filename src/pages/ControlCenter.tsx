@@ -17,12 +17,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
 import { getRecommendedKcal } from "@/lib/health";
 import { computeHealthMetrics } from "@/lib/healthEngine";
-import { getLatestLab, getTestosteroneStatus } from "@/lib/labs";
+import { getLatestLab } from "@/lib/labs";
 import { getStorageKey } from "@/lib/userStorage";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
-import { TestosteroneCard } from "@/components/control/TestosteroneCard";
+import { StressCard } from "@/components/control/StressCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 
@@ -194,10 +194,9 @@ const ControlCenter = () => {
     };
   }, [user?.height, user?.weight, storageKeys]);
 
-  const stressScore = metrics.stressScore;
   const recoveryScore = metrics.recoveryScore;
-  const testosteroneValue = 56;
-  const testosteroneStatusKey = testosteroneValue != null ? getTestosteroneStatus(testosteroneValue) : null;
+  const testosteroneValue = 22.4;
+  const testosteroneDate = "12.03.2026";
 
   const sleepPercent = useMemo(() => {
     const actual = SLEEP_AVG_HOURS;
@@ -217,6 +216,22 @@ const ControlCenter = () => {
     const stepsPart = (steps / targetSteps) * 50;
     return clamp(Math.round(kcalPart + stepsPart), 0, 100);
   }, [todayWorkout.caloriesBurned]);
+
+  const stressPercent = useMemo(() => {
+    const hrvBase = 60;
+    const hrvCurrent = 45;
+    const hrvFactor = Math.max(0, (hrvBase - hrvCurrent) / hrvBase) * 100 * 0.4;
+    
+    const restingHR = 62;
+    const pulseFactor = restingHR > 75 ? ((restingHR - 75) / 25) * 100 * 0.3 : 0;
+    
+    const loadFactor = (loadPercent / 100) * 100 * 0.2;
+    
+    const sleepHours = SLEEP_AVG_HOURS;
+    const sleepFactor = sleepHours < 7 ? ((7 - sleepHours) / 3) * 100 * 0.1 : 0;
+    
+    return clamp(Math.round(hrvFactor + pulseFactor + loadFactor + sleepFactor), 0, 100);
+  }, [loadPercent]);
 
   const recoveryPercent = useMemo(() => {
     const sleepPart = sleepPercent * 0.4;
@@ -281,13 +296,13 @@ const ControlCenter = () => {
               })
             }
           />
-          <TestosteroneCard
-            value={testosteroneValue}
+          <StressCard
+            percent={stressPercent}
             onClick={() =>
               openMetricSheet({
-                key: "testosterone",
-                title: t("center.testosterone"),
-                percent: 0,
+                key: "stress",
+                title: t("center.stress"),
+                percent: stressPercent,
               })
             }
           />
@@ -301,6 +316,8 @@ const ControlCenter = () => {
           pulse={62}
           steps={8500}
           recoveryPercent={recoveryPercent}
+          testosteroneValue={testosteroneValue}
+          testosteroneDate={testosteroneDate}
         />
       </motion.div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Gauge, Heart, Footprints, BatteryCharging, ChevronDown, ChevronUp } from "lucide-react";
+import { Gauge, Heart, Footprints, BatteryCharging, ChevronDown, ChevronUp, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
@@ -10,6 +10,7 @@ interface InfluenceFactor {
   label: string;
   mainValue: string;
   unit?: string;
+  subtitle?: string;
   sources: string[];
   iconColor: string;
   iconBg: string;
@@ -21,6 +22,8 @@ export interface InfluenceFactorsProps {
   pulse?: number;
   steps?: number;
   recoveryPercent?: number;
+  testosteroneValue?: number | null;
+  testosteroneDate?: string;
 }
 
 export function InfluenceFactors({
@@ -29,11 +32,14 @@ export function InfluenceFactors({
   pulse = 62,
   steps = 8500,
   recoveryPercent = 55,
+  testosteroneValue,
+  testosteroneDate,
 }: InfluenceFactorsProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const recoveryIndex = Math.max(0, Math.min(100, Math.round(recoveryPercent)));
+  const hasTestosterone = testosteroneValue != null;
 
   const factors: InfluenceFactor[] = [
     {
@@ -75,6 +81,17 @@ export function InfluenceFactors({
       iconColor: "#FF9F0A",
       iconBg: "rgba(255,159,10,0.15)",
     },
+    {
+      id: "testosterone",
+      icon: FlaskConical,
+      label: t("factors.testosterone"),
+      mainValue: hasTestosterone ? testosteroneValue.toFixed(1) : t("factors.noData"),
+      unit: hasTestosterone ? "нмоль/л" : undefined,
+      subtitle: hasTestosterone && testosteroneDate ? `${t("factors.asOf")} ${testosteroneDate}` : undefined,
+      sources: [t("factors.labAnalysis"), t("factors.hormoneBalance")],
+      iconColor: "#8B5CF6",
+      iconBg: "rgba(139,92,246,0.15)",
+    },
   ];
 
   return (
@@ -110,6 +127,9 @@ export function InfluenceFactors({
                     </span>
                   )}
                 </p>
+                {f.subtitle && (
+                  <p className="text-[10px] text-muted-foreground">{f.subtitle}</p>
+                )}
               </div>
 
               {isExpanded ? (

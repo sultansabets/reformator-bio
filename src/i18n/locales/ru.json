@@ -149,6 +149,7 @@
     "pulse": "Пульс",
     "steps": "Шаги",
     "recovery": "Восстановление",
+    "testosterone": "Тестостерон",
     "basedOn": "Основано на:",
     "systolic": "Систолическое",
     "diastolic": "Диастолическое",
@@ -162,7 +163,11 @@
     "sleepQuality": "Качество сна",
     "yesterdayLoad": "Нагрузка вчера",
     "normIndex": "Индекс",
-    "completion": "Выполнение"
+    "completion": "Выполнение",
+    "noData": "Нет данных",
+    "asOf": "Актуально на:",
+    "labAnalysis": "Лабораторный анализ",
+    "hormoneBalance": "Гормональный баланс"
   },
   "bodyState": {
     "optimal": "Оптимальное",
