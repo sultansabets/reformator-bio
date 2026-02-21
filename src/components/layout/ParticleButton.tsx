@@ -93,13 +93,8 @@ export function ParticleButton({ size = 40 }: ParticleButtonProps) {
         }
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size + 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(52, 199, 89, 0.25)`;
-        ctx.fill();
-
-        ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(52, 199, 89, ${p.opacity})`;
+        ctx.fillStyle = `rgba(255, 255, 255, 0.85)`;
         ctx.fill();
       }
 

@@ -73,7 +73,7 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
 
         <button
           onClick={handleAIClick}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-neutral-900 dark:bg-neutral-800 overflow-hidden transition-transform duration-200 active:scale-95 focus:outline-none"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-transform duration-200 active:scale-95 focus:outline-none"
           aria-label={t("tabs.ai")}
         >
           <ParticleButton size={40} />
