@@ -1,11 +1,10 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 
 interface ParticleButtonProps {
   size?: number;
 }
 
 const PARTICLE_COUNT = 12;
-const GREEN_COLOR = "#34c759";
 
 interface Particle {
   x: number;
@@ -29,12 +28,39 @@ function createParticle(center: number, radius: number): Particle {
   };
 }
 
+function getParticleColor(): string {
+  const isDark = document.documentElement.classList.contains("dark");
+  return isDark ? "255, 255, 255" : "0, 0, 0";
+}
+
 export function ParticleButton({ size = 40 }: ParticleButtonProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
+  const colorRef = useRef<string>(getParticleColor());
   const center = size / 2;
   const radius = size * 0.38;
+
+  const [, forceUpdate] = useState(0);
+
+  const updateColor = useCallback(() => {
+    colorRef.current = getParticleColor();
+    forceUpdate((n) => n + 1);
+  }, []);
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === "class") {
+          updateColor();
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
+  }, [updateColor]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,6 +89,7 @@ export function ParticleButton({ size = 40 }: ParticleButtonProps) {
       ctx.clearRect(0, 0, size, size);
 
       const particles = particlesRef.current;
+      const rgb = colorRef.current;
 
       for (const p of particles) {
         p.x += p.vx * (delta * 0.04);
@@ -94,7 +121,7 @@ export function ParticleButton({ size = 40 }: ParticleButtonProps) {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, 0.85)`;
+        ctx.fillStyle = `rgba(${rgb}, 0.85)`;
         ctx.fill();
       }
 

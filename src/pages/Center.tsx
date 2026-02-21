@@ -46,7 +46,6 @@ type Tab = (typeof TAB_KEYS)[number];
 
 const BODY_PARTS = ["chest", "back", "legs", "shoulders", "arms", "abs"] as const;
 const CARDIO_TYPES = ["run", "swim", "bike", "hiit", "other"] as const;
-const WORKOUT_CARDIO_KEYS = ["run", "swim", "bike", "hiit", "other"] as const;
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -538,8 +537,8 @@ export default function Center() {
   const stopWorkout = () => {
     const typeLabel =
       workoutMode === "strength"
-        ? `Силовая: ${Array.from(selectedBodyParts).map((id) => t(`center.${id}`)).join(", ") || "—"}`
-        : WORKOUT_CARDIO_MAP[cardioType] ?? cardioType;
+        ? `${t("center.strength")}: ${Array.from(selectedBodyParts).map((id) => t(`center.${id}`)).join(", ") || "—"}`
+        : t(`center.${cardioType}`) || cardioType;
     const entry: WorkoutHistoryEntry = {
       date: getTodayDateString(),
       type: typeLabel,
@@ -840,7 +839,7 @@ export default function Center() {
                       }}
                       className="rounded-lg border border-border bg-card px-4 py-2 text-sm hover:bg-muted/50"
                     >
-                      {WORKOUT_CARDIO_MAP[id]}
+                      {t(`center.${id}`)}
                     </button>
                   ))}
                 </div>
