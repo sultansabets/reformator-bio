@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const VISUAL_SIZE = 320;
-const PARTICLE_COUNT = 45;
+const ATOM_COUNT = 35;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;
@@ -56,18 +56,22 @@ function getSquishFactor(angle: number, rotation: number): number {
   return 1 + squish;
 }
 
-interface Particle {
+interface Atom {
   x: number;
   y: number;
   dirX: number;
   dirY: number;
   speed: number;
-  size: number;
+  nucleusSize: number;
   opacity: number;
   maxOpacity: number;
+  electronCount: number;
+  electronOrbitRadius: number;
+  electronPhase: number;
+  electronSpeed: number;
 }
 
-function spawnParticle(center: number): Particle {
+function spawnAtom(center: number): Atom {
   const spawnRadius = BASE_RADIUS - 2;
   const angle = Math.random() * Math.PI * 2;
   const x = center + Math.cos(angle) * spawnRadius;
@@ -80,10 +84,14 @@ function spawnParticle(center: number): Particle {
     y,
     dirX: dx / len,
     dirY: dy / len,
-    speed: 0.4 + Math.random() * 0.15,
-    size: 4 + Math.random() * 2,
+    speed: 0.4 + Math.random() * 0.2,
+    nucleusSize: 4 + Math.random() * 2,
     opacity: 0,
-    maxOpacity: 0.75 + Math.random() * 0.25,
+    maxOpacity: 0.7 + Math.random() * 0.3,
+    electronCount: Math.random() > 0.5 ? 2 : 1,
+    electronOrbitRadius: 6 + Math.random() * 3,
+    electronPhase: Math.random() * Math.PI * 2,
+    electronSpeed: 0.002 + Math.random() * 0.001,
   };
 }
 
@@ -148,7 +156,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const isLightRef = useRef(theme === "light");
   isLightRef.current = theme === "light";
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const particlesRef = useRef<Particle[] | null>(null);
+  const atomsRef = useRef<Atom[] | null>(null);
   const rafRef = useRef<number | null>(null);
   const colorRef = useRef<string>("#34c759");
   const mountStartRef = useRef<number | null>(null);
@@ -173,10 +181,10 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     const center = VISUAL_SIZE / 2;
     const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
 
-    if (!particlesRef.current) {
-      particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => spawnParticle(center));
+    if (!atomsRef.current) {
+      atomsRef.current = Array.from({ length: ATOM_COUNT }, () => spawnAtom(center));
     }
-    const particles = particlesRef.current;
+    const atoms = atomsRef.current;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -232,16 +240,10 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.scale(dpr, dpr);
 
       drawSmoothBlob(ctx, center, controlRadii, rot);
-
-      ctx.fillStyle = isLightRef.current ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.03)";
+      ctx.fillStyle = isLightRef.current 
+        ? `rgba(${r}, ${g}, ${b}, 0.03)` 
+        : `rgba(${r}, ${g}, ${b}, 0.02)`;
       ctx.fill();
-
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.5)`;
-      ctx.lineWidth = 1.8;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
 
       ctx.restore();
 
@@ -251,20 +253,19 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       drawSmoothBlob(ctx, center, controlRadii, rot);
       ctx.clip();
 
-      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
+      for (let i = 0; i < atoms.length; i++) {
+        const atom = atoms[i];
 
         if (!reducedMotionRef.current) {
-          p.x += p.dirX * p.speed * dt;
-          p.y += p.dirY * p.speed * dt;
+          atom.x += atom.dirX * atom.speed * dt;
+          atom.y += atom.dirY * atom.speed * dt;
+          atom.electronPhase += atom.electronSpeed * dt * 60;
 
-          const dx = p.x - center;
-          const dy = p.y - center;
+          const dx = atom.x - center;
+          const dy = atom.y - center;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          let targetOpacity = p.maxOpacity;
+          let targetOpacity = atom.maxOpacity;
 
           if (dist > fadeInStart) {
             targetOpacity *= Math.max(0, (spawnRadius - dist) / (spawnRadius - fadeInStart));
@@ -274,23 +275,35 @@ export default function HealthOrb({ score }: HealthOrbProps) {
             targetOpacity *= Math.max(0, (dist - INNER_RADIUS) / (fadeOutStart - INNER_RADIUS));
           }
 
-          p.opacity = targetOpacity;
+          atom.opacity = targetOpacity;
 
           if (dist <= INNER_RADIUS) {
-            particles[i] = spawnParticle(center);
+            atoms[i] = spawnAtom(center);
             continue;
           }
         } else {
-          p.opacity = p.maxOpacity * 0.5;
+          atom.opacity = atom.maxOpacity * 0.5;
         }
 
-        const op = p.opacity * mountProgress;
+        const op = atom.opacity * mountProgress;
         if (op < 0.03) continue;
 
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.globalAlpha = op;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
+        ctx.arc(atom.x, atom.y, atom.nucleusSize * 0.5, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.globalAlpha = op * 0.7;
+        for (let e = 0; e < atom.electronCount; e++) {
+          const electronAngle = atom.electronPhase + (e * Math.PI * 2) / atom.electronCount;
+          const ex = atom.x + Math.cos(electronAngle) * atom.electronOrbitRadius;
+          const ey = atom.y + Math.sin(electronAngle) * atom.electronOrbitRadius;
+          
+          ctx.beginPath();
+          ctx.arc(ex, ey, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       ctx.globalAlpha = 1;
