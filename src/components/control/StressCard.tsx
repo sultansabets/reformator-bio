@@ -17,58 +17,51 @@ function getRandomPercent(): number {
 
 function getStressColor(percent: number): string {
   if (percent <= 30) return "rgb(34, 197, 94)";
-  if (percent <= 55) return "rgb(234, 179, 8)";
-  if (percent <= 75) return "rgb(249, 115, 22)";
+  if (percent <= 60) return "rgb(234, 179, 8)";
+  if (percent <= 80) return "rgb(249, 115, 22)";
   return "rgb(239, 68, 68)";
 }
 
 function getStressGlowColor(percent: number): string {
   if (percent <= 30) return "rgba(34, 197, 94, 0.4)";
-  if (percent <= 55) return "rgba(234, 179, 8, 0.4)";
-  if (percent <= 75) return "rgba(249, 115, 22, 0.4)";
+  if (percent <= 60) return "rgba(234, 179, 8, 0.4)";
+  if (percent <= 80) return "rgba(249, 115, 22, 0.4)";
   return "rgba(239, 68, 68, 0.4)";
 }
 
-function TangledBallIcon({ className }: { className?: string }) {
+function HeadLightningIcon({ className, isHighStress }: { className?: string; isHighStress?: boolean }) {
   return (
-    <svg 
+    <motion.svg 
       viewBox="0 0 24 24" 
       fill="none" 
       className={className}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      animate={isHighStress ? { opacity: [1, 0.6, 1] } : undefined}
+      transition={isHighStress ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" } : undefined}
     >
-      {/* Main chaotic loop - asymmetric scribble */}
-      <path 
-        d="M7 10c1-2.5 4-3.5 6-2s2.5 4 1 6-4 2.5-5.5 1"
+      {/* Head - simple rounded shape */}
+      <circle 
+        cx="10" 
+        cy="13" 
+        r="6"
         stroke="currentColor" 
         strokeWidth="2"
       />
-      {/* Secondary tangle crossing over */}
+      {/* Neck hint */}
       <path 
-        d="M16 9c-1 2-3.5 3-5.5 2s-2-3-0.5-4.5 4-1 5 1"
+        d="M7 18v2M13 18v2"
         stroke="currentColor" 
         strokeWidth="2"
+        strokeLinecap="round"
       />
-      {/* Inner knot detail */}
+      {/* Lightning bolt - positioned at temple/top */}
       <path 
-        d="M10 13c1.5 1 3.5 0 4-1.5s-0.5-3-2-3.5"
+        d="M17 3l-2 4h3l-2.5 5"
         stroke="currentColor" 
         strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      {/* Outer loop fragment */}
-      <path 
-        d="M6 14c0.5 1.5 2.5 2.5 4.5 2s3-2 2.5-3.5"
-        stroke="currentColor" 
-        strokeWidth="2"
-      />
-      {/* Cross thread */}
-      <path 
-        d="M14 7c0.5 1 0.5 2.5-0.5 3.5"
-        stroke="currentColor" 
-        strokeWidth="2"
-      />
-    </svg>
+    </motion.svg>
   );
 }
 
@@ -131,7 +124,7 @@ export function StressCard({ onClick, className }: StressCardProps) {
             className="transition-colors duration-300"
             style={{ color }}
           >
-            <TangledBallIcon className="h-7 w-7" />
+            <HeadLightningIcon className="h-7 w-7" isHighStress={percent > 70} />
           </span>
         </div>
       </div>
