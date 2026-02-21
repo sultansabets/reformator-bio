@@ -22,27 +22,52 @@ function getColorFromPercent(percent: number): string {
   return "rgb(239, 68, 68)";
 }
 
-function ScribbleIcon({ color }: { color: string }) {
+function TangledBallIcon({ color }: { color: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
+    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8">
+      {/* Outer tangled loops */}
       <path 
-        d="M12 4c-2 0-4 1-5 3-1 2 0 4 1 5s3 2 4 4c1 2 0 4-2 5"
+        d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6-2.7 6-6 6"
         stroke={color} 
-        strokeWidth="2" 
+        strokeWidth="2.2" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Inner chaotic loops */}
+      <path 
+        d="M9 9c1.5-1 3.5-0.5 4.5 1s0.5 3.5-1 4.5-3.5 0.5-4.5-1"
+        stroke={color} 
+        strokeWidth="2.2" 
         strokeLinecap="round"
         fill="none"
       />
       <path 
-        d="M8 8c2-1 4 0 5 2s0 4-2 5-4 0-4-2"
+        d="M14 8c1 1.5 0.5 3.5-1 4.5s-3.5 0.5-4-1"
         stroke={color} 
-        strokeWidth="2" 
+        strokeWidth="2.2" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Cross tangles */}
+      <path 
+        d="M8 14c2 1 4 0.5 5-1s0.5-4-1.5-5"
+        stroke={color} 
+        strokeWidth="2.2" 
         strokeLinecap="round"
         fill="none"
       />
       <path 
-        d="M14 12c1 1 2 3 1 4s-3 1-4 0"
+        d="M15 11c0 2-1.5 3.5-3.5 3.5s-3-1-3-2.5 1.5-2.5 3-2.5"
         stroke={color} 
-        strokeWidth="2" 
+        strokeWidth="2.2" 
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Center knot */}
+      <path 
+        d="M11 11c0.5-0.5 1.5-0.5 2 0s0.5 1.5 0 2-1.5 0.5-2 0"
+        stroke={color} 
+        strokeWidth="2.2" 
         strokeLinecap="round"
         fill="none"
       />
@@ -104,7 +129,7 @@ export function StressCard({ onClick, className }: StressCardProps) {
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center">
-          <ScribbleIcon color={color} />
+          <TangledBallIcon color={color} />
         </div>
       </div>
 
