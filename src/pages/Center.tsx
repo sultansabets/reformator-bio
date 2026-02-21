@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Trash2,
   Clock,
   Flame,
-  Camera,
-  Mic,
-  PenLine,
   Beef,
   Wheat,
   Droplet,
@@ -18,20 +15,30 @@ import {
   Pause,
   Square,
   Heart,
-  Dumbbell,
+  Search,
+  X,
+  Minus,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getStorageKey } from "@/lib/userStorage";
 import { useTranslation } from "react-i18next";
+import foodDatabase from "@/data/foodDatabase.json";
+
+interface FoodProduct {
+  id: string;
+  name: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+  category: string;
+}
+
+const FOOD_PRODUCTS: FoodProduct[] = foodDatabase.products;
+const FOOD_CATEGORIES: Record<string, string> = foodDatabase.categories;
 
 const TABS = ["Питание", "Спорт"] as const;
 type Tab = (typeof TABS)[number];
@@ -97,7 +104,9 @@ function getActivityMultiplier(level: string): number {
 
 export interface FoodEntry {
   id: string;
+  product_id: string;
   name: string;
+  grams: number;
   calories: number;
   protein: number;
   carbs: number;
@@ -360,15 +369,14 @@ export default function Center() {
   const weekDays = useMemo(() => getWeekDays(), []);
   const [selectedDate, setSelectedDate] = useState(getTodayDateString());
   const [dayData, setDayData] = useState<DayData>({ entries: [] });
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [addMethod, setAddMethod] = useState<"photo" | "voice" | "manual" | null>(null);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   
-  const [newName, setNewName] = useState("");
-  const [newCalories, setNewCalories] = useState("");
-  const [newProtein, setNewProtein] = useState("");
-  const [newCarbs, setNewCarbs] = useState("");
-  const [newFats, setNewFats] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<FoodProduct | null>(null);
+  const [grams, setGrams] = useState(100);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
   const [workoutMode, setWorkoutMode] = useState<"strength" | "cardio">("strength");
@@ -388,6 +396,42 @@ export default function Center() {
     setDayData(loadDayData(storageKeys.nutrition, selectedDate));
     setWorkoutHistory(loadWorkoutHistory(storageKeys.workout_history));
   }, [storageKeys, selectedDate]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (searchModalOpen && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
+    if (!searchModalOpen) {
+      setSearchQuery("");
+      setDebouncedQuery("");
+      setSelectedProduct(null);
+      setGrams(100);
+    }
+  }, [searchModalOpen]);
+
+  const filteredProducts = useMemo(() => {
+    if (!debouncedQuery.trim()) return FOOD_PRODUCTS.slice(0, 20);
+    const query = debouncedQuery.toLowerCase();
+    return FOOD_PRODUCTS.filter((p) => p.name.toLowerCase().includes(query)).slice(0, 30);
+  }, [debouncedQuery]);
+
+  const calculatedNutrients = useMemo(() => {
+    if (!selectedProduct) return { calories: 0, protein: 0, carbs: 0, fats: 0 };
+    const multiplier = grams / 100;
+    return {
+      calories: Math.round(selectedProduct.calories_per_100g * multiplier),
+      protein: Math.round(selectedProduct.protein_per_100g * multiplier * 10) / 10,
+      carbs: Math.round(selectedProduct.carbs_per_100g * multiplier * 10) / 10,
+      fats: Math.round(selectedProduct.fat_per_100g * multiplier * 10) / 10,
+    };
+  }, [selectedProduct, grams]);
 
   useEffect(() => {
     if (!workoutActive) return;
@@ -450,26 +494,25 @@ export default function Center() {
   const carbsRemaining = carbsGoal - consumed.carbs;
   const fatsRemaining = fatsGoal - consumed.fats;
 
-  const addEntry = useCallback(() => {
-    if (!newName.trim()) return;
+  const addProductEntry = useCallback(() => {
+    if (!selectedProduct || grams <= 0) return;
     const entry: FoodEntry = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: newName.trim(),
-      calories: Math.max(0, Number(newCalories) || 0),
-      protein: Math.max(0, Number(newProtein) || 0),
-      carbs: Math.max(0, Number(newCarbs) || 0),
-      fats: Math.max(0, Number(newFats) || 0),
+      product_id: selectedProduct.id,
+      name: selectedProduct.name,
+      grams,
+      calories: calculatedNutrients.calories,
+      protein: Math.round(calculatedNutrients.protein),
+      carbs: Math.round(calculatedNutrients.carbs),
+      fats: Math.round(calculatedNutrients.fats),
       timestamp: Date.now(),
     };
     saveData({ entries: [...dayData.entries, entry] });
-    setNewName("");
-    setNewCalories("");
-    setNewProtein("");
-    setNewCarbs("");
-    setNewFats("");
-    setAddModalOpen(false);
-    setAddMethod(null);
-  }, [newName, newCalories, newProtein, newCarbs, newFats, dayData.entries, saveData]);
+    setSearchModalOpen(false);
+    setSelectedProduct(null);
+    setGrams(100);
+    setSearchQuery("");
+  }, [selectedProduct, grams, calculatedNutrients, dayData.entries, saveData]);
 
   const removeEntry = useCallback((id: string) => {
     saveData({ entries: dayData.entries.filter((e) => e.id !== id) });
@@ -670,7 +713,7 @@ export default function Center() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {entry.calories} ккал · Б{entry.protein} Ж{entry.fats} У{entry.carbs}
+                          {entry.grams ? `${entry.grams}г · ` : ""}{entry.calories} ккал · Б{entry.protein} Ж{entry.fats} У{entry.carbs}
                         </p>
                       </div>
                       <button
@@ -687,15 +730,17 @@ export default function Center() {
             </motion.div>
 
             {/* Floating add button */}
-            <div className="fixed bottom-24 right-5 z-40">
-              <button
-                type="button"
-                onClick={() => setAddModalOpen(true)}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
-              >
-                <Plus className="h-6 w-6" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setSearchModalOpen(true)}
+              className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+              style={{
+                bottom: "calc(88px + env(safe-area-inset-bottom))",
+                right: 20,
+              }}
+            >
+              <Plus className="h-6 w-6" />
+            </button>
       </div>
 
       {/* Спорт tab - always mounted, hidden via CSS */}
@@ -839,159 +884,219 @@ export default function Center() {
         nutritionKey={storageKeys?.nutrition || null}
       />
 
-      {/* Add food modal */}
-      <Dialog open={addModalOpen} onOpenChange={(o) => { if (!o) { setAddModalOpen(false); setAddMethod(null); } }}>
-        <DialogContent className="max-w-[340px] border border-border bg-card p-0 overflow-hidden">
-          <DialogHeader className="p-5 pb-0">
-            <DialogTitle className="text-base">Добавить еду</DialogTitle>
-          </DialogHeader>
-          
-          {!addMethod ? (
-            <div className="p-5 space-y-3">
-              <button
-                type="button"
-                onClick={() => setAddMethod("photo")}
-                className="flex w-full items-center gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left hover:bg-muted/50"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-                  <Camera className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Через фото</p>
-                  <p className="text-xs text-muted-foreground">AI распознает еду</p>
-                </div>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setAddMethod("voice")}
-                className="flex w-full items-center gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left hover:bg-muted/50"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
-                  <Mic className="h-5 w-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Голосом</p>
-                  <p className="text-xs text-muted-foreground">Скажите что съели</p>
-                </div>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setAddMethod("manual")}
-                className="flex w-full items-center gap-3 rounded-xl border border-border bg-muted/30 p-4 text-left hover:bg-muted/50"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10">
-                  <PenLine className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Вручную</p>
-                  <p className="text-xs text-muted-foreground">Введите данные</p>
-                </div>
-              </button>
-            </div>
-          ) : addMethod === "manual" ? (
-            <div className="p-5 space-y-4">
-              <button
-                type="button"
-                onClick={() => setAddMethod(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                ← Назад
-              </button>
-              
-              <div>
-                <Label className="text-xs">Название</Label>
-                <Input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Куриная грудка"
-                  className="mt-1 border-border bg-background"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-xs">Калории</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={newCalories}
-                  onChange={(e) => setNewCalories(e.target.value)}
-                  placeholder="250"
-                  className="mt-1 border-border bg-background"
-                />
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Белки</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={newProtein}
-                    onChange={(e) => setNewProtein(e.target.value)}
-                    placeholder="30"
-                    className="mt-1 border-border bg-background"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Углеводы</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={newCarbs}
-                    onChange={(e) => setNewCarbs(e.target.value)}
-                    placeholder="0"
-                    className="mt-1 border-border bg-background"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Жиры</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={newFats}
-                    onChange={(e) => setNewFats(e.target.value)}
-                    placeholder="5"
-                    className="mt-1 border-border bg-background"
-                  />
-                </div>
-              </div>
-              
-              <Button className="w-full" onClick={addEntry} disabled={!newName.trim()}>
-                Добавить
-              </Button>
-            </div>
-          ) : (
-            <div className="p-5 space-y-4">
-              <button
-                type="button"
-                onClick={() => setAddMethod(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                ← Назад
-              </button>
-              
-              <div className="py-8 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                  {addMethod === "photo" ? (
-                    <Camera className="h-8 w-8 text-muted-foreground" />
-                  ) : (
-                    <Mic className="h-8 w-8 text-muted-foreground" />
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {addMethod === "photo" ? "AI скоро будет доступен" : "Голосовой ввод скоро"}
-                </p>
-              </div>
-              
-              <Button variant="outline" className="w-full" onClick={() => setAddMethod("manual")}>
-                Ввести вручную
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Fullscreen search modal */}
+      <AnimatePresence>
+        {searchModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] bg-black/60"
+            onClick={() => !selectedProduct && setSearchModalOpen(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 left-0 right-0 max-h-[90vh] overflow-hidden rounded-t-3xl bg-background"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!selectedProduct ? (
+                <>
+                  {/* Search header */}
+                  <div className="sticky top-0 z-10 bg-background px-5 pt-4 pb-3">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-lg font-semibold">Добавить продукт</h2>
+                      <button
+                        type="button"
+                        onClick={() => setSearchModalOpen(false)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        ref={searchInputRef}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Поиск продукта..."
+                        className="h-11 rounded-xl border-border bg-muted/50 pl-10 text-base"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Products list */}
+                  <div className="max-h-[60vh] overflow-y-auto px-5 pb-5">
+                    {filteredProducts.length === 0 ? (
+                      <div className="py-12 text-center">
+                        <p className="text-sm text-muted-foreground">Ничего не найдено</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {filteredProducts.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedProduct(product);
+                              setGrams(100);
+                            }}
+                            className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {FOOD_CATEGORIES[product.category] || product.category}
+                              </p>
+                            </div>
+                            <div className="ml-3 text-right">
+                              <p className="text-sm font-semibold tabular-nums text-foreground">
+                                {product.calories_per_100g}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">ккал/100г</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Product detail view */}
+                  <div className="px-5 pt-4 pb-5">
+                    {/* Back button */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProduct(null)}
+                      className="mb-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Назад
+                    </button>
+
+                    {/* Product info */}
+                    <div className="mb-6 text-center">
+                      <h3 className="text-xl font-semibold text-foreground">{selectedProduct.name}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {FOOD_CATEGORIES[selectedProduct.category] || selectedProduct.category}
+                      </p>
+                    </div>
+
+                    {/* Per 100g info */}
+                    <div className="mb-6 rounded-2xl border border-border bg-muted/30 p-4">
+                      <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        На 100 грамм
+                      </p>
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{selectedProduct.calories_per_100g}</p>
+                          <p className="text-[10px] text-muted-foreground">ккал</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-red-500">{selectedProduct.protein_per_100g}</p>
+                          <p className="text-[10px] text-muted-foreground">белки</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-amber-500">{selectedProduct.carbs_per_100g}</p>
+                          <p className="text-[10px] text-muted-foreground">углеводы</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-green-500">{selectedProduct.fat_per_100g}</p>
+                          <p className="text-[10px] text-muted-foreground">жиры</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Grams input */}
+                    <div className="mb-6">
+                      <p className="mb-3 text-center text-sm text-muted-foreground">Укажите количество</p>
+                      <div className="flex items-center justify-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setGrams(Math.max(10, grams - 10))}
+                          className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted active:scale-95"
+                        >
+                          <Minus className="h-5 w-5" />
+                        </button>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            max={2000}
+                            value={grams}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value) || 0;
+                              setGrams(Math.min(2000, Math.max(0, v)));
+                            }}
+                            className="h-14 w-28 rounded-2xl border-border bg-card text-center text-2xl font-bold tabular-nums"
+                          />
+                          <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
+                            грамм
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setGrams(Math.min(2000, grams + 10))}
+                          className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted active:scale-95"
+                        >
+                          <Plus className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Calculated nutrients */}
+                    <motion.div
+                      key={grams}
+                      initial={{ scale: 0.98, opacity: 0.5 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.15 }}
+                      className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4"
+                    >
+                      <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-primary">
+                        Итого за {grams}г
+                      </p>
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                          <p className="text-xl font-bold text-foreground">{calculatedNutrients.calories}</p>
+                          <p className="text-[10px] text-muted-foreground">ккал</p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-bold text-red-500">{calculatedNutrients.protein}</p>
+                          <p className="text-[10px] text-muted-foreground">белки</p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-bold text-amber-500">{calculatedNutrients.carbs}</p>
+                          <p className="text-[10px] text-muted-foreground">углеводы</p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-bold text-green-500">{calculatedNutrients.fats}</p>
+                          <p className="text-[10px] text-muted-foreground">жиры</p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Add button */}
+                    <Button
+                      className="h-14 w-full rounded-2xl text-base font-medium"
+                      onClick={addProductEntry}
+                      disabled={grams <= 0}
+                    >
+                      Добавить
+                    </Button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
