@@ -218,10 +218,6 @@ const ControlCenter = () => {
     return clamp(Math.round(kcalPart + stepsPart), 0, 100);
   }, [todayWorkout.caloriesBurned]);
 
-  const testosteroneValue = useMemo(() => {
-    return 22.4;
-  }, []);
-
   const recoveryPercent = useMemo(() => {
     const sleepPart = sleepPercent * 0.4;
     const hrvValue = 45;

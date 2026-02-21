@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export interface TestosteroneCardProps {
-  value: number;
+  value?: number | null;
   onClick?: () => void;
   className?: string;
 }
@@ -33,8 +33,10 @@ function getStatusColor(status: TestosteroneStatus): string {
 
 export function TestosteroneCard({ value, onClick, className }: TestosteroneCardProps) {
   const { t } = useTranslation();
-  const status = getStatus(value);
-  const color = getStatusColor(status);
+  const hasValue = value != null;
+  const displayValue = value ?? 0;
+  const status = hasValue ? getStatus(displayValue) : null;
+  const color = status ? getStatusColor(status) : "rgb(156, 163, 175)";
 
   const statusLabels: Record<TestosteroneStatus, string> = {
     low: t("testosterone.low"),
@@ -67,17 +69,19 @@ export function TestosteroneCard({ value, onClick, className }: TestosteroneCard
         className="mt-0.5 text-base font-bold tabular-nums"
         style={{ color }}
       >
-        {value.toFixed(1)}
+        {hasValue ? displayValue.toFixed(1) : "—"}
       </span>
       <span className="text-[10px] text-muted-foreground">
         нмоль/л
       </span>
-      <span
-        className="mt-1 text-[10px] font-medium"
-        style={{ color }}
-      >
-        {statusLabels[status]}
-      </span>
+      {status && (
+        <span
+          className="mt-1 text-[10px] font-medium"
+          style={{ color }}
+        >
+          {statusLabels[status]}
+        </span>
+      )}
     </button>
   );
 }
