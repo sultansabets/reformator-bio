@@ -4,10 +4,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const VISUAL_SIZE = 320;
 const BLOB_SEGMENTS = 125;
-const PARTICLE_COUNT = 80;
+const PARTICLE_COUNT = 60;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const TEXT_SAFE_RADIUS = 70;
-const ABSORB_RADIUS = TEXT_SAFE_RADIUS + 12;
+const INNER_RADIUS = TEXT_SAFE_RADIUS + 12;
 const MOUNT_DURATION_MS = 2000;
 const LIQUID_CYCLE_MS = 8000;
 
@@ -27,99 +27,69 @@ function getColorFromScore(score: number): string {
 interface Particle {
   x: number;
   y: number;
-  angle: number;
-  angleDrift: number;
   speed: number;
-  size: number;
   baseSize: number;
+  size: number;
   opacity: number;
   maxOpacity: number;
   satelliteCount: number;
-  satelliteAngleOffset: number;
-  phase: number;
+  satelliteAngle: number;
 }
 
-function createParticle(center: number): Particle {
+function spawnParticle(center: number): Particle {
   const edgeR = BASE_RADIUS * 0.92;
   const angle = Math.random() * Math.PI * 2;
-  const r = edgeR - 2 - Math.random() * 6;
-  const baseSize = 2.0 + Math.random() * 2.8;
   return {
-    x: center + Math.cos(angle) * r,
-    y: center + Math.sin(angle) * r,
-    angle,
-    angleDrift: (Math.random() - 0.5) * 0.015,
-    speed: 0.4 + Math.random() * 0.35,
-    size: baseSize,
-    baseSize,
+    x: center + Math.cos(angle) * edgeR,
+    y: center + Math.sin(angle) * edgeR,
+    speed: 0.5 + Math.random() * 0.3,
+    baseSize: 6 + Math.random() * 4,
+    size: 6 + Math.random() * 4,
     opacity: 0,
-    maxOpacity: 0.35 + Math.random() * 0.55,
+    maxOpacity: 0.4 + Math.random() * 0.4,
     satelliteCount: 1 + Math.floor(Math.random() * 2),
-    satelliteAngleOffset: Math.random() * Math.PI * 2,
-    phase: Math.random() * Math.PI * 2,
+    satelliteAngle: Math.random() * Math.PI * 2,
   };
 }
 
-function updateParticle(p: Particle, center: number, mountProgress: number, dt: number, time: number) {
-  const edgeR = BASE_RADIUS * 0.92;
-  const fadeOutStart = ABSORB_RADIUS + 30;
-  const respawnDist = 8;
-
+function updateParticle(p: Particle, center: number, dt: number): boolean {
   const dx = center - p.x;
   const dy = center - p.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
-  p.angleDrift += (Math.random() - 0.5) * 0.003;
-  p.angleDrift = Math.max(-0.025, Math.min(0.025, p.angleDrift));
-
-  const noiseDrift = Math.sin(time * 2 + p.phase) * 0.008;
-
-  if (dist < respawnDist) {
-    const angle = Math.random() * Math.PI * 2;
-    const r = edgeR - 2 - Math.random() * 6;
-    p.x = center + Math.cos(angle) * r;
-    p.y = center + Math.sin(angle) * r;
-    p.angleDrift = (Math.random() - 0.5) * 0.015;
-    p.size = p.baseSize;
-    p.opacity = 0;
-    return;
+  if (dist <= INNER_RADIUS) {
+    return true;
   }
 
   const nx = dx / dist;
   const ny = dy / dist;
+  const moveSpeed = p.speed * dt * 60;
+  p.x += nx * moveSpeed;
+  p.y += ny * moveSpeed;
 
-  const perpX = -ny;
-  const perpY = nx;
-  const drift = p.angleDrift + noiseDrift;
+  const edgeR = BASE_RADIUS * 0.92;
+  const fadeInZone = 20;
+  const fadeOutZone = 30;
 
-  const moveX = nx + perpX * drift;
-  const moveY = ny + perpY * drift;
-  const moveLen = Math.sqrt(moveX * moveX + moveY * moveY);
-
-  const speed = p.speed * dt * 60;
-  p.x += (moveX / moveLen) * speed;
-  p.y += (moveY / moveLen) * speed;
+  let targetOpacity = p.maxOpacity;
 
   const newDist = Math.sqrt((p.x - center) ** 2 + (p.y - center) ** 2);
 
-  let baseOpacity = p.maxOpacity;
-  let scale = 1;
-
-  if (mountProgress < 1) {
-    baseOpacity = p.maxOpacity * mountProgress * mountProgress;
-  } else if (newDist < fadeOutStart) {
-    const t = Math.max(0, (newDist - respawnDist) / (fadeOutStart - respawnDist));
-    baseOpacity = p.maxOpacity * t;
-    scale = 0.4 + 0.6 * t;
-  }
-
-  const fadeInZone = 15;
   if (newDist > edgeR - fadeInZone) {
-    baseOpacity *= Math.min(1, (edgeR - newDist) / fadeInZone);
+    targetOpacity *= Math.min(1, (edgeR - newDist) / fadeInZone);
   }
 
-  p.opacity = baseOpacity;
-  p.size = p.baseSize * scale;
+  if (newDist < INNER_RADIUS + fadeOutZone) {
+    const t = (newDist - INNER_RADIUS) / fadeOutZone;
+    targetOpacity *= Math.max(0, t);
+    p.size = p.baseSize * (0.3 + 0.7 * Math.max(0, t));
+  } else {
+    p.size = p.baseSize;
+  }
+
+  p.opacity = targetOpacity;
+
+  return false;
 }
 
 interface HealthOrbProps {
@@ -154,7 +124,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
 
     if (!particlesRef.current) {
-      particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => createParticle(center));
+      particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () => spawnParticle(center));
     }
     const particles = particlesRef.current;
     const canvas = canvasRef.current;
@@ -181,7 +151,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         lastFrameRef.current = timestamp;
       }
 
-      const dt = Math.min((timestamp - lastFrameRef.current) / 16.67, 2);
+      const dt = Math.min((timestamp - lastFrameRef.current) / 16.67, 2.5);
       lastFrameRef.current = timestamp;
 
       const elapsed = timestamp - mountStartRef.current;
@@ -190,12 +160,11 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       if (!reducedMotionRef.current) {
         timeRef.current = elapsed * 0.001;
-        rotationRef.current += 0.0015 * dt;
+        rotationRef.current += 0.0012 * dt;
       }
 
       const hex = colorRef.current;
       const [r, g, b] = hexToRgb(hex);
-      const time = timeRef.current;
       const rot = rotationRef.current;
 
       ctx.clearRect(0, 0, VISUAL_SIZE * dpr, VISUAL_SIZE * dpr);
@@ -226,52 +195,58 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       ctx.clip();
 
-      if (particles.length > 0) {
-        for (const p of particles) {
-          if (!reducedMotionRef.current) {
-            updateParticle(p, center, mountProgress, dt, time);
-          } else {
-            p.opacity = p.maxOpacity * 0.6;
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        if (!reducedMotionRef.current) {
+          const shouldRespawn = updateParticle(p, center, dt);
+          if (shouldRespawn) {
+            particles[i] = spawnParticle(center);
+            continue;
           }
-
-          if (p.opacity > 0.02) {
-            const mainR = p.size * 0.55;
-            const satR = mainR * 0.35;
-            const satDist = p.size * 1.2;
-
-            ctx.globalAlpha = p.opacity * 0.25;
-            ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
-            ctx.lineWidth = 0.4;
-            for (let s = 0; s < p.satelliteCount; s++) {
-              const a = p.satelliteAngleOffset + (s / p.satelliteCount) * Math.PI * 2;
-              const sx = p.x + Math.cos(a) * satDist;
-              const sy = p.y + Math.sin(a) * satDist;
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(sx, sy);
-              ctx.stroke();
-            }
-
-            ctx.globalAlpha = p.opacity * 0.7;
-            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-            for (let s = 0; s < p.satelliteCount; s++) {
-              const a = p.satelliteAngleOffset + (s / p.satelliteCount) * Math.PI * 2;
-              const sx = p.x + Math.cos(a) * satDist;
-              const sy = p.y + Math.sin(a) * satDist;
-              ctx.beginPath();
-              ctx.arc(sx, sy, satR, 0, Math.PI * 2);
-              ctx.fill();
-            }
-
-            ctx.globalAlpha = p.opacity;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, mainR, 0, Math.PI * 2);
-            ctx.fill();
-          }
+        } else {
+          p.opacity = p.maxOpacity * 0.5;
         }
-        ctx.globalAlpha = 1;
+
+        const op = p.opacity * mountProgress;
+        if (op < 0.02) continue;
+
+        const mainR = p.size * 0.5;
+        const satR = mainR * 0.35;
+        const satDist = p.size * 1.0;
+
+        ctx.globalAlpha = op * 0.2;
+        ctx.lineWidth = 0.5;
+        for (let s = 0; s < p.satelliteCount; s++) {
+          const a = p.satelliteAngle + (s / p.satelliteCount) * Math.PI * 2;
+          const sx = p.x + Math.cos(a) * satDist;
+          const sy = p.y + Math.sin(a) * satDist;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(sx, sy);
+          ctx.stroke();
+        }
+
+        ctx.globalAlpha = op * 0.6;
+        for (let s = 0; s < p.satelliteCount; s++) {
+          const a = p.satelliteAngle + (s / p.satelliteCount) * Math.PI * 2;
+          const sx = p.x + Math.cos(a) * satDist;
+          const sy = p.y + Math.sin(a) * satDist;
+          ctx.beginPath();
+          ctx.arc(sx, sy, satR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = op;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, mainR, 0, Math.PI * 2);
+        ctx.fill();
       }
 
+      ctx.globalAlpha = 1;
       ctx.restore();
 
       rafRef.current = requestAnimationFrame(draw);
