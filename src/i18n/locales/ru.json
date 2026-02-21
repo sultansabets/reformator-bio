@@ -1,9 +1,18 @@
 {
   "testosterone": {
     "low": "Низкий",
+    "normal": "Норма",
     "optimal": "Оптимальный",
     "high": "Высокий",
-    "elevated": "Повышенный"
+    "elevated": "Повышенный",
+    "stressCorrelation": "Корреляция со стрессом",
+    "sleepQuality": "Качество сна",
+    "recovery": "Уровень восстановления"
+  },
+  "stress": {
+    "low": "Низкий",
+    "medium": "Средний",
+    "high": "Высокий"
   },
   "common": {
     "save": "Сохранить",

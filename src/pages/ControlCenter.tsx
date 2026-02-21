@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
@@ -22,9 +22,9 @@ import { getStorageKey } from "@/lib/userStorage";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
-import { StressCard } from "@/components/control/StressCard";
+import { StressCard, type StressLevel } from "@/components/control/StressCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
-import { InfluenceFactors } from "@/components/control/InfluenceFactors";
+import { InfluenceFactors, type TestosteroneStatus } from "@/components/control/InfluenceFactors";
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -195,8 +195,29 @@ const ControlCenter = () => {
   }, [user?.height, user?.weight, storageKeys]);
 
   const recoveryScore = metrics.recoveryScore;
-  const testosteroneValue = 22.4;
-  const testosteroneDate = "12.03.2026";
+  
+  const [testosteroneStatus, setTestosteroneStatus] = useState<TestosteroneStatus>("normal");
+  const [testosteroneGlowing, setTestosteroneGlowing] = useState(false);
+  const prevStressLevelRef = useRef<StressLevel>("medium");
+
+  const handleStressChange = useCallback((_percent: number, level: StressLevel) => {
+    if (prevStressLevelRef.current !== level) {
+      let newTestoStatus: TestosteroneStatus;
+      
+      if (level === "high") {
+        newTestoStatus = "low";
+      } else if (level === "low") {
+        newTestoStatus = "high";
+        setTestosteroneGlowing(true);
+        setTimeout(() => setTestosteroneGlowing(false), 2000);
+      } else {
+        newTestoStatus = "normal";
+      }
+      
+      setTestosteroneStatus(newTestoStatus);
+      prevStressLevelRef.current = level;
+    }
+  }, []);
 
   const sleepPercent = useMemo(() => {
     const actual = SLEEP_AVG_HOURS;
@@ -297,7 +318,8 @@ const ControlCenter = () => {
             }
           />
           <StressCard
-            percent={stressPercent}
+            basePercent={stressPercent}
+            onStressChange={handleStressChange}
             onClick={() =>
               openMetricSheet({
                 key: "stress",
@@ -316,8 +338,8 @@ const ControlCenter = () => {
           pulse={62}
           steps={8500}
           recoveryPercent={recoveryPercent}
-          testosteroneValue={testosteroneValue}
-          testosteroneDate={testosteroneDate}
+          testosteroneStatus={testosteroneStatus}
+          testosteroneGlowing={testosteroneGlowing}
         />
       </motion.div>
 

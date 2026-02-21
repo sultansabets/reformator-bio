@@ -1,9 +1,18 @@
 {
   "testosterone": {
     "low": "Low",
+    "normal": "Normal",
     "optimal": "Optimal",
     "high": "High",
-    "elevated": "Elevated"
+    "elevated": "Elevated",
+    "stressCorrelation": "Stress correlation",
+    "sleepQuality": "Sleep quality",
+    "recovery": "Recovery level"
+  },
+  "stress": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
   },
   "common": {
     "save": "Save",
