@@ -7,7 +7,7 @@ const BLOB_SEGMENTS = 125;
 const PARTICLE_COUNT = 60;
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const TEXT_SAFE_RADIUS = 70;
-const INNER_RADIUS = TEXT_SAFE_RADIUS + 12;
+const INNER_RADIUS = TEXT_SAFE_RADIUS - 5;
 const MOUNT_DURATION_MS = 2000;
 const LIQUID_CYCLE_MS = 8000;
 
@@ -42,11 +42,11 @@ function spawnParticle(center: number): Particle {
   return {
     x: center + Math.cos(angle) * edgeR,
     y: center + Math.sin(angle) * edgeR,
-    speed: 0.5 + Math.random() * 0.3,
-    baseSize: 6 + Math.random() * 4,
-    size: 6 + Math.random() * 4,
+    speed: 0.6 + Math.random() * 0.3,
+    baseSize: 4 + Math.random() * 3,
+    size: 4 + Math.random() * 3,
     opacity: 0,
-    maxOpacity: 0.4 + Math.random() * 0.4,
+    maxOpacity: 0.7 + Math.random() * 0.3,
     satelliteCount: 1 + Math.floor(Math.random() * 2),
     satelliteAngle: Math.random() * Math.PI * 2,
   };
@@ -68,8 +68,8 @@ function updateParticle(p: Particle, center: number, dt: number): boolean {
   p.y += ny * moveSpeed;
 
   const edgeR = BASE_RADIUS * 0.92;
-  const fadeInZone = 20;
-  const fadeOutZone = 30;
+  const fadeInZone = 10;
+  const fadeOutZone = 20;
 
   let targetOpacity = p.maxOpacity;
 
