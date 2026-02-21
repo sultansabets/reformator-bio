@@ -987,7 +987,7 @@ const Profile = () => {
                       setEditFirstName(v);
                       updateUser({ firstName: v });
                     }}
-                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                   />
                 </div>
 
@@ -1004,7 +1004,7 @@ const Profile = () => {
                       setEditLastName(v);
                       updateUser({ lastName: v });
                     }}
-                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                   />
                 </div>
 
@@ -1022,7 +1022,7 @@ const Profile = () => {
                       setEditNickname(sanitized);
                       updateUser({ nickname: sanitized });
                     }}
-                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                     placeholder={t("profile.placeholderUsername")}
                   />
                 </div>
@@ -1041,7 +1041,7 @@ const Profile = () => {
                       setEditDob(v);
                       updateUser({ dob: v });
                     }}
-                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base text-left [&::-webkit-calendar-picker-indicator]:opacity-50"
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border appearance-none [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-date-and-time-value]:text-left"
                   />
                 </div>
 
@@ -1054,7 +1054,7 @@ const Profile = () => {
                     id="edit-age"
                     value={editAge}
                     readOnly
-                    className="mt-1.5 h-14 w-full rounded-2xl border-border bg-muted px-4 text-base text-muted-foreground"
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left text-muted-foreground box-border"
                   />
                 </div>
 
@@ -1077,7 +1077,7 @@ const Profile = () => {
                         const n = Number(v);
                         if (!Number.isNaN(n)) updateUser({ height: n });
                       }}
-                      className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                     />
                   </div>
                   <div>
@@ -1097,7 +1097,7 @@ const Profile = () => {
                         const n = Number(v);
                         if (!Number.isNaN(n)) updateUser({ weight: n });
                       }}
-                      className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                     />
                   </div>
                 </div>
@@ -1116,7 +1116,7 @@ const Profile = () => {
                   >
                     <SelectTrigger
                       id="edit-city"
-                      className="mt-1.5 h-14 w-full rounded-2xl border-border bg-card px-4 text-base"
+                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                     >
                       <SelectValue placeholder={t("profile.chooseCity")} />
                     </SelectTrigger>
