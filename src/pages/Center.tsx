@@ -18,6 +18,7 @@ import {
   Search,
   X,
   Minus,
+  Dumbbell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ import { getStorageKey } from "@/lib/userStorage";
 import { useTranslation } from "react-i18next";
 import foodDatabase from "@/data/foodDatabase.json";
 import FullscreenModal from "@/components/FullscreenModal";
+import { SportHero, MuscleMap, WorkoutProgram, WorkoutCalendar } from "@/components/sport";
+import type { MuscleProgress, WeekPlan, WorkoutDay } from "@/components/sport";
 
 interface FoodProduct {
   id: string;
@@ -150,6 +153,83 @@ function saveWorkoutHistory(key: string, entries: WorkoutHistoryEntry[]): void {
   try {
     localStorage.setItem(key, JSON.stringify(entries.slice(-50)));
   } catch {}
+}
+
+function loadWeekPlan(key: string): WeekPlan {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return { monday: ["chest"], wednesday: ["back"], friday: ["legs"] };
+    return JSON.parse(raw);
+  } catch {
+    return { monday: ["chest"], wednesday: ["back"], friday: ["legs"] };
+  }
+}
+
+function saveWeekPlan(key: string, plan: WeekPlan): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(plan));
+  } catch {}
+}
+
+function calculateXP(history: WorkoutHistoryEntry[]): number {
+  return history.reduce((total, entry) => {
+    const isCardio = !entry.bodyParts || entry.bodyParts.length === 0;
+    return total + (isCardio ? 70 : 120);
+  }, 0);
+}
+
+function calculateMuscleProgress(history: WorkoutHistoryEntry[]): MuscleProgress {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgoStr = getDateString(weekAgo);
+  
+  const recentWorkouts = history.filter(w => w.date >= weekAgoStr);
+  
+  const muscleCount: Record<string, number> = {
+    chest: 0,
+    back: 0,
+    shoulders: 0,
+    arms: 0,
+    legs: 0,
+    abs: 0,
+  };
+  
+  for (const workout of recentWorkouts) {
+    if (workout.bodyParts) {
+      for (const part of workout.bodyParts) {
+        if (muscleCount[part] !== undefined) {
+          muscleCount[part]++;
+        }
+      }
+    }
+  }
+  
+  return {
+    chest: muscleCount.chest >= 2 ? 100 : muscleCount.chest === 1 ? 50 : 0,
+    back: muscleCount.back >= 2 ? 100 : muscleCount.back === 1 ? 50 : 0,
+    shoulders: muscleCount.shoulders >= 2 ? 100 : muscleCount.shoulders === 1 ? 50 : 0,
+    arms: muscleCount.arms >= 2 ? 100 : muscleCount.arms === 1 ? 50 : 0,
+    legs: muscleCount.legs >= 2 ? 100 : muscleCount.legs === 1 ? 50 : 0,
+    abs: muscleCount.abs >= 2 ? 100 : muscleCount.abs === 1 ? 50 : 0,
+  };
+}
+
+function convertHistoryToWorkoutDays(history: WorkoutHistoryEntry[]): WorkoutDay[] {
+  const dayMap: Record<string, WorkoutDay> = {};
+  
+  for (const entry of history) {
+    if (!dayMap[entry.date]) {
+      dayMap[entry.date] = { date: entry.date, workouts: [] };
+    }
+    dayMap[entry.date].workouts.push({
+      type: entry.type,
+      bodyParts: entry.bodyParts,
+      durationSec: entry.durationSec,
+      caloriesBurned: entry.caloriesBurned,
+    });
+  }
+  
+  return Object.values(dayMap);
 }
 
 function MacroCircle({ 
@@ -355,6 +435,7 @@ export default function Center() {
     return {
       nutrition: getStorageKey(user.id, "nutrition_v2"),
       workout_history: getStorageKey(user.id, "workout_history"),
+      week_plan: getStorageKey(user.id, "week_plan"),
     };
   }, [user?.id]);
 
@@ -373,6 +454,7 @@ export default function Center() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
+  const [weekPlan, setWeekPlan] = useState<WeekPlan>({ monday: ["chest"], wednesday: ["back"], friday: ["legs"] });
   const [workoutMode, setWorkoutMode] = useState<"strength" | "cardio">("strength");
   const [selectedBodyParts, setSelectedBodyParts] = useState<Set<string>>(new Set());
   const [cardioType, setCardioType] = useState<string>("run");
@@ -389,6 +471,7 @@ export default function Center() {
     if (!storageKeys) return;
     setDayData(loadDayData(storageKeys.nutrition, selectedDate));
     setWorkoutHistory(loadWorkoutHistory(storageKeys.workout_history));
+    setWeekPlan(loadWeekPlan(storageKeys.week_plan));
   }, [storageKeys, selectedDate]);
 
   useEffect(() => {
@@ -487,6 +570,21 @@ export default function Center() {
   const proteinRemaining = proteinGoal - consumed.protein;
   const carbsRemaining = carbsGoal - consumed.carbs;
   const fatsRemaining = fatsGoal - consumed.fats;
+
+  const totalXP = useMemo(() => calculateXP(workoutHistory), [workoutHistory]);
+  const muscleProgress = useMemo(() => calculateMuscleProgress(workoutHistory), [workoutHistory]);
+  const workoutDays = useMemo(() => convertHistoryToWorkoutDays(workoutHistory), [workoutHistory]);
+  
+  const todayMuscles = useMemo(() => {
+    const today = getTodayDateString();
+    const todayWorkouts = workoutHistory.filter(w => w.date === today);
+    return todayWorkouts.flatMap(w => w.bodyParts || []) as ("chest" | "back" | "shoulders" | "arms" | "legs" | "abs")[];
+  }, [workoutHistory]);
+
+  const handleWeekPlanChange = useCallback((newPlan: WeekPlan) => {
+    setWeekPlan(newPlan);
+    if (storageKeys) saveWeekPlan(storageKeys.week_plan, newPlan);
+  }, [storageKeys]);
 
   const addProductEntry = useCallback(() => {
     if (!selectedProduct || grams <= 0) return;
@@ -737,21 +835,110 @@ export default function Center() {
             </button>
       </div>
 
-      {/* Спорт tab - always mounted, hidden via CSS */}
+      {/* Спорт tab - Premium minimalist design */}
       <div
-        className={`space-y-6 transition-opacity duration-200 ${
+        className={`transition-opacity duration-200 ${
           activeTab === "sport" ? "block opacity-100" : "hidden opacity-0"
         }`}
       >
-            {/* Strength */}
-            <div>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Силовые
-              </h2>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                {!workoutActive ? (
-                  <>
-                    <div className="mb-4 flex flex-wrap gap-2">
+        {workoutHistory.length === 0 && !workoutActive ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted/50">
+              <Dumbbell className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <p className="mb-2 text-lg font-medium text-foreground">Пора качнуть форму</p>
+            <p className="mb-6 text-sm text-muted-foreground">Начнем?</p>
+            <Button 
+              className="gap-2"
+              onClick={() => {
+                setWorkoutMode("strength");
+                setSelectedBodyParts(new Set(["chest"]));
+              }}
+            >
+              <Play className="h-4 w-4" />
+              Запустить тренировку
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Active Workout Overlay */}
+            {workoutActive && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl bg-primary/10 border border-primary/20 p-5"
+              >
+                <div className="text-center mb-4">
+                  <p className="text-[10px] uppercase tracking-wider text-primary mb-1">Активная тренировка</p>
+                  <p className="text-4xl font-mono font-bold text-foreground">
+                    {formatTime(workoutElapsedSec)}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="flex items-center gap-2 rounded-xl bg-background/50 p-3">
+                    <Heart className="h-4 w-4 text-destructive" />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Пульс</p>
+                      <p className="text-sm font-semibold">{workoutHeartRate} bpm</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl bg-background/50 p-3">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Калории</p>
+                      <p className="text-sm font-semibold">~{workoutCalories}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1 gap-2" onClick={pauseWorkout}>
+                    {workoutPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                    {workoutPaused ? t("center.continue") : t("center.pause")}
+                  </Button>
+                  <Button variant="destructive" className="flex-1 gap-2" onClick={stopWorkout}>
+                    <Square className="h-4 w-4" />
+                    {t("center.stop")}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Hero Block - Avatar & Level */}
+            {!workoutActive && (
+              <SportHero
+                totalWorkouts={workoutHistory.length}
+                totalXP={totalXP}
+                userName={user?.name}
+              />
+            )}
+
+            {/* Muscle Map */}
+            {!workoutActive && (
+              <div>
+                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
+                  Мышечная карта
+                </h3>
+                <MuscleMap
+                  progress={muscleProgress}
+                  onMuscleClick={(muscle) => {
+                    setWorkoutMode("strength");
+                    setSelectedBodyParts(new Set([muscle]));
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Quick Start Workout */}
+            {!workoutActive && (
+              <div>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Быстрый старт
+                </h3>
+                <div className="space-y-3">
+                  {/* Strength workout */}
+                  <div className="rounded-2xl bg-muted/30 p-4">
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {BODY_PARTS.map((id) => {
                         const selected = selectedBodyParts.has(id);
                         return (
@@ -767,8 +954,10 @@ export default function Center() {
                                 return next;
                               });
                             }}
-                            className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                              selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted/50"
+                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                              selected 
+                                ? "bg-primary text-primary-foreground shadow-sm" 
+                                : "bg-muted hover:bg-muted/80 text-foreground"
                             }`}
                           >
                             {t(`center.${id}` as "center.chest")}
@@ -777,96 +966,54 @@ export default function Center() {
                       })}
                     </div>
                     <Button
-                      className="w-full gap-2"
+                      className="w-full gap-2 h-11"
                       onClick={() => { setWorkoutMode("strength"); startWorkout(); }}
                       disabled={selectedBodyParts.size === 0}
                     >
-                      <Play className="h-4 w-4" />
-                      Начать
+                      <Dumbbell className="h-4 w-4" />
+                      Силовая
                     </Button>
-                  </>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="text-center text-3xl font-mono font-semibold text-foreground">
-                      {formatTime(workoutElapsedSec)}
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
-                        <Heart className="h-4 w-4 text-destructive" />
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Пульс</p>
-                          <p className="text-sm font-semibold">{workoutHeartRate} bpm</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
-                        <Flame className="h-4 w-4 text-orange-500" />
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">Калории</p>
-                          <p className="text-sm font-semibold">~{workoutCalories}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 gap-2" onClick={pauseWorkout}>
-                        {workoutPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                        {workoutPaused ? t("center.continue") : t("center.pause")}
-                      </Button>
-                      <Button variant="destructive" className="flex-1 gap-2" onClick={stopWorkout}>
-                        <Square className="h-4 w-4" />
-                        {t("center.stop")}
-                      </Button>
-                    </div>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Cardio */}
+                  {/* Cardio chips */}
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                    {CARDIO_TYPES.map((id) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => {
+                          setWorkoutMode("cardio");
+                          setCardioType(id);
+                          startWorkout();
+                        }}
+                        className="flex-shrink-0 rounded-xl bg-muted/50 px-4 py-2.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                      >
+                        {t(`center.${id}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Weekly Program */}
             {!workoutActive && (
-              <div>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Кардио
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {CARDIO_TYPES.map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => {
-                        setWorkoutMode("cardio");
-                        setCardioType(id);
-                        startWorkout();
-                      }}
-                      className="rounded-lg border border-border bg-card px-4 py-2 text-sm hover:bg-muted/50"
-                    >
-                      {t(`center.${id}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <WorkoutProgram
+                weekPlan={weekPlan}
+                onPlanChange={handleWeekPlanChange}
+                todayWorkouts={todayMuscles}
+              />
             )}
 
-            {/* History */}
-            {workoutHistory.length > 0 && (
-              <div>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  История
-                </h2>
-                <div className="space-y-2">
-                  {workoutHistory.slice(0, 7).map((h, i) => (
-                    <div
-                      key={`${h.date}-${h.startedAt}-${i}`}
-                      className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3"
-                    >
-                      <span className="text-sm text-foreground">{h.type}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {Math.floor(h.durationSec / 60)} мин · ~{h.caloriesBurned} ккал
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Workout Calendar */}
+            {!workoutActive && (
+              <WorkoutCalendar
+                workoutDays={workoutDays}
+                weekPlan={weekPlan}
+              />
             )}
+          </div>
+        )}
       </div>
 
       {/* Calendar popup */}
