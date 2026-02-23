@@ -233,29 +233,42 @@ function convertHistoryToWorkoutDays(history: WorkoutHistoryEntry[]): WorkoutDay
   return Object.values(dayMap);
 }
 
-function MacroCircle({ 
-  icon: Icon, 
-  label, 
-  remaining, 
-  goal, 
-  color,
-}: { 
+/** Single palette: color depends only on progress. 0–40% muted, 40–80% brand, 80–100% enhanced, >100% soft amber. */
+function getMacroColor(progress: number): string {
+  if (progress > 100) {
+    return "hsl(38, 45%, 52%)"; // soft amber glow, no bright red
+  }
+  if (progress >= 80) {
+    return "hsl(240, 18%, 32%)"; // enhanced brand
+  }
+  if (progress >= 40) {
+    return "hsl(240, 12%, 38%)"; // main brand
+  }
+  return "hsl(240, 6%, 48%)"; // muted accent, low saturation
+}
+
+function MacroCircle({
+  icon: Icon,
+  label,
+  remaining,
+  goal,
+}: {
   icon: React.ElementType;
   label: string;
   remaining: number;
   goal: number;
-  color: string;
 }) {
   const consumed = goal - remaining;
-  const progress = goal > 0 ? Math.min(100, (consumed / goal) * 100) : 0;
-  const isOver = remaining < 0;
-  
+  const progress = goal > 0 ? (consumed / goal) * 100 : 0;
+  const ringColor = getMacroColor(progress);
+  const dashProgress = Math.min(100, progress);
+
   const CIRCLE_SIZE = 70;
   const STROKE_WIDTH = 3;
   const radius = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference - (Math.min(progress, 100) / 100) * circumference;
-  
+  const dashOffset = circumference - (dashProgress / 100) * circumference;
+
   return (
     <div className="flex flex-col items-center">
       <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
@@ -269,16 +282,16 @@ function MacroCircle({
             cy={CIRCLE_SIZE / 2}
             r={radius}
             fill="none"
-            stroke="hsl(var(--border))"
+            stroke="hsl(240 6% 28%)"
             strokeWidth={STROKE_WIDTH}
-            opacity={0.25}
+            opacity={0.4}
           />
           <motion.circle
             cx={CIRCLE_SIZE / 2}
             cy={CIRCLE_SIZE / 2}
             r={radius}
             fill="none"
-            stroke={isOver ? "#EF4444" : color}
+            stroke={ringColor}
             strokeWidth={STROKE_WIDTH}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -289,16 +302,11 @@ function MacroCircle({
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="h-6 w-6" style={{ color: isOver ? "#EF4444" : color }} />
+          <Icon className="h-6 w-6 text-muted-foreground" />
         </div>
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">{label}</p>
-      <p 
-        className="text-base font-bold tabular-nums"
-        style={{ color: isOver ? "#EF4444" : "hsl(var(--foreground))" }}
-      >
-        {remaining}г
-      </p>
+      <p className="text-base font-bold tabular-nums text-foreground">{remaining}г</p>
     </div>
   );
 }
@@ -788,21 +796,18 @@ export default function Center() {
                   label={t("center.proteinShort")}
                   remaining={proteinRemaining}
                   goal={proteinGoal}
-                  color="#EF4444"
                 />
                 <MacroCircle
                   icon={Wheat}
                   label={t("center.carbsShort")}
                   remaining={carbsRemaining}
                   goal={carbsGoal}
-                  color="#F59E0B"
                 />
                 <MacroCircle
                   icon={Droplet}
                   label={t("center.fatsShort")}
                   remaining={fatsRemaining}
                   goal={fatsGoal}
-                  color="#22C55E"
                 />
               </div>
             </motion.div>
@@ -1164,15 +1169,15 @@ export default function Center() {
                     <p className="text-[10px] text-muted-foreground">ккал</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-red-500">{selectedProduct.protein_per_100g}</p>
+                    <p className="text-lg font-bold text-foreground">{selectedProduct.protein_per_100g}</p>
                     <p className="text-[10px] text-muted-foreground">белки</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-amber-500">{selectedProduct.carbs_per_100g}</p>
+                    <p className="text-lg font-bold text-foreground">{selectedProduct.carbs_per_100g}</p>
                     <p className="text-[10px] text-muted-foreground">углеводы</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-green-500">{selectedProduct.fat_per_100g}</p>
+                    <p className="text-lg font-bold text-foreground">{selectedProduct.fat_per_100g}</p>
                     <p className="text-[10px] text-muted-foreground">жиры</p>
                   </div>
                 </div>
@@ -1233,15 +1238,15 @@ export default function Center() {
                     <p className="text-[10px] text-muted-foreground">ккал</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-red-500">{calculatedNutrients.protein}</p>
+                    <p className="text-xl font-bold text-foreground">{calculatedNutrients.protein}</p>
                     <p className="text-[10px] text-muted-foreground">белки</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-amber-500">{calculatedNutrients.carbs}</p>
+                    <p className="text-xl font-bold text-foreground">{calculatedNutrients.carbs}</p>
                     <p className="text-[10px] text-muted-foreground">углеводы</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-green-500">{calculatedNutrients.fats}</p>
+                    <p className="text-xl font-bold text-foreground">{calculatedNutrients.fats}</p>
                     <p className="text-[10px] text-muted-foreground">жиры</p>
                   </div>
                 </div>
