@@ -29,7 +29,7 @@ import { getStorageKey } from "@/lib/userStorage";
 import { useTranslation } from "react-i18next";
 import foodDatabase from "@/data/foodDatabase.json";
 import FullscreenModal from "@/components/FullscreenModal";
-import { SportXpBlock, MuscleMap, WorkoutProgram, WorkoutCalendar } from "@/components/sport";
+import { WorkoutProgram, WorkoutCalendar } from "@/components/sport";
 import type { MuscleProgress, WeekPlan, WorkoutDay } from "@/components/sport";
 
 interface FoodProduct {
@@ -923,27 +923,6 @@ export default function Center() {
                 workoutDays={workoutDays}
                 weekPlan={weekPlan}
               />
-            )}
-
-            {/* Compact XP block */}
-            {!workoutActive && (
-              <SportXpBlock totalXP={totalXP} />
-            )}
-
-            {/* Muscle Map */}
-            {!workoutActive && (
-              <div>
-                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
-                  Мышечная карта
-                </h3>
-                <MuscleMap
-                  progress={muscleProgress}
-                  onMuscleClick={(muscle) => {
-                    setWorkoutMode("strength");
-                    setSelectedBodyParts(new Set([muscle]));
-                  }}
-                />
-              </div>
             )}
 
             {/* Quick Start Workout */}
