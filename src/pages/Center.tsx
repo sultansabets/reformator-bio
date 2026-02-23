@@ -21,6 +21,7 @@ import {
   Dumbbell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHealthStore } from "@/store/healthStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -469,10 +470,25 @@ export default function Center() {
 
   useEffect(() => {
     if (!storageKeys) return;
-    setDayData(loadDayData(storageKeys.nutrition, selectedDate));
-    setWorkoutHistory(loadWorkoutHistory(storageKeys.workout_history));
+    const day = loadDayData(storageKeys.nutrition, selectedDate);
+    const history = loadWorkoutHistory(storageKeys.workout_history);
+    setDayData(day);
+    setWorkoutHistory(history);
     setWeekPlan(loadWeekPlan(storageKeys.week_plan));
-  }, [storageKeys, selectedDate]);
+    if (selectedDate === getTodayDateString()) {
+      const agg = day.entries.reduce(
+        (a, e) => ({
+          caloriesIntake: a.caloriesIntake + e.calories,
+          protein: a.protein + e.protein,
+          carbs: a.carbs + e.carbs,
+          fats: a.fats + e.fats,
+        }),
+        { caloriesIntake: 0, protein: 0, carbs: 0, fats: 0 }
+      );
+      setNutritionToday(agg);
+      setWorkouts(history);
+    }
+  }, [storageKeys, selectedDate, setNutritionToday, setWorkouts]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -586,6 +602,11 @@ export default function Center() {
     if (storageKeys) saveWeekPlan(storageKeys.week_plan, newPlan);
   }, [storageKeys]);
 
+  const addNutrition = useHealthStore((s) => s.addNutrition);
+  const addWorkout = useHealthStore((s) => s.addWorkout);
+  const setNutritionToday = useHealthStore((s) => s.setNutritionToday);
+  const setWorkouts = useHealthStore((s) => s.setWorkouts);
+
   const addProductEntry = useCallback(() => {
     if (!selectedProduct || grams <= 0) return;
     const entry: FoodEntry = {
@@ -600,11 +621,17 @@ export default function Center() {
       timestamp: Date.now(),
     };
     saveData({ entries: [...dayData.entries, entry] });
+    addNutrition({
+      calories: calculatedNutrients.calories,
+      protein: Math.round(calculatedNutrients.protein),
+      carbs: Math.round(calculatedNutrients.carbs),
+      fats: Math.round(calculatedNutrients.fats),
+    });
     setSearchModalOpen(false);
     setSelectedProduct(null);
     setGrams(100);
     setSearchQuery("");
-  }, [selectedProduct, grams, calculatedNutrients, dayData.entries, saveData]);
+  }, [selectedProduct, grams, calculatedNutrients, dayData.entries, saveData, addNutrition]);
 
   const removeEntry = useCallback((id: string) => {
     saveData({ entries: dayData.entries.filter((e) => e.id !== id) });
@@ -648,6 +675,7 @@ export default function Center() {
     const nextHistory = [entry, ...workoutHistory];
     setWorkoutHistory(nextHistory);
     if (storageKeys) saveWorkoutHistory(storageKeys.workout_history, nextHistory);
+    addWorkout(entry);
     setWorkoutActive(false);
     setWorkoutPaused(false);
     setWorkoutStartTime(null);

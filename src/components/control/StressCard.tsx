@@ -1,19 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 export interface StressCardProps {
+  percent?: number;
   onClick?: () => void;
   className?: string;
 }
 
 const CIRCLE_SIZE = 76;
 const STROKE_WIDTH = 3;
-
-function getRandomPercent(): number {
-  return Math.floor(Math.random() * 101);
-}
 
 function getStressColor(percent: number): string {
   if (percent <= 30) return "rgb(34, 197, 94)";
@@ -81,9 +78,9 @@ function StressIcon({ className, isHighStress }: { className?: string; isHighStr
   );
 }
 
-export function StressCard({ onClick, className }: StressCardProps) {
+export function StressCard({ percent: percentProp, onClick, className }: StressCardProps) {
   const { t } = useTranslation();
-  const [percent] = useState(getRandomPercent);
+  const percent = percentProp ?? 50;
   
   const color = getStressColor(percent);
   const glowColor = getStressGlowColor(percent);

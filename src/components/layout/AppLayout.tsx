@@ -23,6 +23,7 @@ import {
 import BottomNav from "./BottomNav";
 import { useScrollSource } from "@/contexts/ScrollSourceContext";
 import { DevicesPopover } from "@/components/DevicesPopover";
+import { HealthStoreHydrator } from "@/components/HealthStoreHydrator";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
 import { LANGUAGES, persistLanguage } from "@/i18n";
@@ -380,6 +381,7 @@ const AppLayout = () => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
+        <HealthStoreHydrator />
         <main className="flex-1 pb-4 transition-colors duration-300">
           <Outlet />
         </main>

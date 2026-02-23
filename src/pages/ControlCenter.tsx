@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
@@ -15,10 +15,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
-import { getRecommendedKcal } from "@/lib/health";
-import { computeHealthMetrics } from "@/lib/healthEngine";
-import { getLatestLab } from "@/lib/labs";
-import { getStorageKey } from "@/lib/userStorage";
+import { useHealthStore } from "@/store/healthStore";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
@@ -26,73 +23,10 @@ import { StressCard } from "@/components/control/StressCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 
-function getTodayDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function getDateDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function readTodayKcal(nutritionKey: string): number {
-  try {
-    const raw = localStorage.getItem(nutritionKey);
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw);
-    if (parsed.date !== getTodayDateString()) return 0;
-    const day = parsed;
-    const sum = (arr: { manualKcal?: number; kcalPer100?: number; grams?: number }[]) =>
-      arr.reduce((s, i) => {
-        const k = i.manualKcal ?? (i.kcalPer100 && i.grams ? (i.grams / 100) * i.kcalPer100 : 0);
-        return s + Math.round(k);
-      }, 0);
-    return sum(day.breakfast ?? []) + sum(day.lunch ?? []) + sum(day.dinner ?? []) + sum(day.snacks ?? []);
-  } catch {
-    return 0;
-  }
-}
-
-function readTodayWater(waterKey: string): { current: number; goal: number } {
-  try {
-    const raw = localStorage.getItem(waterKey);
-    const today = getTodayDateString();
-    if (!raw) return { current: 0, goal: 2500 };
-    const parsed = JSON.parse(raw);
-    if (parsed.lastUpdatedDate !== today) return { current: 0, goal: Number(parsed.goal) || 2500 };
-    return { current: Number(parsed.current) || 0, goal: Number(parsed.goal) || 2500 };
-  } catch {
-    return { current: 0, goal: 2500 };
-  }
-}
-
-function readTodayWorkout(workoutHistoryKey: string): { durationSec: number; caloriesBurned: number } {
-  try {
-    const raw = localStorage.getItem(workoutHistoryKey);
-    if (!raw) return { durationSec: 0, caloriesBurned: 0 };
-    const list = JSON.parse(raw);
-    const today = getTodayDateString();
-    const todayEntries = Array.isArray(list) ? list.filter((e: { date: string }) => e.date === today) : [];
-    const durationSec = todayEntries.reduce((s: number, e: { durationSec?: number }) => s + (e.durationSec ?? 0), 0);
-    const caloriesBurned = todayEntries.reduce((s: number, e: { caloriesBurned?: number }) => s + (e.caloriesBurned ?? 0), 0);
-    return { durationSec, caloriesBurned };
-  } catch {
-    return { durationSec: 0, caloriesBurned: 0 };
-  }
-}
-
-function testosteroneNgDlToNmolL(ngDl: number): number {
-  return ngDl * 0.0347;
-}
-
-function workoutIntensityFromToday(durationSec: number, caloriesBurned: number): number {
-  if (durationSec <= 0) return 0;
-  const minutes = durationSec / 60;
-  const intensityFromDuration = Math.min(10, (minutes / 45) * 6);
-  const intensityFromCal = Math.min(4, caloriesBurned / 100);
-  return Math.round(Math.min(10, intensityFromDuration + intensityFromCal * 0.5));
+function formatDateShort(iso: string | undefined): string {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return [d, m, y].filter(Boolean).join(".") || iso;
 }
 
 const sleepDataRaw = [
@@ -123,19 +57,6 @@ const recoveryDataRaw = [
   { dayIdx: 6, score: 82 },
 ];
 
-const sleepLast3DaysRaw = [
-  { dayKey: "dayBeforeYesterday", hours: 7.2 },
-  { dayKey: "yesterday", hours: 6.8 },
-  { dayKey: "today", hours: 7.5 },
-];
-
-const SLEEP_AVG_HOURS =
-  (sleepLast3DaysRaw[0].hours + sleepLast3DaysRaw[1].hours + sleepLast3DaysRaw[2].hours) / 3;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
@@ -143,106 +64,29 @@ const ControlCenter = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const displayName = user?.fullName?.trim() || t("common.user");
-
-  const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
-  const sleepData = sleepDataRaw.map(d => ({ ...d, day: dayLabels[d.dayIdx] }));
-  const loadData = loadDataRaw.map(d => ({ ...d, day: dayLabels[d.dayIdx] }));
-  const recoveryData = recoveryDataRaw.map(d => ({ ...d, day: dayLabels[d.dayIdx] }));
-  const sleepLast3Days = sleepLast3DaysRaw.map(d => ({ ...d, day: t(`days.${d.dayKey}`) }));
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
-  const storageKeys = useMemo(() => {
-    if (!user?.id) return null;
-    return {
-      nutrition: getStorageKey(user.id, "nutrition"),
-      water: getStorageKey(user.id, "water"),
-      workout_history: getStorageKey(user.id, "workout_history"),
-      labs: getStorageKey(user.id, "labs"),
-    };
-  }, [user?.id]);
+  const sleepPercent = useHealthStore((s) => s.sleepPercent);
+  const loadPercent = useHealthStore((s) => s.loadPercent);
+  const stress = useHealthStore((s) => s.stress);
+  const recovery = useHealthStore((s) => s.recovery);
+  const mainStateScore = useHealthStore((s) => s.mainStateScore);
+  const sleepScore = useHealthStore((s) => s.sleepScore);
+  const steps = useHealthStore((s) => s.steps);
+  const heartRate = useHealthStore((s) => s.heartRate);
+  const testosterone = useHealthStore((s) => s.testosterone);
+  const testosteroneDate = useHealthStore((s) => s.testosteroneDate);
 
-  const { metrics, latestLab, todayKcal, todayWorkout } = useMemo(() => {
-    const keys = storageKeys ?? {
-      nutrition: "reformator_bio_nutrition",
-      water: "reformator_bio_water",
-      workout_history: "reformator_bio_workout_history",
-      labs: "reformator_bio_labs",
-    };
-    const water = readTodayWater(keys.water);
-    const workout = readTodayWorkout(keys.workout_history);
-    const recommended = user?.height && user?.weight ? getRecommendedKcal(user.height, user.weight) : null;
-    const targetKcal = recommended?.target ?? 2000;
-    const lab = getLatestLab(keys.labs);
-    const testosteroneNmolL = lab?.testosterone != null ? testosteroneNgDlToNmolL(lab.testosterone) : undefined;
-    const input = {
-      sleepHours: 7.5,
-      caloriesConsumed: readTodayKcal(keys.nutrition),
-      caloriesTarget: targetKcal,
-      workoutIntensity: workoutIntensityFromToday(workout.durationSec, workout.caloriesBurned),
-      waterMl: water.current,
-      age: 30,
-      weight: user?.weight ?? 70,
-      height: user?.height ?? 170,
-      labs: {
-        testosterone: testosteroneNmolL,
-        bilirubin: lab?.other?.bilirubin,
-        uricAcid: lab?.other?.uricAcid,
-        platelets: lab?.other?.platelets,
-      },
-    };
-    const healthMetrics = computeHealthMetrics(input);
-    return {
-      metrics: healthMetrics,
-      latestLab: lab,
-      todayKcal: readTodayKcal(keys.nutrition),
-      todayWorkout: readTodayWorkout(keys.workout_history),
-    };
-  }, [user?.height, user?.weight, storageKeys]);
-
-  const recoveryScore = metrics.recoveryScore;
-
-  const sleepPercent = useMemo(() => {
-    const actual = SLEEP_AVG_HOURS;
-    const target = 8;
-    let base = (actual / target) * 100;
-    const stability = 0.85;
-    if (stability >= 0.8) base += 5;
-    return clamp(Math.round(base), 0, 100);
-  }, []);
-
-  const loadPercent = useMemo(() => {
-    const targetActiveKcal = 400;
-    const targetSteps = 10000;
-    const activeKcal = todayWorkout.caloriesBurned || 180;
-    const steps = 6500;
-    const kcalPart = (activeKcal / targetActiveKcal) * 50;
-    const stepsPart = (steps / targetSteps) * 50;
-    return clamp(Math.round(kcalPart + stepsPart), 0, 100);
-  }, [todayWorkout.caloriesBurned]);
-
-  const recoveryPercent = useMemo(() => {
-    const sleepPart = sleepPercent * 0.4;
-    const hrvValue = 45;
-    const hrvPart = clamp((hrvValue / 60) * 100, 0, 100) * 0.4;
-    const yesterdayLoad = 65;
-    const loadPenalty = yesterdayLoad * 0.2;
-    return clamp(Math.round(sleepPart + hrvPart - loadPenalty), 0, 100);
-  }, [sleepPercent]);
-
-  const sleepQualityPercent = useMemo(() => {
-    const sleepRatio = (SLEEP_AVG_HOURS / 8) * 60;
-    const stabilityBonus = 20;
-    const wakeupPenalty = 5;
-    return clamp(Math.round(sleepRatio + stabilityBonus - wakeupPenalty), 0, 100);
-  }, []);
+  const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
+  const sleepData = sleepDataRaw.map((d) => ({ ...d, day: dayLabels[d.dayIdx] }));
+  const loadData = loadDataRaw.map((d) => ({ ...d, day: dayLabels[d.dayIdx] }));
+  const recoveryData = recoveryDataRaw.map((d) => ({ ...d, day: dayLabels[d.dayIdx] }));
 
   const openMetricSheet = (detail: MetricDetail) => {
     setSelectedMetric(detail);
     setMetricSheetOpen(true);
   };
-
-  const bodyStateScore = 85;
 
   return (
     <motion.div
@@ -258,7 +102,7 @@ const ControlCenter = () => {
 
       <motion.div variants={item} className="mt-4 mb-4 flex justify-center overflow-visible">
         <div className="relative mx-auto flex w-full max-w-[420px] items-center justify-center overflow-visible">
-          <HealthOrb score={bodyStateScore} />
+          <HealthOrb score={mainStateScore} />
         </div>
       </motion.div>
 
@@ -285,11 +129,12 @@ const ControlCenter = () => {
             }
           />
           <StressCard
+            percent={stress}
             onClick={() =>
               openMetricSheet({
                 key: "stress",
                 title: t("center.stress"),
-                percent: 50,
+                percent: stress,
               })
             }
           />
@@ -300,18 +145,18 @@ const ControlCenter = () => {
         <InfluenceFactors
           systolic={125}
           diastolic={82}
-          pulse={62}
-          steps={8500}
-          recoveryPercent={recoveryPercent}
-          testosteroneValue={56}
-          testosteroneDate="12.03.2026"
+          pulse={heartRate}
+          steps={steps}
+          recoveryPercent={recovery}
+          testosteroneValue={testosterone != null ? Math.round(testosterone) : undefined}
+          testosteroneDate={formatDateShort(testosteroneDate)}
         />
       </motion.div>
 
       <motion.div variants={item} className="space-y-4">
         <div>
           <p className="mb-1 text-sm font-medium text-foreground">
-            {t("center.sleepQuality")}: {sleepQualityPercent}%
+            {t("center.sleepQuality")}: {sleepScore}%
           </p>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("center.sleepTrends")}
