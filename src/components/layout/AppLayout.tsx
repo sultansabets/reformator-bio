@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, AlarmClock } from "lucide-react";
+import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
@@ -157,11 +157,11 @@ const AppLayout = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/smart-wake")}
+                  onClick={() => navigate("/community")}
                   className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                  aria-label={t("smartWake.title")}
+                  aria-label="Community"
                 >
-                  <AlarmClock className="h-5 w-5" />
+                  <Users2 className="h-5 w-5" />
                 </button>
               </div>
             </>
