@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2 } from "lucide-react";
+import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2, AlarmClock } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
@@ -49,6 +49,7 @@ const AppLayout = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const isProfilePage = location.pathname === "/profile";
+  const isMainPage = location.pathname === "/" || location.pathname === "/control";
   const { logout, user, updateUser } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true);
@@ -99,29 +100,21 @@ const AppLayout = () => {
       >
       <header className="sticky top-0 z-40 bg-background dark:border-0">
         <div className="relative flex h-14 items-center justify-between px-4">
-          {isProfilePage ? (
-            <>
-              <div className="flex items-center">
-                <DevicesPopover />
-              </div>
+          <>
+            <div className="flex items-center">
+              <DevicesPopover />
+            </div>
 
-              <div className="absolute left-1/2 -translate-x-1/2">
-                <img
-                  src={theme === "dark" ? logoDark : logoLight}
-                  alt="Reformator Bio Logo"
-                  className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
-                />
-              </div>
+            <div className="absolute left-1/2 -translate-x-1/2">
+              <img
+                src={theme === "dark" ? logoDark : logoLight}
+                alt="Reformator Bio Logo"
+                className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
+              />
+            </div>
 
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setNotificationsOpen(true)}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                  aria-label={t("settings.ariaNotifications")}
-                >
-                  <Bell className="h-5 w-5" />
-                </button>
+            <div className="flex items-center gap-1">
+              {isProfilePage ? (
                 <button
                   type="button"
                   onClick={() => setSettingsOpen((prev) => !prev)}
@@ -130,42 +123,39 @@ const AppLayout = () => {
                 >
                   <Settings className="h-5 w-5" />
                 </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center">
-                <DevicesPopover />
-              </div>
-
-              <div className="absolute left-1/2 -translate-x-1/2">
-                <img
-                  src={theme === "dark" ? logoDark : logoLight}
-                  alt="Reformator Bio Logo"
-                  className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
-                />
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setNotificationsOpen(true)}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                  aria-label={t("settings.ariaNotifications")}
-                >
-                  <Bell className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/community")}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                  aria-label="Community"
-                >
-                  <Users2 className="h-5 w-5" />
-                </button>
-              </div>
-            </>
-          )}
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setNotificationsOpen(true)}
+                    className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+                    aria-label={t("settings.ariaNotifications")}
+                  >
+                    <Bell className="h-5 w-5" />
+                  </button>
+                  {isMainPage ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/smart-wake")}
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+                      aria-label={t("smartWake.title")}
+                    >
+                      <AlarmClock className="h-5 w-5" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/community")}
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+                      aria-label="Community"
+                    >
+                      <Users2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </>
         </div>
       </header>
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
