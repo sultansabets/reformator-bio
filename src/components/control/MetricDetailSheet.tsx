@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
+import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { SleepDetailSheet } from "./SleepDetailSheet";
 import { EnergyDetailSheet } from "./EnergyDetailSheet";
 import { LoadDetailSheet } from "./LoadDetailSheet";
@@ -90,9 +90,9 @@ export function MetricDetailSheet({
   }
 
   return (
-    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
-      <UnifiedBottomSheet.Content>
-        <UnifiedBottomSheet.Header className="text-left">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[90vh] flex flex-col">
+        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           {detail && info && (
             <>
               <h2 className="text-xl font-semibold text-foreground">
@@ -100,9 +100,9 @@ export function MetricDetailSheet({
               </h2>
             </>
           )}
-        </UnifiedBottomSheet.Header>
+        </DrawerHeader>
         {detail && info && (
-          <UnifiedBottomSheet.Body>
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="space-y-4">
                 <p className="text-2xl font-bold text-foreground">
                   {detail.percent}%
@@ -132,9 +132,9 @@ export function MetricDetailSheet({
                   </ul>
                 </div>
             </div>
-          </UnifiedBottomSheet.Body>
+          </div>
         )}
-      </UnifiedBottomSheet.Content>
-    </UnifiedBottomSheet.Root>
+      </DrawerContent>
+    </Drawer>
   );
 }

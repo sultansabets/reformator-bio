@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
+import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { BarChart, Bar, Cell, XAxis, YAxis, ResponsiveContainer, ReferenceArea } from "recharts";
 import { calculateLoadDetail } from "@/engine/loadEngine";
 import { useHealthStore } from "@/store/healthStore";
@@ -39,15 +39,15 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
   const { loadScore, chartData, optimalMin, optimalMax, breakdown } = detail;
 
   return (
-    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
-      <UnifiedBottomSheet.Content>
-        <UnifiedBottomSheet.Header className="text-left">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[90vh] flex flex-col">
+        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold">
             {t("loadDetail.title")} — {loadScore}%
           </h2>
-        </UnifiedBottomSheet.Header>
+        </DrawerHeader>
 
-        <UnifiedBottomSheet.Body>
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="space-y-5">
             <section>
               <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -93,8 +93,8 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
               </div>
             </section>
           </div>
-        </UnifiedBottomSheet.Body>
-      </UnifiedBottomSheet.Content>
-    </UnifiedBottomSheet.Root>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

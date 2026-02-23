@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
+import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
 import type { EnergyEngineResult } from "@/engine/energyEngine";
 
 interface EnergyDetailSheetProps {
@@ -16,18 +17,19 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
   const { energyScore, contributions, recommendationKey } = energyDetail;
 
   return (
-    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
-      <UnifiedBottomSheet.Content>
-        <UnifiedBottomSheet.Header className="text-left">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[90vh] flex flex-col">
+        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold">
             {t("energyDetail.title")} — {energyScore}%
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("energyDetail.subtitle")}
           </p>
-        </UnifiedBottomSheet.Header>
+        </DrawerHeader>
 
-        <UnifiedBottomSheet.Body className="space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="space-y-4">
             <section>
               <h3 className="mb-3 text-sm font-medium text-foreground">
                 {t("energyDetail.whyTitle", { score: energyScore })}
@@ -53,8 +55,9 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
             <section className="rounded-xl border border-border bg-muted/30 p-4">
               <p className="text-sm text-foreground">{t(recommendationKey)}</p>
             </section>
-        </UnifiedBottomSheet.Body>
-      </UnifiedBottomSheet.Content>
-    </UnifiedBottomSheet.Root>
+        </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

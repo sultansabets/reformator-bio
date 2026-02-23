@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
+import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AreaChart,
@@ -123,18 +123,18 @@ export function SleepDetailSheet({
   const aiSummaryKey = WEAKEST_SUMMARY[weakestBlockKey] ?? WEAKEST_SUMMARY.duration;
 
   return (
-    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
-      <UnifiedBottomSheet.Content>
-        <UnifiedBottomSheet.Header className="text-left">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[90vh] flex flex-col">
+        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold">
             {t("center.sleep")} — {sleepScore}%
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("sleepDetail.subtitle")}
           </p>
-        </UnifiedBottomSheet.Header>
+        </DrawerHeader>
 
-        <UnifiedBottomSheet.Body>
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="space-y-3">
             {blocks.map((block) => (
               <BlockRow
@@ -232,8 +232,8 @@ export function SleepDetailSheet({
             </p>
             <p className="mt-2 text-sm text-foreground">{t(aiSummaryKey)}</p>
           </div>
-        </UnifiedBottomSheet.Body>
-      </UnifiedBottomSheet.Content>
-    </UnifiedBottomSheet.Root>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
