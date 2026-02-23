@@ -55,6 +55,35 @@ function getSquishFactor(angle: number, rotation: number): number {
   return 1 + squish;
 }
 
+const MAX_BLOB_OFFSET = 0.15;
+
+/** Creates a fixed blob Path2D: 6–8 polar points, radius = base ± 15%, smoothed with quadraticCurveTo. */
+function createBlobPath(baseRadius: number): Path2D {
+  const n = 6 + Math.floor(Math.random() * 3);
+  const points: [number, number][] = [];
+  const maxOffset = baseRadius * MAX_BLOB_OFFSET;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const offset = (Math.random() * 2 - 1) * maxOffset;
+    const r = baseRadius + offset;
+    points.push([Math.cos(a) * r, Math.sin(a) * r]);
+  }
+  const p = new Path2D();
+  p.moveTo(points[0][0], points[0][1]);
+  for (let i = 0; i < n; i++) {
+    const curr = points[i];
+    const next = points[(i + 1) % n];
+    const midX = (curr[0] + next[0]) / 2;
+    const midY = (curr[1] + next[1]) / 2;
+    const scale = 1.1;
+    const ctrlX = midX * scale;
+    const ctrlY = midY * scale;
+    p.quadraticCurveTo(ctrlX, ctrlY, next[0], next[1]);
+  }
+  p.closePath();
+  return p;
+}
+
 interface Atom {
   x: number;
   y: number;
@@ -68,6 +97,8 @@ interface Atom {
   electronOrbitRadius: number;
   electronPhase: number;
   electronSpeed: number;
+  nucleusBlob: Path2D;
+  electronBlobs: Path2D[];
 }
 
 function spawnAtom(center: number): Atom {
@@ -78,19 +109,24 @@ function spawnAtom(center: number): Atom {
   const dx = center - x;
   const dy = center - y;
   const len = Math.sqrt(dx * dx + dy * dy);
+  const nucleusSize = 4 + Math.random() * 2;
+  const electronCount = Math.random() > 0.5 ? 2 : 1;
+  const nucleusRadius = nucleusSize / 2;
   return {
     x,
     y,
     dirX: dx / len,
     dirY: dy / len,
     speed: 0.4 + Math.random() * 0.2,
-    nucleusSize: 4 + Math.random() * 2,
+    nucleusSize,
     opacity: 0,
     maxOpacity: 0.7 + Math.random() * 0.3,
-    electronCount: Math.random() > 0.5 ? 2 : 1,
+    electronCount,
     electronOrbitRadius: 6 + Math.random() * 3,
     electronPhase: Math.random() * Math.PI * 2,
     electronSpeed: 0.002 + Math.random() * 0.001,
+    nucleusBlob: createBlobPath(nucleusRadius),
+    electronBlobs: Array.from({ length: electronCount }, () => createBlobPath(1.2)),
   };
 }
 
@@ -108,38 +144,10 @@ function catmullRomToBezier(
   ];
 }
 
-/** Organic blob Path2D: unit circle (~0.5 radius) with subtle bumps. Scaled to match given radius. */
-const BLOB_PATH = (() => {
-  const p = new Path2D();
-  const r = 0.5;
-  const n = 8;
-  p.moveTo(r, 0);
-  for (let i = 1; i <= n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    const bump = 1 + 0.08 * Math.sin(i * 2.1);
-    const x = Math.cos(a) * r * bump;
-    const y = Math.sin(a) * r * bump;
-    const a2 = ((i - 0.5) / n) * Math.PI * 2;
-    const cx = Math.cos(a2) * r * 0.98;
-    const cy = Math.sin(a2) * r * 0.98;
-    p.quadraticCurveTo(cx, cy, x, y);
-  }
-  p.closePath();
-  return p;
-})();
-
-function drawBlob(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  radius: number,
-  angle: number
-) {
+function drawBlobAt(ctx: CanvasRenderingContext2D, x: number, y: number, blobPath: Path2D) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(angle);
-  ctx.scale(radius * 2, radius * 2);
-  ctx.fill(BLOB_PATH);
+  ctx.fill(blobPath);
   ctx.restore();
 }
 
@@ -310,15 +318,14 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.globalAlpha = op;
-        const blobAngle = Math.atan2(atom.dirY, atom.dirX);
-        drawBlob(ctx, atom.x, atom.y, atom.nucleusSize / 2, blobAngle);
+        drawBlobAt(ctx, atom.x, atom.y, atom.nucleusBlob);
 
         ctx.globalAlpha = op * 0.7;
         for (let e = 0; e < atom.electronCount; e++) {
           const electronAngle = atom.electronPhase + (e * Math.PI * 2) / atom.electronCount;
           const ex = atom.x + Math.cos(electronAngle) * atom.electronOrbitRadius;
           const ey = atom.y + Math.sin(electronAngle) * atom.electronOrbitRadius;
-          drawBlob(ctx, ex, ey, 1.2, electronAngle);
+          drawBlobAt(ctx, ex, ey, atom.electronBlobs[e]);
         }
       }
 
