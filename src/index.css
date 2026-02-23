@@ -3,8 +3,57 @@
 @tailwind utilities;
 
 @layer base {
-  /* Light theme – hex ref: #FAFAFA, #1C1C1E, #FFFFFF, #EAEAEA */
-  :root {
+  /* Dark theme (default) – Threads-style: #000000, #1C1C1E, #FFFFFF, #A1A1A6, #6E6E73 */
+  :root,
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 240 2% 11%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 2% 11%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 240 2% 11%;
+    --secondary-foreground: 240 3% 64%;
+
+    --muted: 240 2% 11%;
+    --muted-foreground: 240 2% 44%;
+
+    --accent: 240 2% 14%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 2% 16%;
+    --input: 240 2% 16%;
+    --ring: 0 0% 100%;
+
+    --radius: 0.5rem;
+
+    --status-green: 152 55% 48%;
+    --status-amber: 38 92% 55%;
+    --status-red: 0 72% 55%;
+
+    --store-bg: 0 0% 0%;
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 240 3% 64%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 240 2% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: transparent;
+    --sidebar-ring: 0 0% 100%;
+  }
+
+  /* Light theme – switchable */
+  .light {
     --background: 0 0% 98%;
     --foreground: 240 2% 11%;
 
@@ -50,52 +99,6 @@
     --sidebar-border: 0 0% 92%;
     --sidebar-ring: 240 6% 10%;
   }
-
-  /* Dark theme – background-primary #080C12, secondary #0D1219, card #111722 */
-  .dark {
-    --background: 216 38% 5%;
-    --foreground: 0 0% 95%;
-
-    --card: 216 33% 10%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 216 33% 10%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 0 0% 95%;
-    --primary-foreground: 216 38% 5%;
-
-    --secondary: 216 32% 8%;
-    --secondary-foreground: 0 0% 95%;
-
-    --muted: 216 28% 12%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 216 28% 12%;
-    --accent-foreground: 0 0% 95%;
-
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 216 20% 14%;
-    --input: 216 20% 14%;
-    --ring: 0 0% 95%;
-
-    --status-green: 152 55% 48%;
-    --status-amber: 38 92% 55%;
-    --status-red: 0 72% 55%;
-
-    --store-bg: 216 38% 6%;
-
-    --sidebar-background: 216 38% 5%;
-    --sidebar-foreground: 0 0% 65%;
-    --sidebar-primary: 0 0% 95%;
-    --sidebar-primary-foreground: 216 38% 5%;
-    --sidebar-accent: 216 28% 12%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 216 20% 14%;
-    --sidebar-ring: 0 0% 95%;
-  }
 }
 
 @layer base {
@@ -115,6 +118,10 @@
 }
 
 @layer utilities {
+  .dark [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

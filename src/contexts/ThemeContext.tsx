@@ -14,7 +14,7 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 function getStoredTheme(): Theme {
   try {
     const stored = localStorage.getItem(THEME_KEY);
-    if (stored === "dark" || stored === "light") return stored;
+    if (stored === "light" || stored === "dark") return stored;
   } catch {
     // ignore
   }

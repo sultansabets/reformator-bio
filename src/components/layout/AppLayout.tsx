@@ -134,7 +134,7 @@ const AppLayout = () => {
         ref={scrollRef}
         className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
       >
-      <header className="sticky top-0 z-40 bg-background dark:border-0 dark:shadow-none">
+      <header className="sticky top-0 z-40 bg-background dark:border-0">
         <div className="relative flex h-14 items-center justify-between px-4">
           {isProfilePage ? (
             <>
