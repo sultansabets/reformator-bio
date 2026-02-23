@@ -30,11 +30,11 @@ export function DateNavigator() {
 
   return (
     <>
-      <div className="flex items-center justify-center gap-2 py-3">
+      <div className="flex items-center justify-center gap-2 py-2">
         <button
           type="button"
           onClick={goPrev}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex h-10 w-10 shrink-0 items-center justify-center text-foreground/80 transition-opacity hover:opacity-80 active:opacity-70 outline-none focus:outline-none focus-visible:ring-0"
           aria-label={t("common.back")}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -43,7 +43,7 @@ export function DateNavigator() {
         <button
           type="button"
           onClick={() => setCalendarOpen(true)}
-          className="min-w-[140px] rounded-lg border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted/50"
+          className="min-w-[120px] px-4 py-2 text-center text-sm font-medium text-foreground transition-opacity hover:opacity-80 active:opacity-70 outline-none focus:outline-none focus-visible:ring-0"
         >
           {label}
         </button>
@@ -52,7 +52,7 @@ export function DateNavigator() {
           type="button"
           onClick={goNext}
           disabled={!canGoNext()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+          className="flex h-10 w-10 shrink-0 items-center justify-center text-foreground/80 transition-opacity hover:opacity-80 active:opacity-70 disabled:opacity-40 outline-none focus:outline-none focus-visible:ring-0 disabled:hover:opacity-40"
           aria-label="Next day"
         >
           <ChevronRight className="h-5 w-5" />

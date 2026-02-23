@@ -129,7 +129,7 @@ const ControlCenter = () => {
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
 
-      <motion.div variants={item} className="mt-4 mb-4 flex justify-center overflow-visible">
+      <motion.div variants={item} className="mt-4 mb-2 flex justify-center overflow-visible">
         <div
           role="button"
           tabIndex={0}

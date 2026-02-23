@@ -46,21 +46,22 @@ export function DateCalendarSheet({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] flex flex-col bg-card">
-        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-4 text-left">
-          <h2 className="text-lg font-semibold text-foreground">{t("center.datePickTitle")}</h2>
+      <DrawerContent className="max-h-[85vh] flex flex-col border-0 bg-background">
+        <DrawerHeader className="shrink-0 px-5 pb-3 pt-2 text-left">
+          <h2 className="text-base font-medium text-foreground">{t("center.datePickTitle")}</h2>
         </DrawerHeader>
-        <div className="flex flex-1 justify-center overflow-y-auto p-4">
+        <div className="flex flex-1 justify-center overflow-y-auto px-4 pb-6">
           <Calendar
             mode="single"
             selected={toDate(selectedDate)}
             onSelect={handleSelect}
             disabled={disabledDays}
-            className="rounded-lg border-0 bg-transparent"
+            className="rounded-none border-0 bg-transparent p-0"
             classNames={{
-              day_today: "bg-primary/20 text-primary font-semibold",
+              day_today: "bg-primary/25 text-foreground font-semibold",
               day_selected: "bg-primary text-primary-foreground",
-              day_disabled: "opacity-40",
+              day_disabled: "opacity-30 cursor-not-allowed",
+              nav_button: "hover:opacity-80",
             }}
           />
         </div>
