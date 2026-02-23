@@ -93,12 +93,7 @@ interface Atom {
   nucleusSize: number;
   opacity: number;
   maxOpacity: number;
-  electronCount: number;
-  electronOrbitRadius: number;
-  electronPhase: number;
-  electronSpeed: number;
   nucleusBlob: Path2D;
-  electronBlobs: Path2D[];
 }
 
 function spawnAtom(center: number): Atom {
@@ -110,7 +105,6 @@ function spawnAtom(center: number): Atom {
   const dy = center - y;
   const len = Math.sqrt(dx * dx + dy * dy);
   const nucleusSize = 4 + Math.random() * 2;
-  const electronCount = Math.random() > 0.5 ? 2 : 1;
   const nucleusRadius = nucleusSize / 2;
   return {
     x,
@@ -121,12 +115,7 @@ function spawnAtom(center: number): Atom {
     nucleusSize,
     opacity: 0,
     maxOpacity: 0.7 + Math.random() * 0.3,
-    electronCount,
-    electronOrbitRadius: 6 + Math.random() * 3,
-    electronPhase: Math.random() * Math.PI * 2,
-    electronSpeed: 0.002 + Math.random() * 0.001,
     nucleusBlob: createBlobPath(nucleusRadius),
-    electronBlobs: Array.from({ length: electronCount }, () => createBlobPath(1.2)),
   };
 }
 
@@ -287,7 +276,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         if (!reducedMotionRef.current) {
           atom.x += atom.dirX * atom.speed * dt;
           atom.y += atom.dirY * atom.speed * dt;
-          atom.electronPhase += atom.electronSpeed * dt * 60;
 
           const dx = atom.x - center;
           const dy = atom.y - center;
@@ -319,14 +307,6 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.globalAlpha = op;
         drawBlobAt(ctx, atom.x, atom.y, atom.nucleusBlob);
-
-        ctx.globalAlpha = op * 0.7;
-        for (let e = 0; e < atom.electronCount; e++) {
-          const electronAngle = atom.electronPhase + (e * Math.PI * 2) / atom.electronCount;
-          const ex = atom.x + Math.cos(electronAngle) * atom.electronOrbitRadius;
-          const ey = atom.y + Math.sin(electronAngle) * atom.electronOrbitRadius;
-          drawBlobAt(ctx, ex, ey, atom.electronBlobs[e]);
-        }
       }
 
       ctx.globalAlpha = 1;
