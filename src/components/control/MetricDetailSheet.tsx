@@ -8,6 +8,9 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { SleepDetailSheet } from "./SleepDetailSheet";
+import { EnergyDetailSheet } from "./EnergyDetailSheet";
+import { LoadDetailSheet } from "./LoadDetailSheet";
+import { AdaptationDetailSheet } from "./AdaptationDetailSheet";
 import { useHealthStore } from "@/store/healthStore";
 
 export type MetricKey = "energy" | "hormones" | "strength" | "sleep" | "load" | "recovery";
@@ -64,14 +67,30 @@ export function MetricDetailSheet({
 }: MetricDetailSheetProps) {
   const { t } = useTranslation();
   const sleepDetail = useHealthStore((s) => s.sleepDetail);
+  const energyDetail = useHealthStore((s) => s.energyDetail);
   const info = detail ? METRIC_KEYS[detail.key] : null;
 
   if (detail?.key === "sleep") {
+    return <SleepDetailSheet open={open} onOpenChange={onOpenChange} sleepDetail={sleepDetail} />;
+  }
+  if (detail?.key === "energy") {
+    return <EnergyDetailSheet open={open} onOpenChange={onOpenChange} energyDetail={energyDetail} />;
+  }
+  if (detail?.key === "load") {
     return (
-      <SleepDetailSheet
+      <LoadDetailSheet
         open={open}
         onOpenChange={onOpenChange}
-        sleepDetail={sleepDetail}
+        loadPercent={detail.percent}
+      />
+    );
+  }
+  if (detail?.key === "recovery") {
+    return (
+      <AdaptationDetailSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        adaptationPercent={detail.percent}
       />
     );
   }

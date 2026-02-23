@@ -101,7 +101,13 @@ const ControlCenter = () => {
       </motion.div>
 
       <motion.div variants={item} className="mt-4 mb-4 flex justify-center overflow-visible">
-        <div className="relative mx-auto flex w-full max-w-[420px] items-center justify-center overflow-visible">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
+          onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
+          className="relative mx-auto flex w-full max-w-[420px] cursor-pointer items-center justify-center overflow-visible"
+        >
           <HealthOrb score={mainStateScore} />
         </div>
       </motion.div>

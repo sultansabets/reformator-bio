@@ -1,0 +1,129 @@
+import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  ReferenceArea,
+} from "recharts";
+import { calculateAdaptationDetail } from "@/engine/adaptationEngine";
+import { useHealthStore } from "@/store/healthStore";
+
+interface AdaptationDetailSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  adaptationPercent: number;
+}
+
+function TrendIcon({ trend }: { trend: "up" | "down" | "stable" }) {
+  if (trend === "up") return <ArrowUp className="h-4 w-4 text-emerald-500" />;
+  if (trend === "down") return <ArrowDown className="h-4 w-4 text-amber-500" />;
+  return <Minus className="h-4 w-4 text-muted-foreground" />;
+}
+
+export function AdaptationDetailSheet({
+  open,
+  onOpenChange,
+  adaptationPercent,
+}: AdaptationDetailSheetProps) {
+  const { t } = useTranslation();
+  const hrvScore = useHealthStore((s) => s.hrvScore);
+  const sleepScore = useHealthStore((s) => s.sleepScore);
+  const trainingLoad = useHealthStore((s) => s.trainingLoad);
+  const recovery = useHealthStore((s) => s.recovery);
+  const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
+
+  const detail = useMemo(
+    () =>
+      calculateAdaptationDetail({
+        recovery: adaptationPercent || recovery,
+        hrvScore,
+        sleepScore,
+        trainingLoad,
+        dayLabels,
+      }),
+    [adaptationPercent, recovery, hrvScore, sleepScore, trainingLoad, dayLabels]
+  );
+
+  const { adaptationScore, chartData, baselineMin, baselineMax, indicators } = detail;
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent
+        className={cn(
+          "mx-0 max-h-[calc(100vh-64px)] rounded-t-2xl border-t flex flex-col overflow-hidden"
+        )}
+      >
+        <div className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
+        <DrawerHeader className="shrink-0 border-b px-5 pb-4 pt-2 text-left">
+          <DrawerTitle className="text-xl font-semibold">
+            {t("adaptationDetail.title")} — {adaptationScore}%
+          </DrawerTitle>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("adaptationDetail.subtitle")}
+          </p>
+        </DrawerHeader>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-4">
+          <div className="space-y-5">
+            <section>
+              <div className="overflow-hidden rounded-xl border border-border bg-card">
+                <ResponsiveContainer width="100%" height={140}>
+                  <LineChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 4 }}>
+                    <ReferenceArea
+                      y1={baselineMin}
+                      y2={baselineMax}
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.08}
+                    />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    />
+                    <YAxis domain={[0, 100]} hide />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t("adaptationDetail.baselineZone", { min: baselineMin, max: baselineMax })}
+              </p>
+            </section>
+
+            <section>
+              <div className="space-y-2">
+                {indicators.map((ind) => (
+                  <div
+                    key={ind.key}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {t(`adaptationDetail.${ind.key}`)} — {t(ind.valueKey)}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{t(ind.descKey)}</p>
+                    </div>
+                    <TrendIcon trend={ind.trend} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}

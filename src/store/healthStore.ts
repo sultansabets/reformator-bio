@@ -17,6 +17,7 @@ import {
   type WorkoutEntry,
 } from "@/engine/healthEngine";
 import { calculateSleepFromBlocks, mapHealthToSleepInput, type SleepEngineResult } from "@/engine/sleepEngine";
+import { calculateEnergyDetail, type EnergyEngineResult } from "@/engine/energyEngine";
 import { hydrateFromStorage } from "@/lib/healthDataSync";
 
 export interface WorkoutEntryStore {
@@ -60,6 +61,7 @@ export interface HealthRawState {
 export interface HealthComputedState {
   sleepScore: number;
   sleepDetail: SleepEngineResult;
+  energyDetail: EnergyEngineResult;
   nutritionScore: number;
   trainingLoad: number;
   recovery: number;
@@ -123,10 +125,16 @@ function recompute(raw: HealthRawState): HealthComputedState {
     adaptation: recovery,
     load: loadPercent,
   });
+  const energyDetail = calculateEnergyDetail({
+    sleep: sleepScore,
+    adaptation: recovery,
+    load: loadPercent,
+  });
 
   return {
     sleepScore,
     sleepDetail,
+    energyDetail,
     nutritionScore,
     trainingLoad,
     recovery,
