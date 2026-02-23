@@ -16,7 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
 import { useHealthStore } from "@/store/healthStore";
-import HealthOrb from "@/components/control/HealthOrb";
+import LiquidState from "@/components/LiquidState";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
 import { RecoveryCard } from "@/components/control/RecoveryCard";
@@ -102,7 +102,7 @@ const ControlCenter = () => {
 
       <motion.div variants={item} className="mt-4 mb-4 flex justify-center overflow-visible">
         <div className="relative mx-auto flex w-full max-w-[420px] items-center justify-center overflow-visible">
-          <HealthOrb score={mainStateScore} />
+          <LiquidState score={mainStateScore} />
         </div>
       </motion.div>
 
