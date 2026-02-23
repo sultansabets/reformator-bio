@@ -18,7 +18,7 @@ function getStoredTheme(): Theme {
   } catch {
     // ignore
   }
-  return "light";
+  return "dark";
 }
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {

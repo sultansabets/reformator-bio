@@ -65,7 +65,7 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
 
   return (
     <nav
-      className={`shrink-0 border-t border-border bg-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+      className={`shrink-0 border-t border-border dark:border-0 bg-background dark:shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
       }`}
     >
