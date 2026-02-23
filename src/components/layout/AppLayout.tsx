@@ -8,6 +8,7 @@ import { ensureDailyReset } from "@/lib/dailyReset";
 import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
 import { getNotifications, setNotifications, seedMockIfEmpty, type Notification } from "@/lib/notifications";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
@@ -388,37 +389,29 @@ const AppLayout = () => {
       </div>
       <BottomNav visible={menuBarVisible} />
 
-      {/* Уведомления: fullscreen Sheet справа налево */}
-      <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        <SheetContent
-          side="right"
-          className="h-screen w-full max-w-full overflow-y-auto border-border bg-background p-0 sm:max-w-md"
-        >
-          <div className="flex flex-col h-full">
-            <div className="shrink-0 border-b border-border px-4 pt-14 pb-4">
-              <h2 className="text-lg font-semibold text-foreground">{t("notifications.title")}</h2>
-              {!notificationsEnabled && (
-                <p className="mt-1 text-xs text-muted-foreground">{t("settings.notificationsOff")}</p>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto px-4 py-4">
-              {notificationList.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("settings.noNotifications")}</p>
-              ) : (
-                notificationList.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border-b border-border py-4"
-                  >
-                    <p className="text-sm font-medium text-foreground">{item.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Уведомления: bottom sheet */}
+      <UnifiedBottomSheet.Root open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <UnifiedBottomSheet.Content>
+          <UnifiedBottomSheet.Header className="text-left">
+            <h2 className="text-xl font-semibold text-foreground">{t("notifications.title")}</h2>
+            {!notificationsEnabled && (
+              <p className="mt-1 text-xs text-muted-foreground">{t("settings.notificationsOff")}</p>
+            )}
+          </UnifiedBottomSheet.Header>
+          <UnifiedBottomSheet.Body>
+            {notificationList.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("settings.noNotifications")}</p>
+            ) : (
+              notificationList.map((item) => (
+                <div key={item.id} className="border-b border-border py-4">
+                  <p className="text-sm font-medium text-foreground">{item.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
+                </div>
+              ))
+            )}
+          </UnifiedBottomSheet.Body>
+        </UnifiedBottomSheet.Content>
+      </UnifiedBottomSheet.Root>
       </div>
   );
 };

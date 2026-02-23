@@ -1,12 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from "@/components/ui/drawer";
+import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
 import { SleepDetailSheet } from "./SleepDetailSheet";
 import { EnergyDetailSheet } from "./EnergyDetailSheet";
 import { LoadDetailSheet } from "./LoadDetailSheet";
@@ -96,51 +90,51 @@ export function MetricDetailSheet({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
-        <div className="overflow-y-auto">
-          <DrawerHeader className="text-left">
-            {detail && info && (
-              <>
-                <DrawerTitle className="text-xl font-semibold text-foreground">
-                  {detail.title}
-                </DrawerTitle>
-                <DrawerDescription asChild>
-                  <div className="space-y-4 pt-2">
-                    <p className="text-2xl font-bold text-foreground">
-                      {detail.percent}%
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {info && t(info.desc)}
-                    </p>
-                    <div>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        {t("metrics.detailFormula")}
-                      </p>
-                      <p className="font-mono text-sm text-foreground">
-                        {info && t(info.formula)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        {t("metrics.detailSources")}
-                      </p>
-                      <ul className="space-y-1.5 text-sm text-muted-foreground">
-                        {info?.sources.map((key) => (
-                          <li key={key} className="flex items-center gap-2">
-                            <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-                            {t(key)}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </DrawerDescription>
-              </>
-            )}
-          </DrawerHeader>
-        </div>
-      </DrawerContent>
-    </Drawer>
+    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
+      <UnifiedBottomSheet.Content>
+        <UnifiedBottomSheet.Header className="text-left">
+          {detail && info && (
+            <>
+              <h2 className="text-xl font-semibold text-foreground">
+                {detail.title}
+              </h2>
+            </>
+          )}
+        </UnifiedBottomSheet.Header>
+        {detail && info && (
+          <UnifiedBottomSheet.Body>
+            <div className="space-y-4">
+                <p className="text-2xl font-bold text-foreground">
+                  {detail.percent}%
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t(info.desc)}
+                </p>
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("metrics.detailFormula")}
+                  </p>
+                  <p className="font-mono text-sm text-foreground">
+                    {t(info.formula)}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("metrics.detailSources")}
+                  </p>
+                  <ul className="space-y-1.5 text-sm text-muted-foreground">
+                    {info.sources.map((key) => (
+                      <li key={key} className="flex items-center gap-2">
+                        <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+                        {t(key)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+            </div>
+          </UnifiedBottomSheet.Body>
+        )}
+      </UnifiedBottomSheet.Content>
+    </UnifiedBottomSheet.Root>
   );
 }

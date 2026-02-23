@@ -1,8 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { cn } from "@/lib/utils";
+import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
 import {
   LineChart,
   Line,
@@ -53,23 +52,18 @@ export function AdaptationDetailSheet({
   const { adaptationScore, chartData, baselineMin, baselineMax, indicators } = detail;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent
-        className={cn(
-          "mx-0 max-h-[calc(100vh-64px)] rounded-t-2xl border-t flex flex-col overflow-hidden"
-        )}
-      >
-        <div className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
-        <DrawerHeader className="shrink-0 border-b px-5 pb-4 pt-2 text-left">
-          <DrawerTitle className="text-xl font-semibold">
+    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
+      <UnifiedBottomSheet.Content>
+        <UnifiedBottomSheet.Header className="text-left">
+          <h2 className="text-xl font-semibold">
             {t("adaptationDetail.title")} — {adaptationScore}%
-          </DrawerTitle>
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("adaptationDetail.subtitle")}
           </p>
-        </DrawerHeader>
+        </UnifiedBottomSheet.Header>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-4">
+        <UnifiedBottomSheet.Body>
           <div className="space-y-5">
             <section>
               <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -122,8 +116,8 @@ export function AdaptationDetailSheet({
               </div>
             </section>
           </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </UnifiedBottomSheet.Body>
+      </UnifiedBottomSheet.Content>
+    </UnifiedBottomSheet.Root>
   );
 }

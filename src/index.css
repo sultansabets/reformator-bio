@@ -106,14 +106,29 @@
     @apply border-border;
   }
 
+  *:focus {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: none;
+  }
+
   html {
     @apply transition-colors duration-300;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground antialiased transition-colors duration-300;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+
+  [data-vaul-drawer-wrapper] {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

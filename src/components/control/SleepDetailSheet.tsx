@@ -1,14 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 import {
   AreaChart,
   Area,
@@ -129,24 +123,18 @@ export function SleepDetailSheet({
   const aiSummaryKey = WEAKEST_SUMMARY[weakestBlockKey] ?? WEAKEST_SUMMARY.duration;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent
-        className={cn(
-          "mx-0 max-h-[calc(100vh-64px)] rounded-t-2xl border-t",
-          "flex flex-col overflow-hidden"
-        )}
-      >
-        <div className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
-        <DrawerHeader className="shrink-0 border-b px-5 pb-4 pt-2 text-left">
-          <DrawerTitle className="text-xl font-semibold">
+    <UnifiedBottomSheet.Root open={open} onOpenChange={onOpenChange}>
+      <UnifiedBottomSheet.Content>
+        <UnifiedBottomSheet.Header className="text-left">
+          <h2 className="text-xl font-semibold">
             {t("center.sleep")} — {sleepScore}%
-          </DrawerTitle>
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("sleepDetail.subtitle")}
           </p>
-        </DrawerHeader>
+        </UnifiedBottomSheet.Header>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-4">
+        <UnifiedBottomSheet.Body>
           <div className="space-y-3">
             {blocks.map((block) => (
               <BlockRow
@@ -244,8 +232,8 @@ export function SleepDetailSheet({
             </p>
             <p className="mt-2 text-sm text-foreground">{t(aiSummaryKey)}</p>
           </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </UnifiedBottomSheet.Body>
+      </UnifiedBottomSheet.Content>
+    </UnifiedBottomSheet.Root>
   );
 }
