@@ -13,7 +13,7 @@ import {
   calculateRecovery,
   calculateStress,
   testosteroneToScore,
-  calculateMainState,
+  calculateEnergy,
   calculateSleepPercent,
   calculateLoadPercent,
   type WorkoutEntry,
@@ -112,17 +112,16 @@ function recompute(raw: HealthRawState): HealthComputedState {
     sleepScore,
   });
   const testosteroneScore = testosteroneToScore(raw.testosterone);
-  const mainStateScore = calculateMainState({
-    sleepScore,
-    nutritionScore,
-    recovery,
-    testosteroneNormalized: testosteroneScore,
-  });
   const sleepPercent = calculateSleepPercent({
     sleepHours: raw.sleepHours,
     sleepQuality: raw.sleepQuality,
   });
   const loadPercent = calculateLoadPercent(workoutEntries, raw.steps);
+  const mainStateScore = calculateEnergy({
+    sleep: sleepScore,
+    adaptation: recovery,
+    load: loadPercent,
+  });
 
   return {
     sleepScore,

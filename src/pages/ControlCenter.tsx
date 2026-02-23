@@ -118,16 +118,6 @@ const ControlCenter = () => {
               })
             }
           />
-          <LoadCard
-            percent={loadPercent}
-            onClick={() =>
-              openMetricSheet({
-                key: "load",
-                title: t("center.load"),
-                percent: loadPercent,
-              })
-            }
-          />
           <RecoveryCard
             percent={recovery}
             onClick={() =>
@@ -135,6 +125,16 @@ const ControlCenter = () => {
                 key: "recovery",
                 title: t("center.recovery"),
                 percent: recovery,
+              })
+            }
+          />
+          <LoadCard
+            percent={loadPercent}
+            onClick={() =>
+              openMetricSheet({
+                key: "load",
+                title: t("center.load"),
+                percent: loadPercent,
               })
             }
           />
@@ -174,20 +174,6 @@ const ControlCenter = () => {
         </div>
 
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("center.load")}
-        </h2>
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <ResponsiveContainer width="100%" height={140}>
-            <LineChart data={loadData}>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-              <YAxis hide />
-              <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
-              <Line type="monotone" dataKey="load" stroke="hsl(var(--status-amber))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--status-amber))" }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("center.recovery")}
         </h2>
         <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -204,6 +190,20 @@ const ControlCenter = () => {
               <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
               <Area type="monotone" dataKey="score" stroke="hsl(var(--status-green))" strokeWidth={2} fill="url(#recoveryGradMain)" />
             </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("center.load")}
+        </h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <ResponsiveContainer width="100%" height={140}>
+            <LineChart data={loadData}>
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis hide />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }} />
+              <Line type="monotone" dataKey="load" stroke="hsl(var(--status-amber))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--status-amber))" }} />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </motion.div>
