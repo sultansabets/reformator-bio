@@ -108,24 +108,38 @@ function catmullRomToBezier(
   ];
 }
 
-/** SVG path for teardrop shape (center 0.5,0.5, radius ~0.5, point down) */
-const DROPLET_PATH = new Path2D(
-  "M0.5 0C0.78 0 1 0.22 1 0.5C1 0.72 0.9 0.88 0.7 0.96L0.5 1L0.3 0.96C0.1 0.88 0 0.72 0 0.5C0 0.22 0.22 0 0.5 0Z"
-);
+/** Organic blob Path2D: unit circle (~0.5 radius) with subtle bumps. Scaled to match given radius. */
+const BLOB_PATH = (() => {
+  const p = new Path2D();
+  const r = 0.5;
+  const n = 8;
+  p.moveTo(r, 0);
+  for (let i = 1; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const bump = 1 + 0.08 * Math.sin(i * 2.1);
+    const x = Math.cos(a) * r * bump;
+    const y = Math.sin(a) * r * bump;
+    const a2 = ((i - 0.5) / n) * Math.PI * 2;
+    const cx = Math.cos(a2) * r * 0.98;
+    const cy = Math.sin(a2) * r * 0.98;
+    p.quadraticCurveTo(cx, cy, x, y);
+  }
+  p.closePath();
+  return p;
+})();
 
-function drawDroplet(
+function drawBlob(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  size: number,
+  radius: number,
   angle: number
 ) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.scale(size, size);
-  ctx.translate(-0.5, -0.5);
-  ctx.fill(DROPLET_PATH);
+  ctx.scale(radius * 2, radius * 2);
+  ctx.fill(BLOB_PATH);
   ctx.restore();
 }
 
@@ -296,18 +310,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.globalAlpha = op;
-        const dropletAngle = Math.atan2(atom.dirY, atom.dirX) - Math.PI / 2;
-        drawDroplet(ctx, atom.x, atom.y, atom.nucleusSize, dropletAngle);
+        const blobAngle = Math.atan2(atom.dirY, atom.dirX);
+        drawBlob(ctx, atom.x, atom.y, atom.nucleusSize / 2, blobAngle);
 
         ctx.globalAlpha = op * 0.7;
         for (let e = 0; e < atom.electronCount; e++) {
           const electronAngle = atom.electronPhase + (e * Math.PI * 2) / atom.electronCount;
           const ex = atom.x + Math.cos(electronAngle) * atom.electronOrbitRadius;
           const ey = atom.y + Math.sin(electronAngle) * atom.electronOrbitRadius;
-          
-          ctx.beginPath();
-          ctx.arc(ex, ey, 1.2, 0, Math.PI * 2);
-          ctx.fill();
+          drawBlob(ctx, ex, ey, 1.2, electronAngle);
         }
       }
 
