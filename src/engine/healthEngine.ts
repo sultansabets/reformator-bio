@@ -125,8 +125,8 @@ export function calculateMainState(data: {
   const s = data.sleepScore * 0.25;
   const n = data.nutritionScore * 0.25;
   const r = data.recovery * 0.25;
-  const t = data.testosteroneNormalized * 0.25;
-  return clamp(Math.round(s + n + r + t), 0, 100);
+  const te = data.testosteroneNormalized * 0.25;
+  return clamp(Math.round(s + n + r + te), 0, 100);
 }
 
 /** Sleep percentage for UI (same as SleepScore, or simplified) */

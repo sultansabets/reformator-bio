@@ -18,7 +18,7 @@ import {
   calculateLoadPercent,
   type WorkoutEntry,
 } from "@/engine/healthEngine";
-import { hydrateFromStorage, type RawHealthData } from "@/lib/healthDataSync";
+import { hydrateFromStorage } from "@/lib/healthDataSync";
 
 export interface WorkoutEntryStore {
   date: string;
@@ -157,7 +157,10 @@ const initialRaw: HealthRawState = {
   nutritionHistory: [],
 };
 
-const initialComputed = recompute(initialRaw);
+function getInitialState(): HealthState {
+  const computed = recompute(initialRaw);
+  return { ...initialRaw, ...computed };
+}
 
 type HealthActions = {
   hydrate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }) => void;
@@ -171,11 +174,12 @@ type HealthActions = {
 };
 
 export const useHealthStore = create<HealthState & HealthActions>()(
-  subscribeWithSelector((set, get) => ({
-    ...initialRaw,
-    ...initialComputed,
+  subscribeWithSelector((set, get) => {
+    const initialState = getInitialState();
+    return {
+      ...initialState,
 
-    hydrate: (userId, profile) => {
+      hydrate: (userId, profile) => {
       const raw = hydrateFromStorage({
         userId,
         weight: profile.weight,
@@ -270,7 +274,7 @@ export const useHealthStore = create<HealthState & HealthActions>()(
       set({ ...next, ...recompute(next) });
     },
 
-    setPersonalData: (data) => {
+      setPersonalData: (data) => {
       const s = get();
       let targetCalories = s.targetCalories;
       let targetProtein = s.targetProtein;
@@ -284,5 +288,6 @@ export const useHealthStore = create<HealthState & HealthActions>()(
       };
       set({ ...next, ...recompute(next) });
     },
-  }))
+  };
+  })
 );
