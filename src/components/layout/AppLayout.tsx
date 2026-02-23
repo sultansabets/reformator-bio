@@ -8,7 +8,7 @@ import { ensureDailyReset } from "@/lib/dailyReset";
 import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
 import { getNotifications, setNotifications, seedMockIfEmpty, type Notification } from "@/lib/notifications";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { UnifiedBottomSheet } from "@/components/ui/UnifiedBottomSheet";
+import { NotificationModal, NotificationModalHeader, NotificationModalBody } from "@/components/ui/NotificationModal";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
@@ -389,29 +389,27 @@ const AppLayout = () => {
       </div>
       <BottomNav visible={menuBarVisible} />
 
-      {/* Уведомления: bottom sheet */}
-      <UnifiedBottomSheet.Root open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        <UnifiedBottomSheet.Content>
-          <UnifiedBottomSheet.Header className="text-left">
-            <h2 className="text-xl font-semibold text-foreground">{t("notifications.title")}</h2>
-            {!notificationsEnabled && (
-              <p className="mt-1 text-xs text-muted-foreground">{t("settings.notificationsOff")}</p>
-            )}
-          </UnifiedBottomSheet.Header>
-          <UnifiedBottomSheet.Body>
-            {notificationList.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("settings.noNotifications")}</p>
-            ) : (
-              notificationList.map((item) => (
-                <div key={item.id} className="border-b border-border py-4">
-                  <p className="text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
-                </div>
-              ))
-            )}
-          </UnifiedBottomSheet.Body>
-        </UnifiedBottomSheet.Content>
-      </UnifiedBottomSheet.Root>
+      {/* Уведомления: простой modal */}
+      <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <NotificationModalHeader onClose={() => setNotificationsOpen(false)}>
+          <h2 className="text-xl font-semibold text-foreground">{t("notifications.title")}</h2>
+          {!notificationsEnabled && (
+            <p className="mt-1 text-xs text-muted-foreground">{t("settings.notificationsOff")}</p>
+          )}
+        </NotificationModalHeader>
+        <NotificationModalBody>
+          {notificationList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("settings.noNotifications")}</p>
+          ) : (
+            notificationList.map((item) => (
+              <div key={item.id} className="border-b border-border py-4">
+                <p className="text-sm font-medium text-foreground">{item.title}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
+              </div>
+            ))
+          )}
+        </NotificationModalBody>
+      </NotificationModal>
       </div>
   );
 };
