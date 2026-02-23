@@ -1,7 +1,22 @@
 import React from "react";
-import { Activity } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MetricCard } from "./MetricCard";
+
+function LoadIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 2L4 14h6l-2 8 10-12h-6L12 2" />
+    </svg>
+  );
+}
 
 export interface LoadCardProps {
   percent: number;
@@ -13,7 +28,7 @@ export function LoadCard({ percent, onClick }: LoadCardProps) {
   return (
     <MetricCard
       percent={percent}
-      icon={<Activity className="h-7 w-7" />}
+      icon={<LoadIcon className="h-7 w-7" />}
       label={t("center.load")}
       onClick={onClick}
     />

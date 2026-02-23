@@ -5,6 +5,11 @@ const RU_MONTHS = [
   "июля", "августа", "сентября", "октября", "ноября", "декабря",
 ];
 
+const RU_MONTHS_SHORT = [
+  "янв", "фев", "мар", "апр", "мая", "июн",
+  "июл", "авг", "сен", "окт", "ноя", "дек",
+];
+
 /** Format ISO date (YYYY-MM-DD) as "15 марта 1990" */
 export function formatDateRu(isoDate: string): string {
   if (!isoDate || !isoDate.trim()) return "";
@@ -14,6 +19,16 @@ export function formatDateRu(isoDate: string): string {
   const month = RU_MONTHS[d.getMonth()];
   const year = d.getFullYear();
   return `${day} ${month} ${year}`;
+}
+
+/** Format ISO date (YYYY-MM-DD) as "12 июн" (short, for date navigator) */
+export function formatDateShort(isoDate: string): string {
+  if (!isoDate || !isoDate.trim()) return "";
+  const d = new Date(isoDate.trim() + "T12:00:00");
+  if (Number.isNaN(d.getTime())) return isoDate;
+  const day = d.getDate();
+  const month = RU_MONTHS_SHORT[d.getMonth()];
+  return `${day} ${month}`;
 }
 
 /** Validate: valid date and at least 16 years old. Returns error message or null. */

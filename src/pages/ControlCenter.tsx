@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
@@ -22,6 +22,8 @@ import { LoadCard } from "@/components/control/LoadCard";
 import { RecoveryCard } from "@/components/control/RecoveryCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { InfluenceFactors } from "@/components/control/InfluenceFactors";
+import { DateNavigator } from "@/components/control/DateNavigator";
+import { useDateStore } from "@/store/dateStore";
 
 function formatDateShort(iso: string | undefined): string {
   if (!iso) return "";
@@ -67,6 +69,9 @@ const ControlCenter = () => {
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
+  const selectedDate = useDateStore((s) => s.selectedDate);
+  const hydrateForDate = useHealthStore((s) => s.hydrateForDate);
+  const hydrate = useHealthStore((s) => s.hydrate);
   const sleepPercent = useHealthStore((s) => s.sleepPercent);
   const loadPercent = useHealthStore((s) => s.loadPercent);
   const recovery = useHealthStore((s) => s.recovery);
@@ -82,6 +87,30 @@ const ControlCenter = () => {
   const sleepData = sleepDataRaw.map((d) => ({ ...d, day: dayLabels[d.dayIdx] }));
   const loadData = loadDataRaw.map((d) => ({ ...d, day: dayLabels[d.dayIdx] }));
   const recoveryData = recoveryDataRaw.map((d) => ({ ...d, day: dayLabels[d.dayIdx] }));
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const profile = {
+      weight: user.weight,
+      height: user.height,
+      age: user.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : undefined,
+      activityLevel: user.activityLevel,
+    };
+    hydrateForDate(user.id, profile, selectedDate);
+  }, [user?.id, user?.weight, user?.height, user?.dob, user?.activityLevel, selectedDate, hydrateForDate]);
+
+  useEffect(() => {
+    return () => {
+      if (user?.id) {
+        hydrate(user.id, {
+          weight: user.weight,
+          height: user.height,
+          age: user.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : undefined,
+          activityLevel: user.activityLevel,
+        });
+      }
+    };
+  }, [user?.id, hydrate]);
 
   const openMetricSheet = (detail: MetricDetail) => {
     setSelectedMetric(detail);
@@ -110,6 +139,10 @@ const ControlCenter = () => {
         >
           <HealthOrb score={mainStateScore} />
         </div>
+      </motion.div>
+
+      <motion.div variants={item} className="flex justify-center">
+        <DateNavigator />
       </motion.div>
 
       <motion.div variants={item} className="mb-4">

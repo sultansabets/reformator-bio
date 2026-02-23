@@ -215,14 +215,24 @@ function SubscriptionsTab() {
   );
 }
 
-// --- Medications tab: types and storage ---
+// --- Medications (Preparations) tab: types and storage ---
+export type MedicationForm = "tablets" | "capsules" | "injections" | "solution" | "powder" | "syrup" | "gel" | "ointment" | "spray" | "other";
+export type DosageUnit = "mg" | "ml" | "IU";
+export type MedicationFrequency = "1x" | "2x" | "weekly" | "course";
+
 type Medication = {
   id: string;
   name: string;
+  form: MedicationForm;
+  formOther?: string;
+  dosage: number;
+  dosageUnit: DosageUnit;
   time: string;
-  quantity: number;
-  frequency: "daily" | "weekly" | "once";
+  quantity: number; // legacy, = dosage for compat
+  frequency: MedicationFrequency | "daily" | "weekly" | "once"; // legacy values supported
   startDate: string;
+  endDate?: string;
+  comment?: string;
 };
 
 type MedicationsData = {
@@ -231,9 +241,39 @@ type MedicationsData = {
 };
 
 const MEDICATIONS_STORAGE_PREFIX = "medications_";
+const FORM_OPTIONS: MedicationForm[] = ["tablets", "capsules", "injections", "solution", "powder", "syrup", "gel", "ointment", "spray", "other"];
+const DOSAGE_UNITS: DosageUnit[] = ["mg", "ml", "IU"];
+const FREQUENCY_NEW: MedicationFrequency[] = ["1x", "2x", "weekly", "course"];
+const FREQUENCY_VALUES: MedicationFrequency[] = ["1x", "2x", "weekly", "course"];
 
 function getMedicationsStorageKey(userId: string): string {
   return `${MEDICATIONS_STORAGE_PREFIX}${userId}`;
+}
+
+function migrateMedication(m: Record<string, unknown>): Medication {
+  const freq = m.frequency;
+  let frequency: Medication["frequency"] = "1x";
+  if (freq === "daily" || freq === "1x") frequency = "1x";
+  else if (freq === "weekly" || freq === "weeklyDays") frequency = "weekly";
+  else if (freq === "once" || freq === "course") frequency = freq === "course" ? "course" : "course";
+  else if (freq === "2x") frequency = "2x";
+  const dosage = typeof m.dosage === "number" ? m.dosage : (typeof m.quantity === "number" ? m.quantity : 1);
+  const form = (m.form as MedicationForm) || "tablets";
+  const dosageUnit = (m.dosageUnit as DosageUnit) || "mg";
+  return {
+    id: String(m.id ?? ""),
+    name: String(m.name ?? ""),
+    form: FORM_OPTIONS.includes(form) ? form : "tablets",
+    formOther: typeof m.formOther === "string" ? m.formOther : undefined,
+    dosage,
+    dosageUnit: DOSAGE_UNITS.includes(dosageUnit) ? dosageUnit : "mg",
+    time: typeof m.time === "string" ? m.time : "08:00",
+    quantity: dosage,
+    frequency,
+    startDate: String(m.startDate ?? ""),
+    endDate: typeof m.endDate === "string" ? m.endDate : undefined,
+    comment: typeof m.comment === "string" ? m.comment : undefined,
+  };
 }
 
 function loadMedicationsData(userId: string): MedicationsData {
@@ -243,14 +283,7 @@ function loadMedicationsData(userId: string): MedicationsData {
     if (!raw) return { medications: [], taken: {} };
     const parsed = JSON.parse(raw) as MedicationsData;
     const meds = Array.isArray(parsed.medications) ? parsed.medications : [];
-    const migrated = meds.map((m: Record<string, unknown>) => ({
-      id: m.id,
-      name: m.name,
-      time: typeof m.time === "string" ? m.time : "08:00",
-      quantity: typeof m.quantity === "number" ? m.quantity : 1,
-      frequency: m.frequency === "daily" || m.frequency === "weekly" || m.frequency === "once" ? m.frequency : "daily",
-      startDate: m.startDate,
-    })) as Medication[];
+    const migrated = meds.map((m) => migrateMedication(m as Record<string, unknown>));
     return {
       medications: migrated,
       taken: parsed.taken && typeof parsed.taken === "object" ? parsed.taken : {},
@@ -278,10 +311,13 @@ function toDateStr(d: Date): string {
 
 function isIntakeOnDate(med: Medication, dateStr: string, windowStart: string, windowEnd: string): boolean {
   if (dateStr < med.startDate) return false;
+  if (med.endDate && dateStr > med.endDate) return false;
   if (dateStr < windowStart || dateStr > windowEnd) return false;
-  if (med.frequency === "once") return dateStr === med.startDate;
-  if (med.frequency === "daily") return true;
-  if (med.frequency === "weekly") {
+  const freq = med.frequency;
+  if (freq === "once") return dateStr === med.startDate;
+  if (freq === "course") return dateStr >= med.startDate && (!med.endDate || dateStr <= med.endDate);
+  if (freq === "daily" || freq === "1x" || freq === "2x") return true;
+  if (freq === "weekly") {
     const dStart = new Date(med.startDate + "T12:00:00").getDay();
     const dCur = new Date(dateStr + "T12:00:00").getDay();
     return dStart === dCur;
@@ -304,7 +340,11 @@ function getIntakesForDay(
   return out.sort((a, b) => a.med.time.localeCompare(b.med.time));
 }
 
-const FREQUENCY_VALUES = ["daily", "weekly", "once"] as const;
+function getFormLabel(form: MedicationForm, formOther?: string, t: (k: string) => string): string {
+  if (form === "other" && formOther?.trim()) return formOther.trim();
+  const key = `profile.medicationForm${form.charAt(0).toUpperCase() + form.slice(1)}` as const;
+  return t(key);
+}
 
 function MedicationsTab({ userId }: { userId: string }) {
   const { t } = useTranslation();
@@ -363,7 +403,32 @@ function MedicationsTab({ userId }: { userId: string }) {
   if (!userId) return null;
 
   return (
-    <div className="min-h-0">
+    <div className="min-h-0 space-y-4">
+      {/* Full list of all medications - medical tracking style */}
+      {data.medications.length > 0 && (
+        <div className="space-y-1.5 px-1">
+          {data.medications.map((med) => {
+            const isCompleted = med.endDate && med.endDate < todayStr;
+            return (
+              <div
+                key={med.id}
+                className={`rounded-xl px-3 py-2.5 text-sm transition-colors ${
+                  isCompleted ? "bg-muted/30 text-muted-foreground" : "bg-primary/5"
+                }`}
+              >
+                <div className="font-medium text-foreground">{med.name}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {getFormLabel(med.form, med.formOther, t)} • {med.dosage} {t(`profile.medicationDosageUnit${med.dosageUnit.charAt(0).toUpperCase() + med.dosageUnit.slice(1)}`)} • {t(med.frequency === "1x" ? "profile.freq1x" : med.frequency === "2x" ? "profile.freq2x" : med.frequency === "weekly" ? "profile.freqWeeklyDays" : "profile.freqCourse")}
+                </div>
+                <div className={`mt-1 text-[10px] font-medium ${isCompleted ? "text-muted-foreground" : "text-status-green"}`}>
+                  {isCompleted ? t("profile.medicationCompleted") : t("profile.medicationActive")}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* 14-day horizontal scroll */}
       <div
         className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide touch-pan-x"
@@ -411,28 +476,37 @@ function MedicationsTab({ userId }: { userId: string }) {
               {t("profile.noIntakesForDate")}
             </p>
           ) : (
-            intakes.map(({ med, intakeKey }) => (
-              <Card key={intakeKey} className="border border-border">
-                <CardContent className="p-4">
+            intakes.map(({ med, intakeKey }) => {
+              const isCompleted = med.endDate && med.endDate < toDateStr(new Date());
+              return (
+                <div
+                  key={intakeKey}
+                  className={`rounded-xl px-4 py-3 transition-colors ${
+                    isCompleted ? "bg-muted/40" : "bg-primary/5"
+                  }`}
+                >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-foreground">{med.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {med.time} • {t("profile.medicationQty")}: {med.quantity}
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {getFormLabel(med.form, med.formOther, t)} • {med.dosage} {t(`profile.medicationDosageUnit${med.dosageUnit.charAt(0).toUpperCase() + med.dosageUnit.slice(1)}`)} • {t(med.frequency === "1x" ? "profile.freq1x" : med.frequency === "2x" ? "profile.freq2x" : med.frequency === "weekly" ? "profile.freqWeeklyDays" : "profile.freqCourse")}
+                      </div>
+                      <div className={`mt-1 text-xs font-medium ${isCompleted ? "text-muted-foreground" : "text-status-green"}`}>
+                        {isCompleted ? t("profile.medicationCompleted") : t("profile.medicationActive")}
                       </div>
                     </div>
                     <Button
                       size="sm"
-                      variant={isTaken(selectedDate, intakeKey) ? "secondary" : "outline"}
+                      variant={isTaken(selectedDate, intakeKey) ? "secondary" : "ghost"}
                       className="shrink-0"
                       onClick={() => toggleTaken(selectedDate, intakeKey)}
                     >
                       {isTaken(selectedDate, intakeKey) ? t("profile.taken") : t("profile.take")}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))
+                </div>
+              );
+            })
           )}
         </motion.div>
       </AnimatePresence>
@@ -441,7 +515,7 @@ function MedicationsTab({ userId }: { userId: string }) {
       <div className="sticky bottom-20 px-4 pb-6 pt-4">
         <Button className="w-full rounded-full" onClick={() => setAddModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          {t("profile.addMedication")}
+          {t("profile.addPreparation")}
         </Button>
       </div>
 
@@ -474,33 +548,51 @@ function AddMedicationModal({
 }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
-  const [time, setTime] = useState("08:00");
-  const [quantity, setQuantity] = useState(1);
-  const [frequency, setFrequency] = useState<"daily" | "weekly" | "once">("daily");
+  const [form, setForm] = useState<MedicationForm>("tablets");
+  const [formOther, setFormOther] = useState("");
+  const [dosage, setDosage] = useState(1);
+  const [dosageUnit, setDosageUnit] = useState<DosageUnit>("mg");
+  const [frequency, setFrequency] = useState<MedicationFrequency>("1x");
   const [startDate, setStartDate] = useState(() => toDateStr(new Date()));
+  const [endDate, setEndDate] = useState("");
+  const [comment, setComment] = useState("");
+  const [time, setTime] = useState("08:00");
 
   useEffect(() => {
     if (open) {
       setName("");
-      setTime("08:00");
-      setQuantity(1);
-      setFrequency("daily");
+      setForm("tablets");
+      setFormOther("");
+      setDosage(1);
+      setDosageUnit("mg");
+      setFrequency("1x");
       setStartDate(selectedDate);
+      setEndDate("");
+      setComment("");
+      setTime("08:00");
     }
   }, [open, selectedDate]);
 
   const handleSave = () => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
-    const dateToUse = frequency === "once" ? selectedDate : startDate;
+    if (form === "other" && !formOther.trim()) return;
     onSave({
       name: trimmedName,
+      form,
+      formOther: form === "other" ? formOther.trim() : undefined,
+      dosage: Number(dosage) || 1,
+      dosageUnit,
+      quantity: Number(dosage) || 1,
       time: time.trim() || "08:00",
-      quantity: Number(quantity) || 1,
       frequency,
-      startDate: dateToUse,
+      startDate,
+      endDate: endDate.trim() || undefined,
+      comment: comment.trim() || undefined,
     });
   };
+
+  const canSave = name.trim() && (form !== "other" || formOther.trim());
 
   return (
     <FullscreenModal open={open} onClose={onClose}>
@@ -508,7 +600,6 @@ function AddMedicationModal({
         className="flex h-full w-full flex-col"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        {/* Header */}
         <header className="flex h-14 shrink-0 items-center px-5">
           <button
             type="button"
@@ -519,11 +610,10 @@ function AddMedicationModal({
             <X className="h-5 w-5" />
           </button>
           <h2 className="ml-2 text-base font-semibold text-foreground">
-            {t("profile.addMedication")}
+            {t("profile.addPreparation")}
           </h2>
         </header>
 
-        {/* Content */}
         <div 
           className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5"
           style={{ paddingBottom: 100 }}
@@ -538,55 +628,105 @@ function AddMedicationModal({
                 className="mt-1.5 h-12 rounded-xl border-border bg-card text-base"
               />
             </div>
+
             <div>
-              <Label className="text-xs text-muted-foreground">{t("profile.medicationTime")}</Label>
-              <Input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base text-left"
-              />
+              <Label className="text-xs text-muted-foreground">{t("profile.medicationForm")} *</Label>
+              <Select value={form} onValueChange={(v) => setForm(v as MedicationForm)}>
+                <SelectTrigger className="mt-1.5 h-12 rounded-xl border-border bg-card text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[100000]">
+                  {FORM_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {t(`profile.medicationForm${opt.charAt(0).toUpperCase() + opt.slice(1)}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form === "other" && (
+                <Input
+                  value={formOther}
+                  onChange={(e) => setFormOther(e.target.value)}
+                  placeholder={t("profile.medicationFormOtherPlaceholder")}
+                  className="mt-2 h-12 rounded-xl border-border bg-card text-base"
+                />
+              )}
             </div>
+
             <div>
-              <Label className="text-xs text-muted-foreground">{t("profile.medicationQty")}</Label>
-              <Input
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value) || 1)}
-                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base"
-              />
+              <Label className="text-xs text-muted-foreground">{t("profile.medicationDosage")}</Label>
+              <div className="mt-1.5 grid grid-cols-[1fr_auto] gap-3">
+                <Input
+                  type="number"
+                  min={0.1}
+                  step={0.1}
+                  value={dosage}
+                  onChange={(e) => setDosage(Number(e.target.value) || 1)}
+                  className="h-12 rounded-xl border-border bg-card text-base"
+                />
+                <Select value={dosageUnit} onValueChange={(v) => setDosageUnit(v as DosageUnit)}>
+                  <SelectTrigger className="h-12 w-24 rounded-xl border-border bg-card text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[100000]">
+                    {DOSAGE_UNITS.map((u) => (
+                      <SelectItem key={u} value={u}>
+                        {t(`profile.medicationDosageUnit${u === "mg" ? "Mg" : u === "ml" ? "Ml" : "IU"}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
             <div>
               <Label className="text-xs text-muted-foreground">{t("profile.medicationFreq")}</Label>
-              <Select value={frequency} onValueChange={(v) => setFrequency(v as "daily" | "weekly" | "once")}>
+              <Select value={frequency} onValueChange={(v) => setFrequency(v as MedicationFrequency)}>
                 <SelectTrigger className="mt-1.5 h-12 rounded-xl border-border bg-card text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[100000]">
                   {FREQUENCY_VALUES.map((val) => (
                     <SelectItem key={val} value={val}>
-                      {t(`profile.freq${val.charAt(0).toUpperCase() + val.slice(1)}`)}
+                      {t(val === "1x" ? "profile.freq1x" : val === "2x" ? "profile.freq2x" : val === "weekly" ? "profile.freqWeeklyDays" : "profile.freqCourse")}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {frequency !== "once" && (
-              <div>
-                <Label className="text-xs text-muted-foreground">{t("profile.medicationStartDate")}</Label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="mt-1.5 h-12 rounded-xl border-border bg-card text-base text-left"
-                />
-              </div>
-            )}
+
+            <div>
+              <Label className="text-xs text-muted-foreground">{t("profile.medicationStartDate")}</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base text-left"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground">{t("profile.medicationEndDate")}</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base text-left"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground">{t("profile.medicationComment")}</Label>
+              <Input
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder=""
+                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Fixed button */}
         <div 
           className="pointer-events-none absolute bottom-0 left-0 right-0"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -595,7 +735,11 @@ function AddMedicationModal({
             className="pointer-events-auto px-5 pb-4 pt-8"
             style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
           >
-            <Button className="w-full h-14 rounded-[18px] text-base font-medium" onClick={handleSave}>
+            <Button 
+              className="w-full h-14 rounded-[18px] text-base font-medium" 
+              onClick={handleSave}
+              disabled={!canSave}
+            >
               {t("common.save")}
             </Button>
           </div>
@@ -837,14 +981,14 @@ const Profile = () => {
         </Button>
       </motion.div>
 
-      {/* Tabs: Медкарта | Записи | Продукты | Лекарства */}
+      {/* Tabs: Медкарта | Препараты | Записи | Продукты */}
       <motion.div variants={item} className="mt-6 border-b border-border">
         <div className="flex">
           {[
             { key: "medical" as const, labelKey: "profile.medical" },
+            { key: "medications" as const, labelKey: "profile.preparations" },
             { key: "history" as const, labelKey: "profile.history" },
             { key: "subscriptions" as const, labelKey: "profile.subscriptions" },
-            { key: "medications" as const, labelKey: "profile.medications" },
           ].map((tab) => (
             <button
               key={tab.key}

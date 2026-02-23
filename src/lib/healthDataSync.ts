@@ -93,16 +93,18 @@ export interface RawHealthData {
   nutritionHistory: { date: string; calories: number; protein: number; carbs: number; fats: number }[];
 }
 
-/** Load today's nutrition from nutrition_v2 or fallback to nutrition (old format) */
-function loadTodayNutrition(nutritionV2Key: string, nutritionKey: string): {
+/** Load nutrition for a given date from nutrition_v2 or fallback to nutrition (old format) */
+function loadNutritionForDate(
+  nutritionV2Key: string,
+  nutritionKey: string,
+  dateStr: string
+): {
   caloriesIntake: number;
   protein: number;
   carbs: number;
   fats: number;
 } {
-  const today = getTodayDateString();
-
-  const v2Raw = localStorage.getItem(`${nutritionV2Key}_${today}`);
+  const v2Raw = localStorage.getItem(`${nutritionV2Key}_${dateStr}`);
   if (v2Raw) {
     const day: DayDataV2 = safeParse(v2Raw, { entries: [] });
     const entries = Array.isArray(day.entries) ? day.entries : [];
@@ -120,7 +122,7 @@ function loadTodayNutrition(nutritionV2Key: string, nutritionKey: string): {
   const oldRaw = localStorage.getItem(nutritionKey);
   if (oldRaw) {
     const parsed: OldNutritionDay = safeParse(oldRaw, {});
-    if (parsed.date === today) {
+    if (parsed.date === dateStr) {
       const totalKcal =
         sumKcalFromOld(parsed.breakfast) +
         sumKcalFromOld(parsed.lunch) +
@@ -138,10 +140,68 @@ function loadTodayNutrition(nutritionV2Key: string, nutritionKey: string): {
   return { caloriesIntake: 0, protein: 0, carbs: 0, fats: 0 };
 }
 
+function loadTodayNutrition(nutritionV2Key: string, nutritionKey: string) {
+  return loadNutritionForDate(nutritionV2Key, nutritionKey, getTodayDateString());
+}
+
 function loadWorkoutHistory(key: string): WorkoutEntryRaw[] {
   const raw = localStorage.getItem(key);
   const list = safeParse<WorkoutEntryRaw[]>(raw, []);
   return Array.isArray(list) ? list : [];
+}
+
+/** Load health data for a specific date (for date navigation on main page) */
+export function hydrateFromStorageForDate(input: HydrateInput, dateStr: string): RawHealthData {
+  const keys = {
+    nutritionV2: getStorageKey(input.userId, "nutrition_v2"),
+    nutrition: getStorageKey(input.userId, "nutrition"),
+    workout_history: getStorageKey(input.userId, "workout_history"),
+    labs: getStorageKey(input.userId, "labs"),
+  };
+
+  const dateNutrition = loadNutritionForDate(keys.nutritionV2, keys.nutrition, dateStr);
+  const allWorkouts = loadWorkoutHistory(keys.workout_history);
+  const dateWorkouts = allWorkouts.filter((w) => w.date === dateStr);
+
+  const caloriesBurned = dateWorkouts.reduce((s, w) => s + (w.caloriesBurned || 0), 0);
+  const recommended = input.weight && input.height
+    ? getRecommendedKcal(input.weight, input.height)
+    : null;
+  const targetCalories = recommended?.target ?? 2000;
+  const targetProtein = input.weight ? Math.round(input.weight * 2) : 150;
+
+  const lab = getLatestLab(keys.labs);
+  const testosteroneNmolL =
+    lab?.testosterone != null ? testosteroneNgDlToNmolL(lab.testosterone) : undefined;
+  const testosteroneDate = lab?.date;
+
+  const sleepHours = 7.5;
+  const sleepQuality = 80;
+  const hrv = 45;
+  const heartRate = 62;
+  const steps = 6500;
+
+  const nutritionHistory: RawHealthData["nutritionHistory"] = [];
+
+  return {
+    sleepHours,
+    sleepQuality,
+    hrv,
+    heartRate,
+    steps,
+    caloriesIntake: dateNutrition.caloriesIntake,
+    caloriesBurned,
+    protein: dateNutrition.protein,
+    carbs: dateNutrition.carbs,
+    fats: dateNutrition.fats,
+    targetCalories,
+    targetProtein,
+    testosterone: testosteroneNmolL,
+    testosteroneDate,
+    workouts: allWorkouts,
+    todayWorkouts: dateWorkouts,
+    nutritionHistory,
+  };
 }
 
 export function hydrateFromStorage(input: HydrateInput): RawHealthData {

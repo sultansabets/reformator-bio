@@ -18,7 +18,15 @@ import {
 } from "@/engine/healthEngine";
 import { calculateSleepFromBlocks, mapHealthToSleepInput, type SleepEngineResult } from "@/engine/sleepEngine";
 import { calculateEnergyDetail, type EnergyEngineResult } from "@/engine/energyEngine";
-import { hydrateFromStorage } from "@/lib/healthDataSync";
+import { hydrateFromStorage, hydrateFromStorageForDate } from "@/lib/healthDataSync";
+
+function getTodayISO(): string {
+  return new Date().toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).replace(/\//g, "-");
+}
 
 export interface WorkoutEntryStore {
   date: string;
@@ -55,6 +63,8 @@ export interface HealthRawState {
   testosteroneDate: string | undefined;
   workouts: WorkoutEntryStore[];
   nutritionHistory: NutritionHistoryEntry[];
+  /** Date for which computed metrics are shown (YYYY-MM-DD). Used by date navigation. */
+  viewDate: string;
 }
 
 // ─── Computed (outputs) ────────────────────────────────────────────────────
@@ -83,11 +93,9 @@ function toWorkoutEntry(w: WorkoutEntryStore): WorkoutEntry {
 }
 
 function recompute(raw: HealthRawState): HealthComputedState {
-  const todayWorkouts = raw.workouts.filter((w) => {
-    const today = new Date().toISOString().slice(0, 10);
-    return w.date === today;
-  });
-  const workoutEntries = todayWorkouts.map(toWorkoutEntry);
+  const viewDate = raw.viewDate ?? getTodayISO();
+  const dateWorkouts = raw.workouts.filter((w) => w.date === viewDate);
+  const workoutEntries = dateWorkouts.map(toWorkoutEntry);
 
   const sleepInput = mapHealthToSleepInput({
     sleepHours: raw.sleepHours,
@@ -164,6 +172,7 @@ const initialRaw: HealthRawState = {
   testosteroneDate: undefined,
   workouts: [],
   nutritionHistory: [],
+  viewDate: getTodayISO(),
 };
 
 function getInitialState(): HealthState {
@@ -173,6 +182,7 @@ function getInitialState(): HealthState {
 
 type HealthActions = {
   hydrate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }) => void;
+  hydrateForDate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }, dateStr: string) => void;
   setRaw: (patch: Partial<HealthRawState>) => void;
   addNutrition: (entry: { calories: number; protein: number; carbs: number; fats: number }) => void;
   addWorkout: (entry: WorkoutEntryStore) => void;
@@ -213,6 +223,34 @@ export const useHealthStore = create<HealthState & HealthActions>()(
         testosteroneDate: raw.testosteroneDate,
         workouts: raw.workouts,
         nutritionHistory: raw.nutritionHistory,
+        viewDate: getTodayISO(),
+      };
+      set({ ...rawState, ...recompute(rawState) });
+    },
+
+    hydrateForDate: (userId, profile, dateStr) => {
+      const raw = hydrateFromStorageForDate(
+        { userId, weight: profile.weight, height: profile.height, age: profile.age, activityLevel: profile.activityLevel },
+        dateStr
+      );
+      const rawState: HealthRawState = {
+        sleepHours: raw.sleepHours,
+        sleepQuality: raw.sleepQuality,
+        hrv: raw.hrv,
+        heartRate: raw.heartRate,
+        steps: raw.steps,
+        caloriesIntake: raw.caloriesIntake,
+        caloriesBurned: raw.caloriesBurned,
+        protein: raw.protein,
+        carbs: raw.carbs,
+        fats: raw.fats,
+        targetCalories: raw.targetCalories,
+        targetProtein: raw.targetProtein,
+        testosterone: raw.testosterone,
+        testosteroneDate: raw.testosteroneDate,
+        workouts: raw.workouts,
+        nutritionHistory: raw.nutritionHistory,
+        viewDate: dateStr,
       };
       set({ ...rawState, ...recompute(rawState) });
     },
@@ -237,11 +275,9 @@ export const useHealthStore = create<HealthState & HealthActions>()(
     addWorkout: (entry) => {
       const s = get();
       const nextWorkouts = [entry, ...s.workouts];
-      const todayWorkouts = nextWorkouts.filter((w) => {
-        const today = new Date().toISOString().slice(0, 10);
-        return w.date === today;
-      });
-      const caloriesBurned = todayWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0);
+      const viewDate = s.viewDate ?? getTodayISO();
+      const dateWorkouts = nextWorkouts.filter((w) => w.date === viewDate);
+      const caloriesBurned = dateWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0);
       const next: HealthRawState = {
         ...s,
         workouts: nextWorkouts,
@@ -252,9 +288,9 @@ export const useHealthStore = create<HealthState & HealthActions>()(
 
     setWorkouts: (workouts) => {
       const s = get();
-      const today = new Date().toISOString().slice(0, 10);
-      const todayWorkouts = workouts.filter((w) => w.date === today);
-      const caloriesBurned = todayWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0);
+      const viewDate = s.viewDate ?? getTodayISO();
+      const dateWorkouts = workouts.filter((w) => w.date === viewDate);
+      const caloriesBurned = dateWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0);
       const next: HealthRawState = {
         ...s,
         workouts,
