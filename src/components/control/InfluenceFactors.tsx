@@ -1,33 +1,26 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Gauge, Heart, Footprints, Zap, ChevronDown, ChevronUp } from "lucide-react";
+import { Gauge, Heart, Footprints, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
-/** 0–40 red, 41–60 orange, 61–75 yellow, 76–100 green (stress: high % = bad = red) */
-function getFactorColorFromPercent(percent: number): string {
-  const p = Math.min(100, Math.max(0, Math.round(percent)));
-  if (p <= 40) return "rgb(220, 38, 38)";
-  if (p <= 60) return "rgb(249, 115, 22)";
-  if (p <= 75) return "rgb(234, 179, 8)";
-  return "rgb(34, 197, 94)";
-}
-
-/** Stress: low % = good (green), high % = bad (red) — inverted */
-function getStressFactorColor(percent: number): string {
-  return getFactorColorFromPercent(100 - Math.min(100, Math.max(0, percent)));
-}
+/** Fixed colors for expanded state — calm medical palette */
+const FACTOR_COLORS = {
+  pressure: "#4DA3FF",
+  pulse: "#FF5A5A",
+  steps: "#4ED0FF",
+  stress: "#FF6A00",
+  testosterone: "#FFB020",
+} as const;
 
 interface InfluenceFactor {
-  id: string;
+  id: keyof typeof FACTOR_COLORS;
   icon: React.ElementType;
   label: string;
   mainValue: string;
   unit?: string;
   subtitle?: string;
   sources: string[];
-  /** Color only when expanded; null = neutral */
-  getExpandedColor?: () => string;
 }
 
 export interface InfluenceFactorsProps {
@@ -59,11 +52,25 @@ function MarsIcon({ className, style }: { className?: string; style?: React.CSSP
   );
 }
 
-function getTestosteroneColor(value: number): string {
-  if (value <= 10) return "#EF4444";
-  if (value <= 18) return "#F97316";
-  if (value <= 35) return "#22C55E";
-  return "#14B8A6";
+/** Person silhouette with lightning above head — outline, minimal */
+function StressPersonLightningIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+    >
+      <path d="M13 1l-3 5h2l-1 4 4-4h-2l1-5z" />
+      <circle cx="12" cy="13" r="3.5" />
+      <path d="M8 22h8" />
+      <path d="M9 16.5c0-1.66 1.34-3 3-3s3 1.34 3 3v4H9v-4z" />
+    </svg>
+  );
 }
 
 export function InfluenceFactors({
@@ -108,30 +115,29 @@ export function InfluenceFactors({
     },
     {
       id: "stress",
-      icon: Zap,
+      icon: StressPersonLightningIcon,
       label: t("center.stress"),
       mainValue: `${stressIndex}%`,
       sources: [t("factors.hrv"), t("factors.sleepQuality"), t("factors.yesterdayLoad")],
-      getExpandedColor: () => getStressFactorColor(stressPercent),
     },
   ];
 
   const isTestosteroneExpanded = expandedId === "testosterone";
-  const testosteroneColor = hasTestosterone && isTestosteroneExpanded
-    ? getTestosteroneColor(testosteroneValue!)
-    : undefined;
+  const testosteroneColor = isTestosteroneExpanded ? FACTOR_COLORS.testosterone : undefined;
 
   return (
     <div className="space-y-2">
       {factors.map((f) => {
         const isExpanded = expandedId === f.id;
         const Icon = f.icon;
-        const iconColor = isExpanded && f.getExpandedColor ? f.getExpandedColor() : undefined;
+        const accentColor = isExpanded ? FACTOR_COLORS[f.id] : undefined;
+        const cardBg = accentColor ? { backgroundColor: `${accentColor}14` } : undefined; // ~8% opacity
 
         return (
           <Card
             key={f.id}
             className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995]"
+            style={cardBg}
           >
             <button
               type="button"
@@ -141,12 +147,17 @@ export function InfluenceFactors({
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
                 <Icon
                   className="h-5 w-5 text-muted-foreground transition-colors duration-200"
-                  style={iconColor ? { color: iconColor } : undefined}
+                  style={accentColor ? { color: accentColor } : undefined}
                 />
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground">{f.label}</p>
+                <p
+                  className={`text-xs transition-colors duration-200 ${accentColor ? "" : "text-muted-foreground"}`}
+                  style={accentColor ? { color: accentColor } : undefined}
+                >
+                  {f.label}
+                </p>
                 <p className="flex items-baseline gap-1.5 text-lg font-bold tabular-nums text-foreground">
                   {f.mainValue}
                   {f.unit && (
@@ -177,7 +188,7 @@ export function InfluenceFactors({
                 >
                   <div
                     className="border-t border-border bg-muted/25 px-3 pb-3 pt-2"
-                    style={iconColor ? { borderLeft: `3px solid ${iconColor}` } : undefined}
+                    style={accentColor ? { borderLeft: `3px solid ${accentColor}` } : undefined}
                   >
                     <p className="mb-2 text-xs font-medium text-muted-foreground">
                       {t("factors.basedOn")}
@@ -187,7 +198,7 @@ export function InfluenceFactors({
                         <li key={source} className="flex items-center gap-2">
                           <span
                             className="h-1 w-1 shrink-0 rounded-full"
-                            style={{ backgroundColor: iconColor || "hsl(var(--muted-foreground))" }}
+                            style={{ backgroundColor: accentColor || "hsl(var(--muted-foreground))" }}
                           />
                           {source}
                         </li>
@@ -203,6 +214,7 @@ export function InfluenceFactors({
 
       <Card
         className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995]"
+        style={testosteroneColor ? { backgroundColor: `${testosteroneColor}14` } : undefined}
       >
         <button
           type="button"
@@ -217,7 +229,12 @@ export function InfluenceFactors({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">{t("factors.testosterone")}</p>
+            <p
+              className={`text-xs transition-colors duration-200 ${testosteroneColor ? "" : "text-muted-foreground"}`}
+              style={testosteroneColor ? { color: testosteroneColor } : undefined}
+            >
+              {t("factors.testosterone")}
+            </p>
             {hasTestosterone ? (
               <>
                 <p className="flex items-baseline gap-1.5 text-lg font-bold tabular-nums text-foreground">
