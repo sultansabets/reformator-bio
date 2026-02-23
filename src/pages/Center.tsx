@@ -430,7 +430,9 @@ function CalendarPopup({
 export default function Center() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  
+  const setNutritionToday = useHealthStore((s) => s.setNutritionToday);
+  const setWorkouts = useHealthStore((s) => s.setWorkouts);
+
   const storageKeys = useMemo(() => {
     if (!user?.id) return null;
     return {
@@ -604,8 +606,6 @@ export default function Center() {
 
   const addNutrition = useHealthStore((s) => s.addNutrition);
   const addWorkout = useHealthStore((s) => s.addWorkout);
-  const setNutritionToday = useHealthStore((s) => s.setNutritionToday);
-  const setWorkouts = useHealthStore((s) => s.setWorkouts);
 
   const addProductEntry = useCallback(() => {
     if (!selectedProduct || grams <= 0) return;
