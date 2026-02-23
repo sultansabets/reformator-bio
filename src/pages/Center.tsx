@@ -29,7 +29,7 @@ import { getStorageKey } from "@/lib/userStorage";
 import { useTranslation } from "react-i18next";
 import foodDatabase from "@/data/foodDatabase.json";
 import FullscreenModal from "@/components/FullscreenModal";
-import { SportHero, MuscleMap, WorkoutProgram, WorkoutCalendar } from "@/components/sport";
+import { SportXpBlock, MuscleMap, WorkoutProgram, WorkoutCalendar } from "@/components/sport";
 import type { MuscleProgress, WeekPlan, WorkoutDay } from "@/components/sport";
 
 interface FoodProduct {
@@ -874,27 +874,7 @@ export default function Center() {
           activeTab === "sport" ? "block opacity-100" : "hidden opacity-0"
         }`}
       >
-        {workoutHistory.length === 0 && !workoutActive ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted/50">
-              <Dumbbell className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <p className="mb-2 text-lg font-medium text-foreground">Пора качнуть форму</p>
-            <p className="mb-6 text-sm text-muted-foreground">Начнем?</p>
-            <Button 
-              className="gap-2"
-              onClick={() => {
-                setWorkoutMode("strength");
-                setSelectedBodyParts(new Set(["chest"]));
-              }}
-            >
-              <Play className="h-4 w-4" />
-              Запустить тренировку
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-8">
+        <div className="space-y-6">
             {/* Active Workout Overlay */}
             {workoutActive && (
               <motion.div
@@ -937,13 +917,17 @@ export default function Center() {
               </motion.div>
             )}
 
-            {/* Hero Block - Avatar & Level */}
+            {/* Calendar - right under tabs */}
             {!workoutActive && (
-              <SportHero
-                totalWorkouts={workoutHistory.length}
-                totalXP={totalXP}
-                userName={user?.name}
+              <WorkoutCalendar
+                workoutDays={workoutDays}
+                weekPlan={weekPlan}
               />
+            )}
+
+            {/* Compact XP block */}
+            {!workoutActive && (
+              <SportXpBlock totalXP={totalXP} />
             )}
 
             {/* Muscle Map */}
@@ -1038,15 +1022,24 @@ export default function Center() {
               />
             )}
 
-            {/* Workout Calendar */}
-            {!workoutActive && (
-              <WorkoutCalendar
-                workoutDays={workoutDays}
-                weekPlan={weekPlan}
-              />
+            {/* Empty state CTA */}
+            {!workoutActive && workoutHistory.length === 0 && (
+              <div className="flex flex-col items-center py-6 text-center">
+                <p className="mb-2 text-lg font-medium text-foreground">Пора качнуть форму</p>
+                <p className="mb-4 text-sm text-muted-foreground">Начнем?</p>
+                <Button 
+                  className="gap-2"
+                  onClick={() => {
+                    setWorkoutMode("strength");
+                    setSelectedBodyParts(new Set(["chest"]));
+                  }}
+                >
+                  <Play className="h-4 w-4" />
+                  Запустить тренировку
+                </Button>
+              </div>
             )}
           </div>
-        )}
       </div>
 
       {/* Calendar popup */}
