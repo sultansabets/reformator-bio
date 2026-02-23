@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, AlarmClock } from "lucide-react";
@@ -22,7 +22,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BottomNav from "./BottomNav";
-import { useScrollSource } from "@/contexts/ScrollSourceContext";
 import { DevicesPopover } from "@/components/DevicesPopover";
 import { HealthStoreHydrator } from "@/components/HealthStoreHydrator";
 import logoLight from "@/assets/logo-light.png";
@@ -91,43 +90,6 @@ const AppLayout = () => {
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const lastScrollY = useRef(0);
-  const ticking = useRef(false);
-  const [menuBarVisible, setMenuBarVisible] = useState(true);
-  const scrollSource = useScrollSource();
-  const activeEl = scrollSource?.activeScrollElement ?? null;
-  const THRESHOLD = 6;
-  const TOP_THRESHOLD = 20;
-
-  const handleScroll = useCallback((el: HTMLElement) => {
-    if (!el) return;
-    const currentScrollY = el.scrollTop;
-    const dy = currentScrollY - lastScrollY.current;
-
-    if (!ticking.current) {
-      window.requestAnimationFrame(() => {
-        if (currentScrollY < TOP_THRESHOLD) {
-          setMenuBarVisible(true);
-        } else if (dy > THRESHOLD) {
-          setMenuBarVisible(false);
-        } else if (dy < -THRESHOLD) {
-          setMenuBarVisible(true);
-        }
-        lastScrollY.current = currentScrollY;
-        ticking.current = false;
-      });
-      ticking.current = true;
-    }
-  }, []);
-
-  useEffect(() => {
-    const target = activeEl || scrollRef.current;
-    if (!target) return;
-    lastScrollY.current = target.scrollTop;
-    const onScroll = () => handleScroll(target);
-    target.addEventListener("scroll", onScroll, { passive: true });
-    return () => target.removeEventListener("scroll", onScroll);
-  }, [activeEl, handleScroll]);
 
   return (
     <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden bg-background transition-colors duration-300">
@@ -387,7 +349,7 @@ const AppLayout = () => {
           <Outlet />
         </main>
       </div>
-      <BottomNav visible={menuBarVisible} />
+      <BottomNav />
 
       {/* Уведомления: простой modal */}
       <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen}>

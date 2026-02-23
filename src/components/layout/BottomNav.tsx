@@ -16,11 +16,7 @@ const RIGHT_TABS = [
   { path: "/profile", icon: User, key: "tabs.profile", useAvatar: true },
 ];
 
-type BottomNavProps = {
-  visible?: boolean;
-};
-
-const BottomNav = ({ visible = true }: BottomNavProps) => {
+const BottomNav = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -64,11 +60,7 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
   };
 
   return (
-    <nav
-      className={`shrink-0 border-t border-border dark:border-0 dark:border-transparent bg-background transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-      }`}
-    >
+    <nav className="fixed bottom-0 left-0 right-0 z-50 shrink-0 border-t border-border dark:border-0 dark:border-transparent bg-background">
       <div className="flex items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom)]">
         {LEFT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
 
