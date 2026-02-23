@@ -108,6 +108,27 @@ function catmullRomToBezier(
   ];
 }
 
+/** SVG path for teardrop shape (center 0.5,0.5, radius ~0.5, point down) */
+const DROPLET_PATH = new Path2D(
+  "M0.5 0C0.78 0 1 0.22 1 0.5C1 0.72 0.9 0.88 0.7 0.96L0.5 1L0.3 0.96C0.1 0.88 0 0.72 0 0.5C0 0.22 0.22 0 0.5 0Z"
+);
+
+function drawDroplet(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  angle: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.scale(size, size);
+  ctx.translate(-0.5, -0.5);
+  ctx.fill(DROPLET_PATH);
+  ctx.restore();
+}
+
 function drawSmoothBlob(
   ctx: CanvasRenderingContext2D,
   center: number,
@@ -275,9 +296,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.globalAlpha = op;
-        ctx.beginPath();
-        ctx.arc(atom.x, atom.y, atom.nucleusSize * 0.5, 0, Math.PI * 2);
-        ctx.fill();
+        const dropletAngle = Math.atan2(atom.dirY, atom.dirX) - Math.PI / 2;
+        drawDroplet(ctx, atom.x, atom.y, atom.nucleusSize, dropletAngle);
 
         ctx.globalAlpha = op * 0.7;
         for (let e = 0; e < atom.electronCount; e++) {
