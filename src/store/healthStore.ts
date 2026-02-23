@@ -6,7 +6,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import {
-  calculateSleepScore,
   calculateNutritionScore,
   calculateTrainingLoad,
   hrvToScore,
@@ -14,10 +13,10 @@ import {
   calculateStress,
   testosteroneToScore,
   calculateEnergy,
-  calculateSleepPercent,
   calculateLoadPercent,
   type WorkoutEntry,
 } from "@/engine/healthEngine";
+import { calculateSleepFromBlocks, mapHealthToSleepInput, type SleepEngineResult } from "@/engine/sleepEngine";
 import { hydrateFromStorage } from "@/lib/healthDataSync";
 
 export interface WorkoutEntryStore {
@@ -60,6 +59,7 @@ export interface HealthRawState {
 // ─── Computed (outputs) ────────────────────────────────────────────────────
 export interface HealthComputedState {
   sleepScore: number;
+  sleepDetail: SleepEngineResult;
   nutritionScore: number;
   trainingLoad: number;
   recovery: number;
@@ -87,10 +87,14 @@ function recompute(raw: HealthRawState): HealthComputedState {
   });
   const workoutEntries = todayWorkouts.map(toWorkoutEntry);
 
-  const sleepScore = calculateSleepScore({
+  const sleepInput = mapHealthToSleepInput({
     sleepHours: raw.sleepHours,
     sleepQuality: raw.sleepQuality,
+    hrv: raw.hrv,
+    heartRate: raw.heartRate,
   });
+  const sleepDetail = calculateSleepFromBlocks(sleepInput);
+  const sleepScore = sleepDetail.sleepScore;
   const nutritionScore = calculateNutritionScore({
     caloriesIntake: raw.caloriesIntake,
     targetCalories: raw.targetCalories || 2000,
@@ -112,10 +116,7 @@ function recompute(raw: HealthRawState): HealthComputedState {
     sleepScore,
   });
   const testosteroneScore = testosteroneToScore(raw.testosterone);
-  const sleepPercent = calculateSleepPercent({
-    sleepHours: raw.sleepHours,
-    sleepQuality: raw.sleepQuality,
-  });
+  const sleepPercent = sleepScore;
   const loadPercent = calculateLoadPercent(workoutEntries, raw.steps);
   const mainStateScore = calculateEnergy({
     sleep: sleepScore,
@@ -125,6 +126,7 @@ function recompute(raw: HealthRawState): HealthComputedState {
 
   return {
     sleepScore,
+    sleepDetail,
     nutritionScore,
     trainingLoad,
     recovery,
