@@ -19,7 +19,7 @@ import { useHealthStore } from "@/store/healthStore";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
-import { StressCard } from "@/components/control/StressCard";
+import { RecoveryCard } from "@/components/control/RecoveryCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 
@@ -69,8 +69,8 @@ const ControlCenter = () => {
 
   const sleepPercent = useHealthStore((s) => s.sleepPercent);
   const loadPercent = useHealthStore((s) => s.loadPercent);
-  const stress = useHealthStore((s) => s.stress);
   const recovery = useHealthStore((s) => s.recovery);
+  const stress = useHealthStore((s) => s.stress);
   const mainStateScore = useHealthStore((s) => s.mainStateScore);
   const sleepScore = useHealthStore((s) => s.sleepScore);
   const steps = useHealthStore((s) => s.steps);
@@ -128,13 +128,13 @@ const ControlCenter = () => {
               })
             }
           />
-          <StressCard
-            percent={stress}
+          <RecoveryCard
+            percent={recovery}
             onClick={() =>
               openMetricSheet({
-                key: "stress",
-                title: t("center.stress"),
-                percent: stress,
+                key: "recovery",
+                title: t("center.recovery"),
+                percent: recovery,
               })
             }
           />
@@ -147,7 +147,7 @@ const ControlCenter = () => {
           diastolic={82}
           pulse={heartRate}
           steps={steps}
-          recoveryPercent={recovery}
+          stressPercent={stress}
           testosteroneValue={testosterone != null ? Math.round(testosterone) : undefined}
           testosteroneDate={formatDateShort(testosteroneDate)}
         />

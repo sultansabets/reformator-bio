@@ -8,7 +8,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 
-export type MetricKey = "energy" | "hormones" | "strength";
+export type MetricKey = "energy" | "hormones" | "strength" | "sleep" | "load" | "recovery";
 
 export interface MetricDetail {
   key: MetricKey;
@@ -37,6 +37,21 @@ const METRIC_KEYS: Record<MetricKey, { desc: string; formula: string; sources: s
     desc: "metrics.strengthDesc",
     formula: "metrics.strengthFormula",
     sources: ["systems.volume", "systems.intensity", "systems.weight", "systems.recovery"],
+  },
+  sleep: {
+    desc: "metrics.detailSleep",
+    formula: "metrics.detailSleepFormula",
+    sources: ["systems.sleep", "systems.hrv"],
+  },
+  load: {
+    desc: "metrics.detailLoad",
+    formula: "metrics.detailLoadFormula",
+    sources: ["systems.volume", "systems.intensity"],
+  },
+  recovery: {
+    desc: "metrics.detailRecovery",
+    formula: "metrics.detailRecoveryFormula",
+    sources: ["systems.sleep", "systems.hrv", "systems.recovery"],
   },
 };
 

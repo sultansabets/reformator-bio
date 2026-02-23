@@ -116,7 +116,13 @@
     "hormonesDesc": "Hormonal balance. Formed from input factors.",
     "hormonesFormula": "Sleep + Fat % + Training + Testosterone",
     "strengthDesc": "Strength load potential. Formed from input factors.",
-    "strengthFormula": "Volume + Intensity + Weight + Recovery"
+    "strengthFormula": "Volume + Intensity + Weight + Recovery",
+    "detailSleep": "Sleep quality and duration. Affects recovery and main score.",
+    "detailSleepFormula": "0.6×(hours/8) + 0.4×quality",
+    "detailLoad": "Load: active calories and steps.",
+    "detailLoadFormula": "Active kcal + steps / targets",
+    "detailRecovery": "Recovery level. Depends on sleep, HRV and load.",
+    "detailRecoveryFormula": "0.4×Sleep + 0.3×HRV + 0.3×(100−load)"
   },
   "systems": {
     "title": "Resource systems",
