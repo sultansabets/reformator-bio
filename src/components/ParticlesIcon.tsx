@@ -1,10 +1,13 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
-
-interface ParticleButtonProps {
-  size?: number;
-}
+import React, { useRef, useEffect } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const PARTICLE_COUNT = 12;
+const DELTA_MULTIPLIER = 0.04;
+const VELOCITY_DAMP = 0.7;
+const VELOCITY_RANDOM = 0.1;
+const VELOCITY_NUDGE_CHANCE = 0.008;
+const SPEED_CAP = 0.4;
+const SPEED_DAMP = 0.92;
 
 interface Particle {
   x: number;
@@ -28,39 +31,36 @@ function createParticle(center: number, radius: number): Particle {
   };
 }
 
-function getParticleColor(): string {
-  const isDark = document.documentElement.classList.contains("dark");
-  return isDark ? "255, 255, 255" : "0, 0, 0";
+export interface ParticlesIconProps {
+  size?: number;
+  active?: boolean;
+  /** Override color as "r, g, b" (e.g. "34, 197, 94" for green). When set, ignores active/theme. */
+  colorRgb?: string;
+  className?: string;
 }
 
-export function ParticleButton({ size = 40 }: ParticleButtonProps) {
+/**
+ * Shared particle animation used in nav bar and AI page.
+ * Inactive: muted color (matches other nav icons).
+ * Active: white (#FFFFFF).
+ */
+export function ParticlesIcon({ size = 40, active = false, colorRgb, className }: ParticlesIconProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
-  const colorRef = useRef<string>(getParticleColor());
+  const colorRef = useRef<string>("161, 161, 170");
+  const { theme } = useTheme();
+
   const center = size / 2;
   const radius = size * 0.38;
 
-  const [, forceUpdate] = useState(0);
-
-  const updateColor = useCallback(() => {
-    colorRef.current = getParticleColor();
-    forceUpdate((n) => n + 1);
-  }, []);
-
-  useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.attributeName === "class") {
-          updateColor();
-        }
-      }
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-
-    return () => observer.disconnect();
-  }, [updateColor]);
+  colorRef.current =
+    colorRgb ??
+    (active
+      ? "255, 255, 255"
+      : theme === "dark"
+        ? "161, 161, 170"
+        : "113, 113, 122");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -92,8 +92,8 @@ export function ParticleButton({ size = 40 }: ParticleButtonProps) {
       const rgb = colorRef.current;
 
       for (const p of particles) {
-        p.x += p.vx * (delta * 0.04);
-        p.y += p.vy * (delta * 0.04);
+        p.x += p.vx * (delta * DELTA_MULTIPLIER);
+        p.y += p.vy * (delta * DELTA_MULTIPLIER);
 
         const dx = p.x - center;
         const dy = p.y - center;
@@ -104,19 +104,19 @@ export function ParticleButton({ size = 40 }: ParticleButtonProps) {
           const ny = dy / dist;
           p.x = center + nx * radius;
           p.y = center + ny * radius;
-          p.vx = -p.vx * 0.7 + (Math.random() - 0.5) * 0.1;
-          p.vy = -p.vy * 0.7 + (Math.random() - 0.5) * 0.1;
+          p.vx = -p.vx * VELOCITY_DAMP + (Math.random() - 0.5) * VELOCITY_RANDOM;
+          p.vy = -p.vy * VELOCITY_DAMP + (Math.random() - 0.5) * VELOCITY_RANDOM;
         }
 
-        if (Math.random() < 0.008) {
-          p.vx += (Math.random() - 0.5) * 0.1;
-          p.vy += (Math.random() - 0.5) * 0.1;
+        if (Math.random() < VELOCITY_NUDGE_CHANCE) {
+          p.vx += (Math.random() - 0.5) * VELOCITY_RANDOM;
+          p.vy += (Math.random() - 0.5) * VELOCITY_RANDOM;
         }
 
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 0.4) {
-          p.vx *= 0.92;
-          p.vy *= 0.92;
+        if (speed > SPEED_CAP) {
+          p.vx *= SPEED_DAMP;
+          p.vy *= SPEED_DAMP;
         }
 
         ctx.beginPath();
@@ -142,8 +142,9 @@ export function ParticleButton({ size = 40 }: ParticleButtonProps) {
       ref={canvasRef}
       width={size}
       height={size}
-      className="pointer-events-none"
+      className={className}
       style={{ width: size, height: size }}
+      aria-hidden
     />
   );
 }

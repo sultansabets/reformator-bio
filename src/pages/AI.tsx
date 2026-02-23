@@ -3,6 +3,7 @@ import { useScrollSource } from "@/contexts/ScrollSourceContext";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Send, User, Paperclip, RotateCcw } from "lucide-react";
+import { ParticlesIcon } from "@/components/ParticlesIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -11,111 +12,6 @@ const PROMPT_KEYS = ["recovery", "testosterone", "cortisol", "energy", "labs", "
 const EXAMPLE_KEYS = ["labs", "stress", "testosterone"] as const;
 
 type Message = { role: "user" | "assistant"; text: string };
-
-function AIParticles({ size = 64 }: { size?: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<{ x: number; y: number; vx: number; vy: number; size: number; opacity: number }[]>([]);
-  const animationRef = useRef<number>(0);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-
-    const center = size / 2;
-    const radius = size * 0.38;
-
-    if (particlesRef.current.length === 0) {
-      for (let i = 0; i < 10; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * radius * 0.7 + radius * 0.1;
-        particlesRef.current.push({
-          x: center + Math.cos(angle) * dist,
-          y: center + Math.sin(angle) * dist,
-          vx: (Math.random() - 0.5) * 0.25,
-          vy: (Math.random() - 0.5) * 0.25,
-          size: Math.random() * 1.5 + 1,
-          opacity: Math.random() * 0.4 + 0.4,
-        });
-      }
-    }
-
-    let lastTime = performance.now();
-
-    const animate = (time: number) => {
-      const delta = Math.min(time - lastTime, 32);
-      lastTime = time;
-
-      ctx.clearRect(0, 0, size, size);
-
-      const glowGradient = ctx.createRadialGradient(center, center, 0, center, center, radius * 1.2);
-      glowGradient.addColorStop(0, "rgba(34, 197, 94, 0.08)");
-      glowGradient.addColorStop(0.5, "rgba(34, 197, 94, 0.03)");
-      glowGradient.addColorStop(1, "rgba(34, 197, 94, 0)");
-      ctx.fillStyle = glowGradient;
-      ctx.fillRect(0, 0, size, size);
-
-      const particles = particlesRef.current;
-      for (const p of particles) {
-        p.x += p.vx * (delta * 0.04);
-        p.y += p.vy * (delta * 0.04);
-
-        const dx = p.x - center;
-        const dy = p.y - center;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist > radius) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          p.x = center + nx * radius;
-          p.y = center + ny * radius;
-          p.vx = -p.vx * 0.7 + (Math.random() - 0.5) * 0.1;
-          p.vy = -p.vy * 0.7 + (Math.random() - 0.5) * 0.1;
-        }
-
-        if (Math.random() < 0.008) {
-          p.vx += (Math.random() - 0.5) * 0.1;
-          p.vy += (Math.random() - 0.5) * 0.1;
-        }
-
-        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 0.5) {
-          p.vx *= 0.92;
-          p.vy *= 0.92;
-        }
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size + 1, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(34, 197, 94, 0.2)`;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(34, 197, 94, ${p.opacity})`;
-        ctx.fill();
-      }
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [size]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{ width: size, height: size }}
-      className="pointer-events-none"
-    />
-  );
-}
 
 export default function AI() {
   const { t } = useTranslation();
@@ -175,10 +71,10 @@ export default function AI() {
               className="flex flex-col items-center pt-4 pb-5"
             >
               <div className="relative">
-                <AIParticles size={72} />
+                <ParticlesIcon size={72} colorRgb="34, 197, 94" className="pointer-events-none" />
               </div>
               <h1 className="mt-3 text-lg font-semibold text-foreground">
-                Dr.AI
+                Doctor AI
               </h1>
               <p className="text-sm text-muted-foreground">
                 Персональный ассистент
@@ -269,7 +165,7 @@ export default function AI() {
                   >
                     {m.role === "assistant" ? (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <AIParticles size={20} />
+                        <ParticlesIcon size={20} colorRgb="34, 197, 94" className="pointer-events-none" />
                       </div>
                     ) : (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">

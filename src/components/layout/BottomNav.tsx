@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ParticleButton } from "./ParticleButton";
+import { ParticlesIcon } from "@/components/ParticlesIcon";
 
 const LEFT_TABS = [
   { path: "/control", icon: Home, key: "tabs.home" },
@@ -74,10 +74,13 @@ const BottomNav = ({ visible = true }: BottomNavProps) => {
 
         <button
           onClick={handleAIClick}
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-transform duration-200 active:scale-95 focus:outline-none"
+          className={cn(
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-transform duration-200 active:scale-95 focus:outline-none",
+            location.pathname === AI_PATH ? "text-white" : "text-muted-foreground"
+          )}
           aria-label={t("tabs.ai")}
         >
-          <ParticleButton size={40} />
+          <ParticlesIcon size={40} active={location.pathname === AI_PATH} className="pointer-events-none" />
         </button>
 
         {RIGHT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}

@@ -243,7 +243,7 @@
     "statusNoShow": "no show"
   },
   "ai": {
-    "welcome": "Hello. I'm Dr.AI. How can I help?",
+    "welcome": "Hello. I'm Doctor AI. How can I help?",
     "choosePrompt": "Choose a prompt or type your question",
     "newChat": "New chat",
     "placeholder": "Type a message...",
