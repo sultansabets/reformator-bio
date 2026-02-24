@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const VISUAL_SIZE = 320;
-const ATOM_COUNT = Math.floor(42 * 1.25);
+const ATOM_COUNT = Math.floor(42 * 1.25 * 1.25);
 const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;
@@ -356,7 +356,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
 
       drawSmoothBlob(ctx, center, controlRadii, rot);
       ctx.strokeStyle = hex;
-      ctx.lineWidth = 0.45;
+      ctx.lineWidth = 0.28;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.stroke();
