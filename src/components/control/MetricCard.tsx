@@ -23,9 +23,12 @@ export interface MetricCardProps {
   label: string;
   onClick?: () => void;
   className?: string;
+  /** Larger circle for main page 2-card layout */
+  size?: "default" | "large";
 }
 
 const CIRCLE_SIZE = 76;
+const CIRCLE_SIZE_LARGE = 84;
 const STROKE_WIDTH = 3;
 
 export function MetricCard({
@@ -34,12 +37,14 @@ export function MetricCard({
   label,
   onClick,
   className,
+  size = "default",
 }: MetricCardProps) {
   const clamped = Math.min(100, Math.max(0, Math.round(percent)));
   const color = getColorFromPercent(clamped);
   const glowColor = getGlowColorFromPercent(clamped);
 
-  const radius = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
+  const circleSize = size === "large" ? CIRCLE_SIZE_LARGE : CIRCLE_SIZE;
+  const radius = (circleSize - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (clamped / 100) * circumference;
 
@@ -54,24 +59,24 @@ export function MetricCard({
         className,
       )}
     >
-      <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+      <div className="relative" style={{ width: circleSize, height: circleSize }}>
         <svg
-          width={CIRCLE_SIZE}
-          height={CIRCLE_SIZE}
-          viewBox={`0 0 ${CIRCLE_SIZE} ${CIRCLE_SIZE}`}
+          width={circleSize}
+          height={circleSize}
+          viewBox={`0 0 ${circleSize} ${circleSize}`}
           className="absolute left-0 top-0"
         >
           <circle
-            cx={CIRCLE_SIZE / 2}
-            cy={CIRCLE_SIZE / 2}
+            cx={circleSize / 2}
+            cy={circleSize / 2}
             r={radius}
             fill="none"
             stroke="hsl(var(--border))"
             strokeWidth={STROKE_WIDTH}
           />
           <motion.circle
-            cx={CIRCLE_SIZE / 2}
-            cy={CIRCLE_SIZE / 2}
+            cx={circleSize / 2}
+            cy={circleSize / 2}
             r={radius}
             fill="none"
             stroke={color}
@@ -79,7 +84,7 @@ export function MetricCard({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
-            transform={`rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})`}
+            transform={`rotate(-90 ${circleSize / 2} ${circleSize / 2})`}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashOffset }}
             transition={{ duration: 1.2, ease: "easeOut" }}

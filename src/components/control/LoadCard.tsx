@@ -21,9 +21,10 @@ function LoadIcon({ className }: { className?: string }) {
 export interface LoadCardProps {
   percent: number;
   onClick?: () => void;
+  size?: "default" | "large";
 }
 
-export function LoadCard({ percent, onClick }: LoadCardProps) {
+export function LoadCard({ percent, onClick, size }: LoadCardProps) {
   const { t } = useTranslation();
   return (
     <MetricCard
@@ -31,6 +32,7 @@ export function LoadCard({ percent, onClick }: LoadCardProps) {
       icon={<LoadIcon className="h-7 w-7" />}
       label={t("center.load")}
       onClick={onClick}
+      size={size}
     />
   );
 }

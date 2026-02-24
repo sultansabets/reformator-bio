@@ -7,7 +7,6 @@ import { useHealthStore } from "@/store/healthStore";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
-import { RecoveryCard } from "@/components/control/RecoveryCard";
 import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 import { DateNavigator } from "@/components/control/DateNavigator";
@@ -34,7 +33,6 @@ const ControlCenter = () => {
   const hydrate = useHealthStore((s) => s.hydrate);
   const sleepPercent = useHealthStore((s) => s.sleepPercent);
   const loadPercent = useHealthStore((s) => s.loadPercent);
-  const recovery = useHealthStore((s) => s.recovery);
   const stress = useHealthStore((s) => s.stress);
   const mainStateScore = useHealthStore((s) => s.mainStateScore);
   const steps = useHealthStore((s) => s.steps);
@@ -99,10 +97,11 @@ const ControlCenter = () => {
         <DateNavigator />
       </motion.div>
 
-      <motion.div variants={item} className="mb-4">
-        <div className="grid grid-cols-3 gap-3">
+      <motion.div variants={item} className="mb-4 flex justify-center">
+        <div className="grid w-full max-w-[320px] grid-cols-2 justify-items-center gap-x-12 gap-y-2">
           <SleepCard
             percent={sleepPercent}
+            size="large"
             onClick={() =>
               openMetricSheet({
                 key: "sleep",
@@ -111,18 +110,9 @@ const ControlCenter = () => {
               })
             }
           />
-          <RecoveryCard
-            percent={recovery}
-            onClick={() =>
-              openMetricSheet({
-                key: "recovery",
-                title: t("center.recovery"),
-                percent: recovery,
-              })
-            }
-          />
           <LoadCard
             percent={loadPercent}
+            size="large"
             onClick={() =>
               openMetricSheet({
                 key: "load",

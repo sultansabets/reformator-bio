@@ -6,9 +6,10 @@ import { MetricCard } from "./MetricCard";
 export interface SleepCardProps {
   percent: number;
   onClick?: () => void;
+  size?: "default" | "large";
 }
 
-export function SleepCard({ percent, onClick }: SleepCardProps) {
+export function SleepCard({ percent, onClick, size }: SleepCardProps) {
   const { t } = useTranslation();
   return (
     <MetricCard
@@ -16,6 +17,7 @@ export function SleepCard({ percent, onClick }: SleepCardProps) {
       icon={<Moon className="h-7 w-7" />}
       label={t("center.sleep")}
       onClick={onClick}
+      size={size}
     />
   );
 }
