@@ -98,7 +98,7 @@ const ControlCenter = () => {
       </motion.div>
 
       <motion.div variants={item} className="mb-4 flex justify-center">
-        <div className="grid w-full max-w-[320px] grid-cols-2 justify-items-center gap-x-12 gap-y-2">
+        <div className="grid w-full max-w-[260px] grid-cols-2 justify-items-center gap-x-6 gap-y-2">
           <SleepCard
             percent={sleepPercent}
             size="large"

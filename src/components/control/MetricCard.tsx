@@ -28,8 +28,9 @@ export interface MetricCardProps {
 }
 
 const CIRCLE_SIZE = 76;
-const CIRCLE_SIZE_LARGE = 84;
+const CIRCLE_SIZE_LARGE = 94;
 const STROKE_WIDTH = 3;
+const STROKE_WIDTH_LARGE = 4;
 
 export function MetricCard({
   percent,
@@ -44,7 +45,8 @@ export function MetricCard({
   const glowColor = getGlowColorFromPercent(clamped);
 
   const circleSize = size === "large" ? CIRCLE_SIZE_LARGE : CIRCLE_SIZE;
-  const radius = (circleSize - STROKE_WIDTH) / 2;
+  const strokeWidth = size === "large" ? STROKE_WIDTH_LARGE : STROKE_WIDTH;
+  const radius = (circleSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (clamped / 100) * circumference;
 
@@ -54,7 +56,8 @@ export function MetricCard({
       onClick={onClick}
       className={cn(
         "flex w-full flex-col items-center justify-center px-2 py-3",
-        "min-h-[130px] transition-transform duration-200",
+        size === "large" ? "min-h-[150px]" : "min-h-[130px]",
+        "transition-transform duration-200",
         "active:scale-[0.96] hover:opacity-80",
         className,
       )}
@@ -72,7 +75,7 @@ export function MetricCard({
             r={radius}
             fill="none"
             stroke="hsl(var(--border))"
-            strokeWidth={STROKE_WIDTH}
+            strokeWidth={strokeWidth}
           />
           <motion.circle
             cx={circleSize / 2}
@@ -80,7 +83,7 @@ export function MetricCard({
             r={radius}
             fill="none"
             stroke={color}
-            strokeWidth={STROKE_WIDTH}
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
