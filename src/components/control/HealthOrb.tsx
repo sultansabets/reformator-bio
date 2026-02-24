@@ -7,9 +7,9 @@ const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;
 
-const CONTROL_POINTS = 12;
-const BASE_AMPLITUDE = 4;
-const MAX_AMPLITUDE = 6;
+const CONTROL_POINTS = 16;
+const BASE_AMPLITUDE = 8;
+const MAX_AMPLITUDE = 12;
 /** 1 full rotation ~15 sec at 60fps */
 const ROTATION_SPEED = (2 * Math.PI) / (15 * 60);
 
@@ -27,24 +27,28 @@ function getColorFromScore(score: number): string {
   return "#ff3b30";
 }
 
-function smoothNoise(angle: number, time: number, seed: number): number {
-  const t = time * 0.00008;
-  const a1 = Math.sin(angle * 2 + t * 0.7 + seed) * 0.5;
-  const a2 = Math.sin(angle * 3 + t * 0.5 + seed * 1.3) * 0.3;
-  const a3 = Math.sin(angle + t * 0.3 + seed * 0.7) * 0.2;
-  return a1 + a2 + a3;
+/** Returns -1..1; mix of waves for bulge + inward flow. phaseOffset makes bulge flow with rotation */
+function smoothNoise(angle: number, time: number, seed: number, phaseOffset: number): number {
+  const t = time * 0.00012;
+  const a = angle + phaseOffset;
+  const a1 = Math.sin(a * 2 + t * 0.9 + seed) * 0.45;
+  const a2 = Math.sin(a * 3 + t * 0.6 + seed * 1.3) * 0.35;
+  const a3 = Math.sin(a + t * 0.4 + seed * 0.7) * 0.2;
+  return Math.max(-1, Math.min(1, a1 + a2 + a3));
 }
 
-/** Soft periodic bulge: amplitude varies gently 1.0–1.05 over ~8 sec */
+/** Soft global swell: amplitude varies 1.0–1.04 over ~6 sec */
 function getDeformMultiplier(elapsed: number): number {
   const t = elapsed * 0.001;
-  return 1 + Math.sin(t * 0.8) * 0.025;
+  return 1 + Math.sin(t * 1.0) * 0.02;
 }
 
+/** Asymmetric stretch: bulge in one region, squeeze in another */
 function getSquishFactor(angle: number, rotation: number): number {
-  const relativeAngle = angle + rotation;
-  const squish = Math.cos(relativeAngle * 2) * 0.012;
-  return 1 + squish;
+  const a = angle + rotation;
+  const s1 = Math.sin(a * 2) * 0.02;
+  const s2 = Math.cos(a * 3 + 0.5) * 0.015;
+  return 1 + s1 + s2;
 }
 
 const MAX_BLOB_OFFSET = 0.15;
@@ -247,7 +251,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const controlRadii: number[] = [];
       for (let i = 0; i < CONTROL_POINTS; i++) {
         const angle = (i / CONTROL_POINTS) * Math.PI * 2;
-        const noise = smoothNoise(angle, elapsed, seeds[i]);
+        const noise = smoothNoise(angle, elapsed, seeds[i], rot * 1.15);
         const squish = getSquishFactor(angle, rot);
         const deformation = noise * currentAmplitude * squish;
         const radius = (BASE_RADIUS + deformation) * easeOut;
