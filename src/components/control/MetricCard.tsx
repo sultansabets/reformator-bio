@@ -29,8 +29,8 @@ export interface MetricCardProps {
 
 const CIRCLE_SIZE = 76;
 const CIRCLE_SIZE_LARGE = 94;
-const STROKE_WIDTH = 3;
-const STROKE_WIDTH_LARGE = 4;
+const STROKE_WIDTH = 0.3;
+const STROKE_WIDTH_LARGE = 0.3;
 
 export function MetricCard({
   percent,

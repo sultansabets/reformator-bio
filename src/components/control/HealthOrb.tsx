@@ -14,7 +14,7 @@ const MAX_AMPLITUDE = 12;
 const ROTATION_SPEED = (2 * Math.PI) / (15 * 60);
 const ENERGY_MODE_SEC = 30;
 const QUOTE_MODE_SEC = 10;
-const PARTICLES_FADE_MS = 700;
+const PARTICLES_FADE_MS = 400;
 
 const QUOTES = [
   "Мы живем ту жизнь, на которую нам хватило смелости.",
@@ -383,7 +383,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none overflow-hidden">
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-center px-6 transition-opacity duration-700 ${
+            className={`absolute inset-0 flex flex-col items-center justify-center px-6 transition-opacity duration-[400ms] ease-out ${
               mode === "energy" ? "opacity-100" : "opacity-0"
             }`}
           >
@@ -395,12 +395,12 @@ export default function HealthOrb({ score }: HealthOrbProps) {
             </span>
           </div>
           <div
-            className={`absolute inset-0 flex items-center justify-center px-6 transition-opacity duration-700 ${
-              mode === "quote" ? "opacity-100" : "opacity-0"
+            className={`absolute inset-0 flex items-center justify-center px-6 transition-opacity duration-[400ms] ease-out ${
+              mode === "quote" ? "opacity-100 delay-100" : "opacity-0"
             }`}
           >
             <div className="absolute inset-[20%] rounded-full bg-black/[0.04]" aria-hidden />
-            <p className="relative max-w-[80%] text-center text-xl font-normal leading-relaxed text-foreground/75">
+            <p className="relative max-w-[80%] text-center text-sm font-normal leading-relaxed text-foreground/75">
               «{QUOTES[quoteIndex]}»
             </p>
           </div>
