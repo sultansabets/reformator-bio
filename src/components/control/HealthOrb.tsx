@@ -7,12 +7,11 @@ const BASE_RADIUS = VISUAL_SIZE * 0.38;
 const INNER_RADIUS = 40;
 const MOUNT_DURATION_MS = 2000;
 
-const CONTROL_POINTS = 8;
-const BASE_AMPLITUDE = 7;
-const MAX_AMPLITUDE = 10;
-const ROTATION_SPEED = 0.00015;
-const TENSION_CYCLE_MS = 5000;
-const TENSION_BURST_DURATION = 1000;
+const CONTROL_POINTS = 12;
+const BASE_AMPLITUDE = 4;
+const MAX_AMPLITUDE = 6;
+/** 1 full rotation ~15 sec at 60fps */
+const ROTATION_SPEED = (2 * Math.PI) / (15 * 60);
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -29,29 +28,22 @@ function getColorFromScore(score: number): string {
 }
 
 function smoothNoise(angle: number, time: number, seed: number): number {
-  const t = time * 0.0001;
+  const t = time * 0.00008;
   const a1 = Math.sin(angle * 2 + t * 0.7 + seed) * 0.5;
   const a2 = Math.sin(angle * 3 + t * 0.5 + seed * 1.3) * 0.3;
   const a3 = Math.sin(angle + t * 0.3 + seed * 0.7) * 0.2;
   return a1 + a2 + a3;
 }
 
-function getTensionMultiplier(elapsed: number): number {
-  const cyclePosition = elapsed % TENSION_CYCLE_MS;
-  const burstStart = TENSION_CYCLE_MS - TENSION_BURST_DURATION;
-  
-  if (cyclePosition < burstStart) {
-    return 1;
-  }
-  
-  const burstProgress = (cyclePosition - burstStart) / TENSION_BURST_DURATION;
-  const burstCurve = Math.sin(burstProgress * Math.PI);
-  return 1 + burstCurve * 0.2;
+/** Soft periodic bulge: amplitude varies gently 1.0–1.05 over ~8 sec */
+function getDeformMultiplier(elapsed: number): number {
+  const t = elapsed * 0.001;
+  return 1 + Math.sin(t * 0.8) * 0.025;
 }
 
 function getSquishFactor(angle: number, rotation: number): number {
   const relativeAngle = angle + rotation;
-  const squish = Math.cos(relativeAngle * 2) * 0.015;
+  const squish = Math.cos(relativeAngle * 2) * 0.012;
   return 1 + squish;
 }
 
@@ -242,15 +234,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       const easeOut = 1 - Math.pow(1 - mountProgress, 1.3);
 
       if (!reducedMotionRef.current) {
-        rotationRef.current += ROTATION_SPEED * dt;
+        rotationRef.current += ROTATION_SPEED * Math.min(dt, 2);
       }
 
       const hex = colorRef.current;
       const [r, g, b] = hexToRgb(hex);
       const rot = rotationRef.current;
 
-      const tensionMult = getTensionMultiplier(elapsed);
-      const currentAmplitude = Math.min(BASE_AMPLITUDE * tensionMult, MAX_AMPLITUDE);
+      const deformMult = getDeformMultiplier(elapsed);
+      const currentAmplitude = Math.min(BASE_AMPLITUDE * deformMult, MAX_AMPLITUDE);
 
       const controlRadii: number[] = [];
       for (let i = 0; i < CONTROL_POINTS; i++) {
@@ -268,6 +260,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       ctx.scale(dpr, dpr);
 
       drawSmoothBlob(ctx, center, controlRadii, rot);
+      ctx.save();
       ctx.clip();
 
       for (let i = 0; i < atoms.length; i++) {
@@ -310,6 +303,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
       }
 
       ctx.globalAlpha = 1;
+      ctx.restore();
+
+      drawSmoothBlob(ctx, center, controlRadii, rot);
+      ctx.strokeStyle = hex;
+      ctx.lineWidth = 0.45;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+
       ctx.restore();
 
       rafRef.current = requestAnimationFrame(draw);
