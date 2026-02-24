@@ -114,20 +114,88 @@ const MOCK_SUBSCRIPTIONS = [
 
 function MedicalTab() {
   const { t } = useTranslation();
+  const [medicalCard, setMedicalCard] = useState<import("@/services/notionMedicalCard").ParsedMedicalCard | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { getMedicalCard, parseMedicalCard } = await import("@/services/notionMedicalCard");
+        const data = await getMedicalCard();
+        const parsed = parseMedicalCard(data.page, data.blocks);
+        setMedicalCard(parsed);
+      } catch {
+        setMedicalCard(null);
+      }
+    };
+    load();
+  }, []);
+
+  const hasPatientInfo =
+    medicalCard &&
+    (medicalCard.name || medicalCard.phone || medicalCard.admissionDate || medicalCard.birthDate || medicalCard.checkup || medicalCard.status);
+
   return (
-    <Card className="border border-border">
-      <CardContent className="divide-y divide-border p-0">
-        {LAB_ITEM_KEYS.map((key) => (
-          <div
-            key={key}
-            className="flex items-center justify-between px-4 py-3"
-          >
-            <span className="text-sm font-medium text-foreground">{t(`profile.${key}`)}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {hasPatientInfo && (
+        <Card className="border border-border">
+          <CardContent className="p-4 space-y-2">
+            {medicalCard.name && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("profile.firstName")}: </span>
+                <span className="font-medium text-foreground">{medicalCard.name}</span>
+              </div>
+            )}
+            {medicalCard.phone && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("auth.phone")}: </span>
+                <span className="font-medium text-foreground">{medicalCard.phone}</span>
+              </div>
+            )}
+            {medicalCard.birthDate && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("profile.dob")}: </span>
+                <span className="font-medium text-foreground">{medicalCard.birthDate}</span>
+              </div>
+            )}
+            {medicalCard.admissionDate && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("profile.admissionDate")}: </span>
+                <span className="font-medium text-foreground">{medicalCard.admissionDate}</span>
+              </div>
+            )}
+            {(medicalCard.checkup || medicalCard.status) && (
+              <div className="flex gap-4 text-sm">
+                {medicalCard.checkup && (
+                  <span>
+                    <span className="text-muted-foreground">{t("profile.checkup")}: </span>
+                    <span className="font-medium text-foreground">{medicalCard.checkup}</span>
+                  </span>
+                )}
+                {medicalCard.status && (
+                  <span>
+                    <span className="text-muted-foreground">{t("settings.status")}: </span>
+                    <span className="font-medium text-foreground">{medicalCard.status}</span>
+                  </span>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      <Card className="border border-border">
+        <CardContent className="divide-y divide-border p-0">
+          {LAB_ITEM_KEYS.map((key) => (
+            <div
+              key={key}
+              className="flex items-center justify-between px-4 py-3"
+            >
+              <span className="text-sm font-medium text-foreground">{t(`profile.${key}`)}</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

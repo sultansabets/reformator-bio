@@ -353,6 +353,8 @@
     "sportDoctor": "Sports doctor",
     "rehab": "Rehabilitator",
     "psychotherapist": "Psychotherapist",
+    "admissionDate": "Admission date",
+    "checkup": "Checkup",
     "treatingDoctor": "Treating doctor",
     "statusCame": "attended",
     "statusPlanned": "planned",

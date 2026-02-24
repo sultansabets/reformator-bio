@@ -354,6 +354,8 @@
     "sportDoctor": "Спортврач",
     "rehab": "Реабилитолог",
     "psychotherapist": "Психотерапевт",
+    "admissionDate": "Дата приёма",
+    "checkup": "Чекап",
     "treatingDoctor": "Врач",
     "statusCame": "пришел",
     "statusPlanned": "планируется",
