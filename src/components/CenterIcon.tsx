@@ -7,11 +7,15 @@ export interface CenterIconProps {
 
 const STROKE_INACTIVE = 1.8;
 const STROKE_ACTIVE = 2.2;
+const CX = 12;
+const CY = 12;
+const R = 8;
 
-/** 4 squares 2x2 grid, stroke-only. Active: top-left filled white, others outline only. */
+/** Circle with pie-segment. Active: segment fills white. */
 export function CenterIcon({ active, className }: CenterIconProps) {
   const strokeWidth = active ? STROKE_ACTIVE : STROKE_INACTIVE;
-  const transition = "transition-[fill] duration-200";
+  // 90° segment: top → right (12 o'clock to 3 o'clock)
+  const segmentPath = `M ${CX} ${CY} L ${CX} ${CY - R} A ${R} ${R} 0 0 1 ${CX + R} ${CY} Z`;
 
   return (
     <svg
@@ -19,42 +23,19 @@ export function CenterIcon({ active, className }: CenterIconProps) {
       className={cn("h-6 w-6 text-current", className)}
       aria-hidden
     >
-      <rect
-        x={0}
-        y={0}
-        width={11}
-        height={11}
-        rx={1}
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        className={cn(transition, active ? "fill-white" : "fill-none")}
-      />
-      <rect
-        x={13}
-        y={0}
-        width={11}
-        height={11}
-        rx={1}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-      />
-      <rect
-        x={0}
-        y={13}
-        width={11}
-        height={11}
-        rx={1}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-      />
-      <rect
-        x={13}
-        y={13}
-        width={11}
-        height={11}
-        rx={1}
+      <g
+        style={{ transformOrigin: `${CX}px ${CY}px` }}
+        className={cn(
+          "transition-[opacity,transform] duration-200",
+          active ? "opacity-100 scale-100" : "opacity-0 scale-90"
+        )}
+      >
+        <path d={segmentPath} fill="#FFFFFF" />
+      </g>
+      <circle
+        cx={CX}
+        cy={CY}
+        r={R}
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
