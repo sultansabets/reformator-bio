@@ -28,9 +28,9 @@ export interface MetricCardProps {
 }
 
 const CIRCLE_SIZE = 76;
-const CIRCLE_SIZE_LARGE = 150;
+const CIRCLE_SIZE_LARGE = 120;
 const STROKE_WIDTH = 0.3;
-const STROKE_WIDTH_LARGE = 0.5;
+const STROKE_WIDTH_LARGE = 0.4;
 
 export function MetricCard({
   percent,
@@ -56,7 +56,7 @@ export function MetricCard({
       onClick={onClick}
       className={cn(
         "flex w-full flex-col items-center justify-center px-2 py-3",
-        size === "large" ? "min-h-[210px]" : "min-h-[130px]",
+        size === "large" ? "min-h-[180px]" : "min-h-[130px]",
         "transition-transform duration-200",
         "active:scale-[0.96] hover:opacity-80",
         className,
