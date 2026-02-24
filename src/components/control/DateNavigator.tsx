@@ -30,7 +30,7 @@ export function DateNavigator() {
 
   return (
     <>
-      <div className="flex items-center justify-center gap-2 py-2">
+      <div className="flex w-fit max-w-full items-center justify-center gap-4 py-2">
         <button
           type="button"
           onClick={goPrev}
