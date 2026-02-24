@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 const VISUAL_SIZE = 320;
@@ -12,6 +12,15 @@ const BASE_AMPLITUDE = 8;
 const MAX_AMPLITUDE = 12;
 /** 1 full rotation ~15 sec at 60fps */
 const ROTATION_SPEED = (2 * Math.PI) / (15 * 60);
+const ENERGY_MODE_SEC = 30;
+const QUOTE_MODE_SEC = 10;
+const PARTICLES_FADE_MS = 700;
+
+const QUOTES = [
+  "Мы живем ту жизнь, на которую нам хватило смелости.",
+  "Ты не сможешь изменить то, что готов оправдать.",
+  "Все, что мы не меняем, мы выбираем.",
+];
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -179,6 +188,9 @@ interface HealthOrbProps {
 
 export default function HealthOrb({ score }: HealthOrbProps) {
   const { t } = useTranslation();
+  const [mode, setMode] = useState<"energy" | "quote">("energy");
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const atomsRef = useRef<Atom[] | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -188,10 +200,35 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const rotationRef = useRef(0);
   const reducedMotionRef = useRef(false);
   const noiseSeedsRef = useRef<number[]>([]);
+  const modeRef = useRef<"energy" | "quote">("energy");
+  const modeChangeTimeRef = useRef<number>(0);
 
   const color = useMemo(() => getColorFromScore(score), [score]);
   colorRef.current = color;
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+
+  useEffect(() => {
+    let tick = 0;
+    const id = setInterval(() => {
+      tick++;
+      if (tick === ENERGY_MODE_SEC) {
+        setMode("quote");
+        modeRef.current = "quote";
+        modeChangeTimeRef.current = performance.now();
+      } else if (tick >= ENERGY_MODE_SEC + QUOTE_MODE_SEC) {
+        tick = 0;
+        setQuoteIndex((i) => (i + 1) % QUOTES.length);
+        setMode("energy");
+        modeRef.current = "energy";
+        modeChangeTimeRef.current = performance.now();
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     reducedMotionRef.current =
@@ -298,7 +335,15 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           atom.opacity = atom.maxOpacity * 0.5;
         }
 
-        const op = atom.opacity * mountProgress;
+        const particlesOpacity = (() => {
+          const m = modeRef.current;
+          const t0 = modeChangeTimeRef.current;
+          const progress = Math.min(1, (timestamp - t0) / PARTICLES_FADE_MS);
+          const smooth = progress * progress * (3 - 2 * progress);
+          return m === "energy" ? smooth : 1 - smooth;
+        })();
+
+        const op = atom.opacity * mountProgress * particlesOpacity;
         if (op < 0.03) continue;
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
@@ -336,13 +381,29 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           className="absolute left-0 top-0"
           style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-          <span className="text-xs uppercase tracking-widest text-muted-foreground">
-            {t("metrics.state")}
-          </span>
-          <span className="mt-2 text-5xl font-bold tracking-tight text-foreground">
-            {displayScore}%
-          </span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none overflow-hidden">
+          <div
+            className={`absolute inset-0 flex flex-col items-center justify-center px-6 transition-opacity duration-700 ${
+              mode === "energy" ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">
+              {t("metrics.state")}
+            </span>
+            <span className="mt-2 text-5xl font-bold tracking-tight text-foreground">
+              {displayScore}%
+            </span>
+          </div>
+          <div
+            className={`absolute inset-0 flex items-center justify-center px-8 transition-opacity duration-700 ${
+              mode === "quote" ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="absolute inset-[20%] rounded-full bg-black/[0.04]" aria-hidden />
+            <p className="relative max-w-[260px] text-center text-2xl font-medium leading-snug text-foreground/85">
+              {QUOTES[quoteIndex]}
+            </p>
+          </div>
         </div>
       </div>
     </div>
