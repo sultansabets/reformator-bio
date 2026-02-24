@@ -393,14 +393,14 @@ const AppLayout = () => {
         <HealthStoreHydrator />
         <main
           className={`flex-1 transition-colors duration-300 ${
-            isAI ? "bg-[#000000] pb-4" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
+            isAI ? "bg-[#000000]" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
           }`}
           style={isAI ? { backgroundColor: "#000000" } : undefined}
         >
           <Outlet />
         </main>
       </div>
-      {!isAI && <BottomNav />}
+      <BottomNav />
 
       {/* Уведомления: простой modal */}
       <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen}>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const INPUT_BAR_HEIGHT = 56;
+const MENU_BAR_HEIGHT = 80;
 
 const PROMPT_KEYS = ["recovery", "testosterone", "cortisol", "energy", "labs", "overtrain"] as const;
 
@@ -82,7 +83,7 @@ export default function AI() {
   };
 
   const hasMessages = messages.length > 0;
-  const inputPaddingBottom = INPUT_BAR_HEIGHT + keyboardHeight;
+  const inputPaddingBottom = INPUT_BAR_HEIGHT + MENU_BAR_HEIGHT + keyboardHeight;
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#000000]" style={{ backgroundColor: "#000000" }}>
@@ -220,11 +221,11 @@ export default function AI() {
         </div>
       </div>
 
-      {/* Fixed input bar */}
+      {/* Fixed input bar (above BottomNav) */}
       <div
         className="fixed left-0 right-0 z-40 border-t border-border bg-background px-4 py-3"
         style={{
-          bottom: 0,
+          bottom: MENU_BAR_HEIGHT,
           paddingBottom: "max(12px, env(safe-area-inset-bottom))",
           transform: `translateY(-${keyboardHeight}px)`,
         }}
