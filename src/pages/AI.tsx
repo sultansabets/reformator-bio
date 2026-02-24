@@ -85,7 +85,7 @@ export default function AI() {
   const inputPaddingBottom = INPUT_BAR_HEIGHT + keyboardHeight;
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col bg-[#000000]" style={{ backgroundColor: "#000000" }}>
       {/* Scrollable content */}
       <div
         ref={scrollRef}

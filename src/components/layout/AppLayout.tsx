@@ -103,14 +103,21 @@ const AppLayout = () => {
   };
 
   return (
-    <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden bg-background transition-colors duration-300">
+    <div
+      className={`mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden transition-colors duration-300 ${
+        isAI ? "bg-[#000000]" : "bg-background"
+      }`}
+      style={isAI ? { backgroundColor: "#000000" } : undefined}
+    >
       <div
         ref={scrollRef}
-        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+        className={`flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] ${
+          isAI ? "pt-14" : ""
+        }`}
       >
       <header
-        className={`sticky top-0 z-40 ${isAI ? "bg-[#000]" : "bg-background dark:border-0"}`}
-        style={isAI ? { backgroundColor: "#000" } : undefined}
+        className={`z-40 ${isAI ? "fixed left-0 right-0 top-0 mx-auto max-w-[28rem] border-0 bg-[#000000]" : "sticky top-0 bg-background dark:border-0"}`}
+        style={isAI ? { backgroundColor: "#000000" } : undefined}
       >
         <div className="relative flex h-14 items-center justify-between px-4">
           {isAI ? (
@@ -118,7 +125,7 @@ const AppLayout = () => {
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10 -ml-2"
+                className="-ml-2 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
                 aria-label={t("common.back")}
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -134,15 +141,15 @@ const AppLayout = () => {
                 <button
                   type="button"
                   onClick={() => setNotificationsOpen(true)}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10"
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
                   aria-label={t("settings.ariaNotifications")}
                 >
                   <Bell className="h-5 w-5" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/profile")}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10"
+                  onClick={() => navigate("/profile", { state: { from: "/ai" } })}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
                   aria-label={t("tabs.profile")}
                 >
                   <User className="h-5 w-5" />
@@ -384,7 +391,10 @@ const AppLayout = () => {
         </DialogContent>
       </Dialog>
         <HealthStoreHydrator />
-        <main className="flex-1 pb-4 transition-colors duration-300">
+        <main
+          className={`flex-1 transition-colors duration-300 ${isAI ? "bg-[#000000] pb-4" : "pb-4"}`}
+          style={isAI ? { backgroundColor: "#000000" } : undefined}
+        >
           <Outlet />
         </main>
       </div>
