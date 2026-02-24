@@ -1,11 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useScrollSource } from "@/contexts/ScrollSourceContext";
+import { useKeyboard } from "@/contexts/KeyboardContext";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Send, User, Paperclip, RotateCcw } from "lucide-react";
 import { ParticlesIcon } from "@/components/ParticlesIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const INPUT_BAR_HEIGHT = 56;
 
 const PROMPT_KEYS = ["recovery", "testosterone", "cortisol", "energy", "labs", "overtrain"] as const;
 
@@ -16,8 +19,10 @@ type Message = { role: "user" | "assistant"; text: string };
 export default function AI() {
   const { t } = useTranslation();
   const scrollSource = useScrollSource();
+  const setKeyboardOpen = useKeyboard()?.setKeyboardOpen;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -27,14 +32,32 @@ export default function AI() {
   }, [scrollSource]);
 
   useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => {
+      const height = window.innerHeight - vv.height;
+      setKeyboardHeight(height > 50 ? height : 0);
+    };
+    vv.addEventListener("resize", handler);
+    vv.addEventListener("scroll", handler);
+    return () => {
+      vv.removeEventListener("resize", handler);
+      vv.removeEventListener("scroll", handler);
+    };
+  }, []);
+
+  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const send = (text: string) => {
+  const send = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
     setInput("");
+
+    inputRef.current?.blur();
+    setKeyboardOpen?.(false);
 
     const matchedKey = PROMPT_KEYS.find((k) =>
       trimmed.toLowerCase().includes((t(`ai.prompts.${k}`) as string).toLowerCase())
@@ -45,21 +68,29 @@ export default function AI() {
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     }, 600);
-  };
+  }, [t, setKeyboardOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     send(input);
   };
 
+  const handleFocus = () => setKeyboardOpen?.(true);
+  const handleBlur = () => {
+    setKeyboardOpen?.(false);
+    setKeyboardHeight(0);
+  };
+
   const hasMessages = messages.length > 0;
+  const inputPaddingBottom = INPUT_BAR_HEIGHT + keyboardHeight;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Scrollable content */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto overscroll-contain"
+        style={{ paddingBottom: `calc(${inputPaddingBottom}px + env(safe-area-inset-bottom, 0px) + 16px)` }}
       >
         <div className="px-5 py-4">
           {/* AI Hero - compact */}
@@ -190,9 +221,13 @@ export default function AI() {
       </div>
 
       {/* Fixed input bar */}
-      <div 
-        className="shrink-0 border-t border-border bg-background px-4 py-3"
-        style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
+      <div
+        className="fixed left-0 right-0 z-40 border-t border-border bg-background px-4 py-3"
+        style={{
+          bottom: 0,
+          paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          transform: `translateY(-${keyboardHeight}px)`,
+        }}
       >
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <button
@@ -206,6 +241,8 @@ export default function AI() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder={t("ai.placeholder")}
             className="flex-1 h-10 rounded-xl border-border bg-card text-sm"
           />

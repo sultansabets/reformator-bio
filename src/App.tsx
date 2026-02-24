@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ScrollSourceProvider } from "@/contexts/ScrollSourceContext";
+import { KeyboardProvider } from "@/contexts/KeyboardContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/Login";
@@ -35,6 +36,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <ScrollSourceProvider>
+            <KeyboardProvider>
             <SplashScreen />
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -56,6 +58,7 @@ const App = () => (
             <Route path="/smart-wake" element={<ProtectedRoute><SmartWake /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+            </KeyboardProvider>
             </ScrollSourceProvider>
           </AuthProvider>
         </BrowserRouter>

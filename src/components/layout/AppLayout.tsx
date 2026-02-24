@@ -22,6 +22,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BottomNav from "./BottomNav";
+import { useKeyboard } from "@/contexts/KeyboardContext";
 import { DevicesPopover } from "@/components/DevicesPopover";
 import { HealthStoreHydrator } from "@/components/HealthStoreHydrator";
 import logoLight from "@/assets/logo-light.png";
@@ -91,6 +92,8 @@ const AppLayout = () => {
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { isKeyboardOpen } = useKeyboard() ?? { isKeyboardOpen: false };
+  const hideBottomNav = location.pathname === "/ai" && isKeyboardOpen;
 
   return (
     <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden bg-background transition-colors duration-300">
@@ -339,7 +342,7 @@ const AppLayout = () => {
           <Outlet />
         </main>
       </div>
-      <BottomNav />
+      {!hideBottomNav && <BottomNav />}
 
       {/* Уведомления: простой modal */}
       <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen}>
