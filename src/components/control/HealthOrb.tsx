@@ -395,13 +395,13 @@ export default function HealthOrb({ score }: HealthOrbProps) {
             </span>
           </div>
           <div
-            className={`absolute inset-0 flex items-center justify-center px-8 transition-opacity duration-700 ${
+            className={`absolute inset-0 flex items-center justify-center px-6 transition-opacity duration-700 ${
               mode === "quote" ? "opacity-100" : "opacity-0"
             }`}
           >
             <div className="absolute inset-[20%] rounded-full bg-black/[0.04]" aria-hidden />
-            <p className="relative max-w-[260px] text-center text-2xl font-medium leading-snug text-foreground/85">
-              {QUOTES[quoteIndex]}
+            <p className="relative max-w-[80%] text-center text-xl font-normal leading-relaxed text-foreground/75">
+              «{QUOTES[quoteIndex]}»
             </p>
           </div>
         </div>
