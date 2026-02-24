@@ -32,6 +32,49 @@ const CIRCLE_SIZE_LARGE = 120;
 const STROKE_WIDTH = 0.3;
 const STROKE_WIDTH_LARGE = 0.4;
 
+function MetricGlassRing({ size }: { size: number }) {
+  const center = size / 2;
+  const radius = size / 2 - 2;
+
+  return (
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="absolute inset-0 pointer-events-none"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+    >
+      <defs>
+        <radialGradient id="metric-glass-gradient" cx="50%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.24)" />
+          <stop offset="40%" stopColor="rgba(255,255,255,0.12)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
+        </radialGradient>
+      </defs>
+      <motion.ellipse
+        cx={center}
+        cy={center}
+        rx={radius}
+        ry={radius * 0.96}
+        fill="url(#metric-glass-gradient)"
+        stroke="rgba(255,255,255,0.28)"
+        strokeWidth={0.7}
+        animate={{
+          scaleX: [1, 1.02, 1],
+          scaleY: [1, 0.98, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        style={{ transformOrigin: "50% 50%" }}
+      />
+    </motion.svg>
+  );
+}
+
 export function MetricCard({
   percent,
   icon,
@@ -63,6 +106,7 @@ export function MetricCard({
       )}
     >
       <div className="relative" style={{ width: circleSize, height: circleSize }}>
+        {size === "large" && <MetricGlassRing size={circleSize} />}
         <svg
           width={circleSize}
           height={circleSize}
