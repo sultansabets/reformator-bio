@@ -9,13 +9,14 @@ const STROKE_INACTIVE = 1.8;
 const STROKE_ACTIVE = 2.2;
 const CX = 12;
 const CY = 12;
-const R = 10; /* 20px diameter — matches Lucide icon visual area */
+const R = 10;
 
-/** Circle with pie-segment. Active: segment fills white. */
+/** Equilateral triangle pointing up, centered in circle. */
+const TRIANGLE_PATH = "M 12 5 L 6 15.5 L 18 15.5 Z";
+
+/** Circle with inner triangle. Active: triangle fills white. */
 export function CenterIcon({ active, className }: CenterIconProps) {
   const strokeWidth = active ? STROKE_ACTIVE : STROKE_INACTIVE;
-  // 90° segment: top → right (12 o'clock to 3 o'clock)
-  const segmentPath = `M ${CX} ${CY} L ${CX} ${CY - R} A ${R} ${R} 0 0 1 ${CX + R} ${CY} Z`;
 
   return (
     <svg
@@ -23,15 +24,13 @@ export function CenterIcon({ active, className }: CenterIconProps) {
       className={cn("h-6 w-6 text-current", className)}
       aria-hidden
     >
-      <g
-        style={{ transformOrigin: `${CX}px ${CY}px` }}
+      <path
+        d={TRIANGLE_PATH}
         className={cn(
-          "transition-[opacity,transform] duration-200",
-          active ? "opacity-100 scale-100" : "opacity-0 scale-90"
+          "transition-colors duration-200",
+          active ? "fill-white" : "fill-current"
         )}
-      >
-        <path d={segmentPath} fill="#FFFFFF" />
-      </g>
+      />
       <circle
         cx={CX}
         cy={CY}
