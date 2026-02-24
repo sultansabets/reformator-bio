@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { AnimatePresence, motion } from "framer-motion";
 
 const VISUAL_SIZE = 320;
 const ATOM_COUNT = Math.floor(42 * 1.25 * 1.25);
@@ -255,9 +256,9 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     canvas.width = VISUAL_SIZE * dpr;
     canvas.height = VISUAL_SIZE * dpr;
 
-    const spawnRadius = BASE_RADIUS - 2;
-    const fadeInStart = spawnRadius - 15;
-    const fadeOutStart = INNER_RADIUS + 25;
+      const spawnRadius = BASE_RADIUS - 2;
+      const fadeInStart = spawnRadius - 15;
+      const fadeOutStart = INNER_RADIUS + 25;
     const seeds = noiseSeedsRef.current;
 
     const draw = (timestamp: number) => {
@@ -335,14 +336,8 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           atom.opacity = atom.maxOpacity * 0.5;
         }
 
-        const particlesOpacity = (() => {
-          const m = modeRef.current;
-          const t0 = modeChangeTimeRef.current;
-          const progress = Math.min(1, (timestamp - t0) / PARTICLES_FADE_MS);
-          const smooth = progress * progress * (3 - 2 * progress);
-          return m === "energy" ? smooth : 1 - smooth;
-        })();
-
+        // Particles stay visible for both modes; no fade-out on quote
+        const particlesOpacity = 1;
         const op = atom.opacity * mountProgress * particlesOpacity;
         if (op < 0.03) continue;
 
@@ -381,29 +376,40 @@ export default function HealthOrb({ score }: HealthOrbProps) {
           className="absolute left-0 top-0"
           style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none overflow-hidden">
-          <div
-            className={`absolute inset-0 flex flex-col items-center justify-center px-6 transition-opacity duration-[400ms] ease-out ${
-              mode === "energy" ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">
-              {t("metrics.state")}
-            </span>
-            <span className="mt-2 text-5xl font-bold tracking-tight text-foreground">
-              {displayScore}%
-            </span>
-          </div>
-          <div
-            className={`absolute inset-0 flex items-center justify-center px-6 transition-opacity duration-[400ms] ease-out ${
-              mode === "quote" ? "opacity-100 delay-100" : "opacity-0"
-            }`}
-          >
-            <div className="absolute inset-[20%] rounded-full bg-black/[0.04]" aria-hidden />
-            <p className="relative max-w-[80%] text-center text-sm font-normal leading-relaxed text-foreground/75">
-              «{QUOTES[quoteIndex]}»
-            </p>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center px-6 text-center pointer-events-none overflow-hidden">
+          <AnimatePresence mode="wait">
+            {mode === "energy" ? (
+              <motion.div
+                key="energy"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col items-center justify-center"
+              >
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                  {t("metrics.state")}
+                </span>
+                <span className="mt-2 text-5xl font-bold tracking-tight text-foreground">
+                  {displayScore}%
+                </span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="quote"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative flex items-center justify-center"
+              >
+                <div className="absolute inset-[20%] rounded-full bg-black/[0.04]" aria-hidden />
+                <p className="relative max-w-[80%] text-center text-sm font-normal leading-relaxed text-foreground/75">
+                  «{QUOTES[quoteIndex]}»
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
