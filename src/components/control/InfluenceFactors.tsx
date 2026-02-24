@@ -136,14 +136,19 @@ export function InfluenceFactors({
         return (
           <Card
             key={f.id}
-            className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995]"
+            role="button"
+            tabIndex={0}
+            className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
             style={cardBg}
+            onClick={() => setExpandedId(isExpanded ? null : f.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setExpandedId(isExpanded ? null : f.id);
+              }
+            }}
           >
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 p-3 text-left"
-              onClick={() => setExpandedId(isExpanded ? null : f.id)}
-            >
+            <div className="flex w-full items-center gap-3 p-3 text-left">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
                 <Icon
                   className="h-5 w-5 text-muted-foreground transition-colors duration-200"
@@ -176,7 +181,7 @@ export function InfluenceFactors({
               ) : (
                 <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
               )}
-            </button>
+            </div>
             <AnimatePresence initial={false}>
               {isExpanded && (
                 <motion.div
@@ -213,14 +218,19 @@ export function InfluenceFactors({
       })}
 
       <Card
-        className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995]"
+        role="button"
+        tabIndex={0}
+        className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
         style={testosteroneColor ? { backgroundColor: `${testosteroneColor}14` } : undefined}
+        onClick={() => setExpandedId(isTestosteroneExpanded ? null : "testosterone")}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpandedId(isTestosteroneExpanded ? null : "testosterone");
+          }
+        }}
       >
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 p-3 text-left"
-          onClick={() => setExpandedId(isTestosteroneExpanded ? null : "testosterone")}
-        >
+        <div className="flex w-full items-center gap-3 p-3 text-left">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
             <MarsIcon
               className="h-5 w-5 text-muted-foreground transition-colors duration-200"
@@ -261,7 +271,7 @@ export function InfluenceFactors({
           ) : (
             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
           )}
-        </button>
+        </div>
         <AnimatePresence initial={false}>
           {isTestosteroneExpanded && (
             <motion.div

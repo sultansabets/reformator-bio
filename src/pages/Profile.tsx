@@ -404,31 +404,6 @@ function MedicationsTab({ userId }: { userId: string }) {
 
   return (
     <div className="min-h-0 space-y-4">
-      {/* Full list of all medications - medical tracking style */}
-      {data.medications.length > 0 && (
-        <div className="space-y-1.5 px-1">
-          {data.medications.map((med) => {
-            const isCompleted = med.endDate && med.endDate < todayStr;
-            return (
-              <div
-                key={med.id}
-                className={`rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                  isCompleted ? "bg-muted/30 text-muted-foreground" : "bg-primary/5"
-                }`}
-              >
-                <div className="font-medium text-foreground">{med.name}</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">
-                  {getFormLabel(med.form, med.formOther, t)} • {med.dosage} {t(`profile.medicationDosageUnit${med.dosageUnit.charAt(0).toUpperCase() + med.dosageUnit.slice(1)}`)} • {t(med.frequency === "1x" ? "profile.freq1x" : med.frequency === "2x" ? "profile.freq2x" : med.frequency === "weekly" ? "profile.freqWeeklyDays" : "profile.freqCourse")}
-                </div>
-                <div className={`mt-1 text-[10px] font-medium ${isCompleted ? "text-muted-foreground" : "text-status-green"}`}>
-                  {isCompleted ? t("profile.medicationCompleted") : t("profile.medicationActive")}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* 14-day horizontal scroll */}
       <div
         className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide touch-pan-x"
