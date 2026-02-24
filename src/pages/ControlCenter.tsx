@@ -81,7 +81,7 @@ const ControlCenter = () => {
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
 
-      <motion.div variants={item} className="mt-4 mb-2 flex justify-center overflow-visible">
+      <motion.div variants={item} className="mt-4 mb-1 flex justify-center overflow-visible">
         <div
           role="button"
           tabIndex={0}
@@ -93,12 +93,8 @@ const ControlCenter = () => {
         </div>
       </motion.div>
 
-      <motion.div variants={item} className="flex justify-center">
-        <DateNavigator />
-      </motion.div>
-
-      <motion.div variants={item} className="mb-4 flex justify-center">
-        <div className="grid w-full max-w-[260px] grid-cols-2 justify-items-center gap-x-6 gap-y-2">
+      <motion.div variants={item} className="mb-5 flex justify-center">
+        <div className="grid w-full max-w-[360px] grid-cols-2 justify-items-center gap-x-12 gap-y-2">
           <SleepCard
             percent={sleepPercent}
             size="large"
@@ -122,6 +118,10 @@ const ControlCenter = () => {
             }
           />
         </div>
+      </motion.div>
+
+      <motion.div variants={item} className="mb-6 flex justify-center">
+        <DateNavigator />
       </motion.div>
 
       <motion.div variants={item} className="mb-6">
