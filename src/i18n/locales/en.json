@@ -108,7 +108,7 @@
     "energy": "Energy",
     "hormones": "Hormones",
     "strength": "Strength",
-    "state": "Energy",
+    "state": "State",
     "detailFormula": "Formula",
     "detailSources": "Input data",
     "energyDesc": "Overall energy level. Formed from input factors.",
