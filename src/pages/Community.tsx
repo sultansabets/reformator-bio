@@ -67,7 +67,7 @@ const MOCK_GROUPS: Group[] = [
 ];
 
 const MOCK_FEED: FeedPost[] = [
-  { id: "1", author: "Алексей К.", level: 12, text: "7 дней подряд — сон 90%+. Наконец-то!", achievement: "Энергия +8%", likes: 24, comments: 5, timestamp: Date.now() - 3600000 },
+  { id: "1", author: "Алексей К.", level: 12, text: "7 дней подряд — сон 90%+. Наконец-то!", achievement: "Состояние +8%", likes: 24, comments: 5, timestamp: Date.now() - 3600000 },
   { id: "2", author: "Мария С.", level: 8, text: "Первая неделя с приложением. Уже чувствую разницу.", achievement: "7 дней без пропуска", likes: 18, comments: 3, timestamp: Date.now() - 7200000 },
   { id: "3", author: "Дмитрий В.", level: 15, text: "Нагрузка в норме 14 дней подряд. Готовлюсь к марафону.", achievement: "Нагрузка в норме 14 дней", likes: 42, comments: 8, timestamp: Date.now() - 14400000 },
 ];

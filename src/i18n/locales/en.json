@@ -105,13 +105,13 @@
   },
   "metrics": {
     "title": "Metrics",
-    "energy": "Energy",
+    "energy": "State",
     "hormones": "Hormones",
     "strength": "Strength",
     "state": "State",
     "detailFormula": "Formula",
     "detailSources": "Input data",
-    "energyDesc": "Overall energy level. Formed from input factors.",
+    "energyDesc": "Overall state assessment. Formed from input factors.",
     "energyFormula": "0.4×Sleep + 0.3×HRV + 0.2×Stress + 0.1×Recovery",
     "hormonesDesc": "Hormonal balance. Formed from input factors.",
     "hormonesFormula": "Sleep + Fat % + Training + Testosterone",
@@ -172,9 +172,9 @@
     "showLess": "Less"
   },
   "energyDetail": {
-    "title": "Energy",
-    "subtitle": "Readiness for physical and mental load today.",
-    "whyTitle": "Why {{score}}% today",
+    "title": "State",
+    "subtitle": "State is the readiness assessment for physical and mental load today.",
+    "whyTitle": "Why is state {{score}}% today",
     "sleep": "Sleep",
     "adaptation": "Adaptation",
     "load": "Load",
@@ -378,7 +378,7 @@
       "recovery": "How to improve recovery?",
       "testosterone": "What affects testosterone?",
       "cortisol": "How to lower cortisol?",
-      "energy": "How to boost energy?",
+      "energy": "How to improve state?",
       "labs": "Blood test interpretation",
       "overtrain": "What to do when overtrained?"
     },
@@ -386,7 +386,7 @@
       "recovery": "Recovery improves with 7–9h sleep, adequate protein, hydration and rest days. Check the Influence factors and load metrics in the app.",
       "testosterone": "Testosterone is affected by sleep, strength training, dietary fats, vitamin D and stress. I recommend Center → Analytics for trend tracking.",
       "cortisol": "Lower cortisol with regular sleep, moderate exercise, breathing practices and less caffeine. Track stress in the mental health block.",
-      "energy": "Energy is supported by stable sleep, water, protein and movement. Check calories and sleep in Center → Nutrition and Overview.",
+      "energy": "State is supported by stable sleep, water, protein and movement. Check calories and sleep in Center → Nutrition and Overview.",
       "labs": "For lab interpretation upload results in Medical record (Profile). In demo mode full analysis will be available after connecting the service.",
       "overtrain": "When overtrained: reduce load, increase sleep, drink enough water. Check the recovery block in the app and don't skip rest."
     }
