@@ -180,93 +180,8 @@ export function SleepDetailSheet({
           <div className="space-y-4">
             {/* ─── SLEEP DASHBOARD ─── */}
             <div className="overflow-hidden rounded-[24px] border border-border bg-[#18181b] shadow-lg">
-              {/* A. ФАЗЫ СНА (Hypnogram) */}
+              {/* 1. ДЛИТЕЛЬНОСТЬ */}
               <section className="p-4">
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/70">
-                  {t("sleepDetail.howYouSlept")}
-                </h3>
-                <div className="min-w-0 overflow-hidden rounded-2xl bg-[#0f0f10] p-3">
-                  {phaseData.length >= 2 && (
-                    <ResponsiveContainer width="100%" height={140} minHeight={100}>
-                      <ComposedChart data={phaseData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
-                        {segments.map((seg, i) => (
-                          <ReferenceArea
-                            key={i}
-                            x1={seg.start}
-                            x2={seg.end}
-                            y1={seg.phase}
-                            y2={seg.phase + 0.95}
-                            fill={PHASE_COLORS[seg.phase]}
-                          />
-                        ))}
-                        <XAxis
-                          dataKey="time"
-                          type="number"
-                          domain={[0, "dataMax"]}
-                          tickFormatter={(v) => `${Math.round(Number(v) / 60)}ч`}
-                          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.6)" }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval="preserveStartEnd"
-                        />
-                        <YAxis
-                          domain={[0, 3.5]}
-                          ticks={[0.5, 1.5, 2.5, 3.5]}
-                          tickFormatter={(v) => {
-                            const p = Math.round(v);
-                            return p === 0 ? t("sleepDetail.phaseWake") : p === 1 ? t("sleepDetail.phaseLight") : p === 2 ? t("sleepDetail.phaseRem") : t("sleepDetail.phaseDeep");
-                          }}
-                          tick={{ fontSize: 9, fill: "rgba(255,255,255,0.6)" }}
-                          width={44}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Area
-                          type="stepAfter"
-                          dataKey="phase"
-                          stroke="transparent"
-                          fill="transparent"
-                        />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  )}
-                  <div className="mt-3 flex justify-between text-xs text-white/60">
-                    <span>{t("sleepDetail.fallAsleep")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
-                    <span>{t("sleepDetail.wakeUp")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP + actualMinutes)}</span>
-                  </div>
-                  <p className="mt-1 text-center text-xs text-white/50">
-                    {t("sleepDetail.totalSleep")}: {formatDurationShort(actualMinutes)}
-                  </p>
-                </div>
-
-                {phasesExpanded && (
-                  <div className="mt-3 space-y-1.5 rounded-xl bg-white/5 px-4 py-3 text-sm">
-                    <p className="text-foreground">
-                      {t("sleepDetail.archDeep")}: {displayData.deepPercent.toFixed(1)}%
-                    </p>
-                    <p className="text-foreground">
-                      {t("sleepDetail.archRem")}: {displayData.remPercent.toFixed(1)}%
-                    </p>
-                    <p className="text-foreground">
-                      {t("sleepDetail.phaseLight")}: {(100 - displayData.deepPercent - displayData.remPercent).toFixed(1)}%
-                    </p>
-                    <p className="text-muted-foreground">
-                      {t("sleepDetail.archLatency")}: {Math.round(displayData.sleepLatencyMinutes)} мин
-                    </p>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setPhasesExpanded((v) => !v)}
-                  className="mt-2 flex w-full items-center justify-center gap-1 text-xs text-white/60 hover:text-white/80"
-                >
-                  {phasesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  {phasesExpanded ? t("sleepDetail.showLess") : t("sleepDetail.showMore")}
-                </button>
-              </section>
-
-              {/* B. ДЛИТЕЛЬНОСТЬ */}
-              <section className="border-t border-white/10 p-4">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/70">
                   {t("sleepDetail.howMuchYouSlept")}
                 </h3>
@@ -346,7 +261,92 @@ export function SleepDetailSheet({
                 )}
               </section>
 
-              {/* C. КАЧЕСТВО СНА */}
+              {/* 2. ФАЗЫ СНА (Hypnogram) */}
+              <section className="border-t border-white/10 p-4">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/70">
+                  {t("sleepDetail.howYouSlept")}
+                </h3>
+                <div className="min-w-0 overflow-hidden rounded-2xl bg-[#0f0f10] p-3">
+                  {phaseData.length >= 2 && (
+                    <ResponsiveContainer width="100%" height={140} minHeight={100}>
+                      <ComposedChart data={phaseData} margin={{ top: 8, right: 12, left: 52, bottom: 28 }}>
+                        {segments.map((seg, i) => (
+                          <ReferenceArea
+                            key={i}
+                            x1={seg.start}
+                            x2={seg.end}
+                            y1={seg.phase}
+                            y2={seg.phase + 0.95}
+                            fill={PHASE_COLORS[seg.phase]}
+                          />
+                        ))}
+                        <XAxis
+                          dataKey="time"
+                          type="number"
+                          domain={[0, "dataMax"]}
+                          tickFormatter={(v) => `${Math.round(Number(v) / 60)}ч`}
+                          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.65)" }}
+                          axisLine={false}
+                          tickLine={false}
+                          interval="preserveStartEnd"
+                        />
+                        <YAxis
+                          domain={[0, 3.5]}
+                          ticks={[0.5, 1.5, 2.5, 3.5]}
+                          tickFormatter={(v) => {
+                            const p = Math.min(3, Math.floor(Number(v)));
+                            return p === 0 ? t("sleepDetail.phaseWake") : p === 1 ? t("sleepDetail.phaseLight") : p === 2 ? t("sleepDetail.phaseRem") : t("sleepDetail.phaseDeep");
+                          }}
+                          tick={{ fontSize: 9, fill: "rgba(255,255,255,0.65)" }}
+                          width={48}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Area
+                          type="stepAfter"
+                          dataKey="phase"
+                          stroke="transparent"
+                          fill="transparent"
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  )}
+                  <div className="mt-3 flex justify-between text-xs text-white/60">
+                    <span>{t("sleepDetail.fallAsleep")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
+                    <span>{t("sleepDetail.wakeUp")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP + actualMinutes)}</span>
+                  </div>
+                  <p className="mt-1 text-center text-xs text-white/50">
+                    {t("sleepDetail.totalSleep")}: {formatDurationShort(actualMinutes)}
+                  </p>
+                </div>
+
+                {phasesExpanded && (
+                  <div className="mt-3 space-y-1.5 rounded-xl bg-white/5 px-4 py-3 text-sm">
+                    <p className="text-foreground">
+                      {t("sleepDetail.archDeep")}: {displayData.deepPercent.toFixed(1)}%
+                    </p>
+                    <p className="text-foreground">
+                      {t("sleepDetail.archRem")}: {displayData.remPercent.toFixed(1)}%
+                    </p>
+                    <p className="text-foreground">
+                      {t("sleepDetail.phaseLight")}: {(100 - displayData.deepPercent - displayData.remPercent).toFixed(1)}%
+                    </p>
+                    <p className="text-muted-foreground">
+                      {t("sleepDetail.archLatency")}: {Math.round(displayData.sleepLatencyMinutes)} мин
+                    </p>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPhasesExpanded((v) => !v)}
+                  className="mt-2 flex w-full items-center justify-center gap-1 text-xs text-white/60 hover:text-white/80"
+                >
+                  {phasesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {phasesExpanded ? t("sleepDetail.showLess") : t("sleepDetail.showMore")}
+                </button>
+              </section>
+
+              {/* 3. КАЧЕСТВО СНА */}
               <section className="border-t border-white/10 p-4">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/70">
                   {t("sleepDetail.qualityBlock")}
