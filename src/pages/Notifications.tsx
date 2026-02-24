@@ -53,7 +53,7 @@ export default function Notifications() {
       </header>
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4"
       >
         <NotificationPanel
           notifications={notifications}

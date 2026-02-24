@@ -73,7 +73,7 @@ const ControlCenter = () => {
 
   return (
     <motion.div
-      className="px-5 pt-6 pb-24"
+      className="px-5 pt-6 pb-4"
       variants={container}
       initial="hidden"
       animate="show"

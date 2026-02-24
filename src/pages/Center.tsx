@@ -11,6 +11,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  X,
   Play,
   Pause,
   Square,
@@ -369,24 +370,28 @@ function CalendarPopup({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[340px] border border-border bg-card p-4">
+      <DialogContent
+        hideClose
+        className="max-w-[340px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
+      >
         <div className="flex items-center justify-between mb-4">
           <button
             type="button"
             onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1))}
-            className="p-1 hover:bg-muted rounded"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
             <ChevronLeft className="h-5 w-5 text-muted-foreground" />
           </button>
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-foreground">
             {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
           </span>
           <button
             type="button"
-            onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))}
-            className="p-1 hover:bg-muted rounded"
+            onClick={onClose}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            aria-label="Закрыть"
           >
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
         
@@ -398,7 +403,7 @@ function CalendarPopup({
           ))}
         </div>
         
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 mb-4">
           {monthDays.map((day) => {
             const isSelected = day.dateStr === selectedDate;
             const isToday = day.dateStr === getTodayDateString();

@@ -442,6 +442,7 @@ function CalendarModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
@@ -449,27 +450,38 @@ function CalendarModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="mx-4 w-full max-w-[340px] rounded-2xl border border-border bg-card p-5"
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        className="mx-4 w-full max-w-[340px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
           <button
             type="button"
             onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1))}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
             <ChevronLeft className="h-5 w-5 text-muted-foreground" />
           </button>
           <span className="text-sm font-medium text-foreground">
             {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
           </span>
-          <button
-            type="button"
-            onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1))}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Закрыть"
+            >
+              <X className="h-5 w-5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1 mb-2">
@@ -516,7 +528,7 @@ function CalendarModal({
           })}
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
+        <div className="mt-5 mb-1 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-green-500" /> Хороший
           </span>

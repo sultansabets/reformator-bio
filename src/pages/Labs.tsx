@@ -85,7 +85,7 @@ export default function Labs() {
   const { t } = useTranslation();
   return (
     <motion.div
-      className="px-5 pt-12 pb-24"
+      className="px-5 pt-12 pb-4"
       variants={container}
       initial="hidden"
       animate="show"

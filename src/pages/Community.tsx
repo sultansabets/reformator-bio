@@ -318,7 +318,7 @@ function FeedTab() {
   };
 
   return (
-    <div className="px-4 py-4 space-y-4 pb-24">
+    <div className="px-4 py-4 space-y-4 pb-4">
       {MOCK_FEED.map((p) => (
         <motion.article
           key={p.id}

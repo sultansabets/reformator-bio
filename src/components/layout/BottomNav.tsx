@@ -1,14 +1,15 @@
-import { Home, Zap, ShoppingBag, User } from "lucide-react";
+import { Home, ShoppingBag, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ParticlesIcon } from "@/components/ParticlesIcon";
+import { CenterIcon } from "@/components/CenterIcon";
 
 const LEFT_TABS = [
   { path: "/control", icon: Home, key: "tabs.home" },
-  { path: "/center", icon: Zap, key: "tabs.center" },
+  { path: "/center", customIcon: CenterIcon, key: "tabs.center" },
 ];
 const AI_PATH = "/ai";
 const RIGHT_TABS = [
@@ -30,11 +31,18 @@ const BottomNav = () => {
   };
 
   const renderTab = (
-    tab: { path: string; icon: typeof Home; key: string; useAvatar?: boolean },
+    tab: {
+      path: string;
+      icon?: typeof Home;
+      customIcon?: React.ComponentType<{ active?: boolean; className?: string }>;
+      key: string;
+      useAvatar?: boolean;
+    },
     isActive: boolean
   ) => {
     const showAvatar = tab.useAvatar && user?.avatar;
     const Icon = tab.icon;
+    const CustomIcon = tab.customIcon;
     return (
       <button
         key={tab.path}
@@ -52,9 +60,11 @@ const BottomNav = () => {
               {user?.fullName?.slice(0, 1)?.toUpperCase() || "?"}
             </AvatarFallback>
           </Avatar>
-        ) : (
+        ) : CustomIcon ? (
+          <CustomIcon active={isActive} className="h-6 w-6" />
+        ) : Icon ? (
           <Icon className="h-6 w-6" strokeWidth={isActive ? 2.2 : 1.8} />
-        )}
+        ) : null}
       </button>
     );
   };
