@@ -9,7 +9,7 @@ const STROKE_INACTIVE = 1.8;
 const STROKE_ACTIVE = 2.2;
 const CX = 12;
 const CY = 12;
-const R = 8;
+const R = 10; /* 20px diameter — matches Lucide icon visual area */
 
 /** Circle with pie-segment. Active: segment fills white. */
 export function CenterIcon({ active, className }: CenterIconProps) {
