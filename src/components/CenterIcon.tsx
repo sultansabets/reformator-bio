@@ -11,10 +11,10 @@ const CX = 12;
 const CY = 12;
 const R = 10;
 
-/** Equilateral triangle pointing up, centered in circle. */
-const TRIANGLE_PATH = "M 12 5 L 6 15.5 L 18 15.5 Z";
+/** 90° segment: top → right (12 o'clock to 3 o'clock) */
+const SEGMENT_PATH = `M ${CX} ${CY} L ${CX} ${CY - R} A ${R} ${R} 0 0 1 ${CX + R} ${CY} Z`;
 
-/** Circle with inner triangle. Active: triangle fills white. */
+/** Circle with pie-segment. Active: segment white. Inactive: segment gray. */
 export function CenterIcon({ active, className }: CenterIconProps) {
   const strokeWidth = active ? STROKE_ACTIVE : STROKE_INACTIVE;
 
@@ -25,10 +25,10 @@ export function CenterIcon({ active, className }: CenterIconProps) {
       aria-hidden
     >
       <path
-        d={TRIANGLE_PATH}
+        d={SEGMENT_PATH}
         className={cn(
           "transition-colors duration-200",
-          active ? "fill-white" : "fill-current"
+          active ? "fill-white" : "fill-muted-foreground"
         )}
       />
       <circle
@@ -36,8 +36,8 @@ export function CenterIcon({ active, className }: CenterIconProps) {
         cy={CY}
         r={R}
         fill="none"
-        stroke="currentColor"
         strokeWidth={strokeWidth}
+        className="stroke-muted-foreground"
       />
     </svg>
   );
