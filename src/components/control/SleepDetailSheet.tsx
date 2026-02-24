@@ -6,9 +6,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   AreaChart,
   Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import type { SleepEngineResult, SleepBlock } from "@/engine/sleepEngine";
 
@@ -23,6 +26,37 @@ const PHASE_COLORS: Record<number, string> = {
   [PHASE_LIGHT]: "hsl(199 89% 48%)",
   [PHASE_WAKE]: "hsl(0 0% 65%)",
 };
+
+/** Synthetic HR/sleep curve for duration chart (Whoop-style). */
+function buildDurationChartData(
+  actualMinutes: number,
+  baseHR: number
+): { minute: number; hr: number }[] {
+  const total = Math.max(1, actualMinutes);
+  const pts = Math.min(32, Math.max(12, Math.floor(total / 15)));
+  const step = total / Math.max(1, pts - 1);
+  const out: { minute: number; hr: number }[] = [];
+  for (let i = 0; i < pts; i++) {
+    const t = i * step;
+    const x = t / actualMinutes; // 0..1
+    const dip = Math.sin(Math.PI * x) * 8;
+    out.push({ minute: t, hr: Math.round(baseHR + dip) });
+  }
+  return out;
+}
+
+function formatDurationHHMM(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
+function formatTimeHHMM(minutesFromMidnight: number): string {
+  const m = ((minutesFromMidnight % (24 * 60)) + 24 * 60) % (24 * 60);
+  const h = Math.floor(m / 60);
+  const min = Math.round(m % 60);
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
 
 function buildPhaseChartData(actualMinutes: number, deepPct: number, remPct: number): { time: number; phase: number }[] {
   const total = Math.max(60, actualMinutes);
@@ -117,6 +151,12 @@ export function SleepDetailSheet({
     return buildPhaseChartData(actualSleepMinutes, deepPercent, remPercent);
   }, [sleepDetail?.displayData]);
 
+  const durationChartData = useMemo(() => {
+    if (!sleepDetail?.displayData) return [];
+    const { actualSleepMinutes, currentNightHR } = sleepDetail.displayData;
+    return buildDurationChartData(actualSleepMinutes, currentNightHR);
+  }, [sleepDetail?.displayData]);
+
   if (!sleepDetail) return null;
 
   const { sleepScore, blocks, weakestBlockKey, displayData } = sleepDetail;
@@ -135,6 +175,51 @@ export function SleepDetailSheet({
         </DrawerHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
+          {/* Phases chart — immediately under header */}
+          <div className="mb-6">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("sleepDetail.phasesChart")}
+            </h3>
+            <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
+              <ResponsiveContainer width="100%" height={120} minHeight={100}>
+                <AreaChart data={phaseData} margin={{ top: 8, right: 12, left: 12, bottom: 8 }}>
+                  <defs>
+                    <linearGradient id="phaseGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={PHASE_COLORS[PHASE_DEEP]} stopOpacity={0.8} />
+                      <stop offset="100%" stopColor={PHASE_COLORS[PHASE_DEEP]} stopOpacity={0.2} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="time"
+                    type="number"
+                    domain={[0, "dataMax"]}
+                    tickFormatter={(v) => `${Math.round(Number(v) / 60)}ч`}
+                    tick={{ fontSize: 10, fill: "hsl(var(--foreground) / 0.7)" }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    domain={[0, 3.5]}
+                    ticks={[0, 1, 2, 3]}
+                    tickFormatter={(v) => (v === 0 ? t("sleepDetail.phaseWake") : v === 1 ? t("sleepDetail.phaseLight") : v === 2 ? t("sleepDetail.phaseRem") : t("sleepDetail.phaseDeep"))}
+                    tick={{ fontSize: 9, fill: "hsl(var(--foreground) / 0.7)" }}
+                    width={48}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Area
+                    type="stepAfter"
+                    dataKey="phase"
+                    stroke={PHASE_COLORS[PHASE_DEEP]}
+                    fill="url(#phaseGrad)"
+                    strokeWidth={1}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           <div className="space-y-3">
             {blocks.map((block) => (
               <BlockRow
@@ -145,11 +230,68 @@ export function SleepDetailSheet({
               >
                 <div className="border-t px-4 pb-4 pt-3">
                   {block.key === "duration" && (
-                    <ul className="space-y-1.5 text-sm text-muted-foreground">
-                      <li>{t("sleepDetail.durationActual")}: {formatMinutes(displayData.actualSleepMinutes)}</li>
-                      <li>{t("sleepDetail.durationNorm")}: {formatMinutes(displayData.personalOptimalSleepMinutes)}</li>
-                      <li>{t("sleepDetail.durationDebt")}: {formatMinutes(displayData.sleepDebtMinutes)}</li>
-                    </ul>
+                    <>
+                      {durationChartData.length >= 2 && (
+                        <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-[#0f0f10] p-3">
+                          <p className="mb-2 text-center text-sm font-medium text-white/90">
+                            {formatDurationHHMM(displayData.actualSleepMinutes)}
+                          </p>
+                          <ResponsiveContainer width="100%" height={100} minHeight={80}>
+                            <LineChart
+                              data={durationChartData}
+                              margin={{ top: 4, right: 8, left: 8, bottom: 4 }}
+                            >
+                              <ReferenceLine
+                                x={0}
+                                stroke="rgba(255,255,255,0.4)"
+                                strokeDasharray="4 4"
+                                strokeWidth={1}
+                              />
+                              <ReferenceLine
+                                x={displayData.actualSleepMinutes}
+                                stroke="rgba(255,255,255,0.4)"
+                                strokeDasharray="4 4"
+                                strokeWidth={1}
+                              />
+                              <XAxis
+                                dataKey="minute"
+                                type="number"
+                                domain={[0, Math.max(60, displayData.actualSleepMinutes)]}
+                                tickFormatter={(m) => {
+                                  const h = Math.floor(m / 60);
+                                  const min = Math.round(m % 60);
+                                  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+                                }}
+                                tick={{ fontSize: 9, fill: "rgba(255,255,255,0.6)" }}
+                                axisLine={false}
+                                tickLine={false}
+                                interval="preserveStartEnd"
+                              />
+                              <YAxis domain={["auto", "auto"]} hide />
+                              <Line
+                                type="monotone"
+                                dataKey="hr"
+                                stroke="rgba(255,255,255,0.7)"
+                                strokeWidth={1.5}
+                                dot={false}
+                                isAnimationActive
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                          <div className="mt-2 flex justify-between text-[10px] text-white/60">
+                            <span>22:00</span>
+                            <span>
+                              {formatTimeHHMM(22 * 60 + displayData.actualSleepMinutes)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <ul className="space-y-1.5 text-sm text-muted-foreground">
+                        <li>{t("sleepDetail.durationActual")}: {formatMinutes(displayData.actualSleepMinutes)}</li>
+                        <li>{t("sleepDetail.durationNorm")}: {formatMinutes(displayData.personalOptimalSleepMinutes)}</li>
+                        <li>{t("sleepDetail.durationDebt")}: {formatMinutes(displayData.sleepDebtMinutes)}</li>
+                      </ul>
+                    </>
                   )}
                   {block.key === "continuity" && (
                     <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -181,49 +323,6 @@ export function SleepDetailSheet({
                 </div>
               </BlockRow>
             ))}
-          </div>
-
-          <div className="mt-6">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("sleepDetail.phasesChart")}
-            </h3>
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
-              <ResponsiveContainer width="100%" height={120}>
-                <AreaChart data={phaseData} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
-                  <defs>
-                    <linearGradient id="phaseGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={PHASE_COLORS[PHASE_DEEP]} stopOpacity={0.8} />
-                      <stop offset="100%" stopColor={PHASE_COLORS[PHASE_DEEP]} stopOpacity={0.2} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="time"
-                    type="number"
-                    domain={[0, "dataMax"]}
-                    tickFormatter={(v) => `${Math.round(v / 60)}ч`}
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    domain={[0, 3.5]}
-                    ticks={[0, 1, 2, 3]}
-                    tickFormatter={(v) => (v === 0 ? t("sleepDetail.phaseWake") : v === 1 ? t("sleepDetail.phaseLight") : v === 2 ? t("sleepDetail.phaseRem") : t("sleepDetail.phaseDeep"))}
-                    tick={{ fontSize: 9 }}
-                    width={36}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Area
-                    type="stepAfter"
-                    dataKey="phase"
-                    stroke={PHASE_COLORS[PHASE_DEEP]}
-                    fill="url(#phaseGrad)"
-                    strokeWidth={1}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
           </div>
 
           <div className="mt-6 rounded-xl border border-border bg-muted/50 p-4">

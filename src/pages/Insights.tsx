@@ -90,7 +90,7 @@ const Insights = () => {
           <CardContent className="p-4">
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={sleepData}>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--foreground) / 0.7)" }} />
                 <YAxis hide domain={[5, 9]} />
                 <Tooltip
                   contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }}
@@ -111,7 +111,7 @@ const Insights = () => {
           <CardContent className="p-4">
             <ResponsiveContainer width="100%" height={140}>
               <LineChart data={loadData}>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--foreground) / 0.7)" }} />
                 <YAxis hide />
                 <Tooltip
                   contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }}
@@ -144,7 +144,7 @@ const Insights = () => {
                     <stop offset="100%" stopColor="hsl(var(--status-green))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(var(--foreground) / 0.7)" }} />
                 <YAxis hide domain={[50, 100]} />
                 <Tooltip
                   contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", fontSize: 12 }}

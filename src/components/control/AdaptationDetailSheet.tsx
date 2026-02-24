@@ -66,7 +66,7 @@ export function AdaptationDetailSheet({
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="space-y-5">
             <section>
-              <div className="overflow-hidden rounded-xl border border-border bg-card">
+                <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
                 <ResponsiveContainer width="100%" height={140}>
                   <LineChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 4 }}>
                     <ReferenceArea
@@ -79,7 +79,7 @@ export function AdaptationDetailSheet({
                       dataKey="day"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 10, fill: "hsl(var(--foreground) / 0.7)" }}
                     />
                     <YAxis domain={[0, 100]} hide />
                     <Line
