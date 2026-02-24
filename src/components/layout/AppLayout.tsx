@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2, AlarmClock } from "lucide-react";
+import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2, AlarmClock, ArrowLeft, User } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
@@ -22,7 +22,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BottomNav from "./BottomNav";
-import { useKeyboard } from "@/contexts/KeyboardContext";
 import { DevicesPopover } from "@/components/DevicesPopover";
 import { HealthStoreHydrator } from "@/components/HealthStoreHydrator";
 import logoLight from "@/assets/logo-light.png";
@@ -92,8 +91,16 @@ const AppLayout = () => {
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { isKeyboardOpen } = useKeyboard() ?? { isKeyboardOpen: false };
-  const hideBottomNav = location.pathname === "/ai" && isKeyboardOpen;
+  const isAI = location.pathname === "/ai";
+  const from = (location.state as { from?: string } | null)?.from;
+
+  const handleBack = () => {
+    if (from) {
+      navigate(from);
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
     <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden bg-background transition-colors duration-300">
@@ -101,64 +108,103 @@ const AppLayout = () => {
         ref={scrollRef}
         className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
       >
-      <header className="sticky top-0 z-40 bg-background dark:border-0">
+      <header
+        className={`sticky top-0 z-40 ${isAI ? "bg-[#000]" : "bg-background dark:border-0"}`}
+        style={isAI ? { backgroundColor: "#000" } : undefined}
+      >
         <div className="relative flex h-14 items-center justify-between px-4">
-          <>
-            <div className="flex items-center">
-              <DevicesPopover />
-            </div>
-
-            <div className="absolute left-1/2 -translate-x-1/2">
-              <img
-                src={theme === "dark" ? logoDark : logoLight}
-                alt="Reformator Bio Logo"
-                className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
-              />
-            </div>
-
-            <div className="flex items-center gap-1">
-              {isProfilePage ? (
+          {isAI ? (
+            <>
+              <button
+                type="button"
+                onClick={handleBack}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10 -ml-2"
+                aria-label={t("common.back")}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className="absolute left-1/2 -translate-x-1/2">
+                <img
+                  src={logoLight}
+                  alt="Reformator Bio Logo"
+                  className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
+                />
+              </div>
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setSettingsOpen((prev) => !prev)}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                  aria-label={t("settings.ariaSettings")}
+                  onClick={() => setNotificationsOpen(true)}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10"
+                  aria-label={t("settings.ariaNotifications")}
                 >
-                  <Settings className="h-5 w-5" />
+                  <Bell className="h-5 w-5" />
                 </button>
-              ) : (
-                <>
+                <button
+                  type="button"
+                  onClick={() => navigate("/profile")}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-white/10"
+                  aria-label={t("tabs.profile")}
+                >
+                  <User className="h-5 w-5" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center">
+                <DevicesPopover />
+              </div>
+              <div className="absolute left-1/2 -translate-x-1/2">
+                <img
+                  src={theme === "dark" ? logoDark : logoLight}
+                  alt="Reformator Bio Logo"
+                  className="h-5 w-auto flex-shrink-0 object-contain md:h-6"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                {isProfilePage ? (
                   <button
                     type="button"
-                    onClick={() => setNotificationsOpen(true)}
+                    onClick={() => setSettingsOpen((prev) => !prev)}
                     className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                    aria-label={t("settings.ariaNotifications")}
+                    aria-label={t("settings.ariaSettings")}
                   >
-                    <Bell className="h-5 w-5" />
+                    <Settings className="h-5 w-5" />
                   </button>
-                  {isMainPage ? (
+                ) : (
+                  <>
                     <button
                       type="button"
-                      onClick={() => navigate("/smart-wake")}
+                      onClick={() => setNotificationsOpen(true)}
                       className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                      aria-label={t("smartWake.title")}
+                      aria-label={t("settings.ariaNotifications")}
                     >
-                      <AlarmClock className="h-5 w-5" />
+                      <Bell className="h-5 w-5" />
                     </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => navigate("/community")}
-                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-                      aria-label="Community"
-                    >
-                      <Users2 className="h-5 w-5" />
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </>
+                    {isMainPage ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate("/smart-wake")}
+                        className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+                        aria-label={t("smartWake.title")}
+                      >
+                        <AlarmClock className="h-5 w-5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => navigate("/community")}
+                        className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+                        aria-label="Community"
+                      >
+                        <Users2 className="h-5 w-5" />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </header>
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -342,7 +388,7 @@ const AppLayout = () => {
           <Outlet />
         </main>
       </div>
-      {!hideBottomNav && <BottomNav />}
+      {!isAI && <BottomNav />}
 
       {/* Уведомления: простой modal */}
       <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen}>

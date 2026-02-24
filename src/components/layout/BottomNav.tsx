@@ -26,7 +26,7 @@ const BottomNav = () => {
     if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
       navigator.vibrate(10);
     }
-    navigate(AI_PATH);
+    navigate(AI_PATH, { state: { from: location.pathname } });
   };
 
   const renderTab = (
