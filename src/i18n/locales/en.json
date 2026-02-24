@@ -157,7 +157,19 @@
     "aiContinuity": "Frequent awakenings affect quality. Reduce factors that interrupt sleep.",
     "aiHR": "Main dip: night heart rate. Body didn't fully relax.",
     "aiHRV": "HRV below usual. Nervous system recovery is reduced.",
-    "aiArchitecture": "Architecture dip. Deep and REM phase balance is off."
+    "aiArchitecture": "Architecture dip. Deep and REM phase balance is off.",
+    "howYouSlept": "How you slept",
+    "howMuchYouSlept": "How much you slept",
+    "qualityBlock": "Sleep quality",
+    "fallAsleep": "Fall asleep",
+    "wakeUp": "Wake up",
+    "totalSleep": "Total sleep",
+    "yourNorm": "Your norm",
+    "highRecovery": "High recovery",
+    "sleepEfficiency": "Sleep efficiency",
+    "sleepDebt": "Sleep debt",
+    "showMore": "More",
+    "showLess": "Less"
   },
   "energyDetail": {
     "title": "Energy",

@@ -142,7 +142,19 @@
     "aiContinuity": "Жиі ояну сапаға әсер етеді.",
     "aiHR": "Негізгі төмендеу — түнгі пульс. Организм толық релаксацияға жеткен жоқ.",
     "aiHRV": "HRV әдеттегіден төмен.",
-    "aiArchitecture": "Архитектура төмендеуі."
+    "aiArchitecture": "Архитектура төмендеуі.",
+    "howYouSlept": "Қалай ұйықтадың",
+    "howMuchYouSlept": "Қанша ұйықтадың",
+    "qualityBlock": "Ұйқы сапасы",
+    "fallAsleep": "Ұйықтау",
+    "wakeUp": "Ояну",
+    "totalSleep": "Жалпы ұйқы",
+    "yourNorm": "Сенің нормаң",
+    "highRecovery": "Жоғары қалпына келу",
+    "sleepEfficiency": "Ұйқы тиімділігі",
+    "sleepDebt": "Ұйқы тапшылығы",
+    "showMore": "Толығырақ",
+    "showLess": "Жасыру"
   },
   "energyDetail": {
     "title": "Энергия",
