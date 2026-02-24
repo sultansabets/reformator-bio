@@ -5,16 +5,18 @@ export interface CenterIconProps {
   className?: string;
 }
 
-/** 4 squares 2x2 grid — Windows-style. Active: top-left white, others gray. */
+const STROKE_INACTIVE = 1.8;
+const STROKE_ACTIVE = 2.2;
+
+/** 4 squares 2x2 grid, stroke-only. Active: top-left filled white, others outline only. */
 export function CenterIcon({ active, className }: CenterIconProps) {
-  const base = "transition-colors duration-200";
-  const gray = "fill-muted-foreground";
-  const white = "fill-white";
+  const strokeWidth = active ? STROKE_ACTIVE : STROKE_INACTIVE;
+  const transition = "transition-[fill] duration-200";
 
   return (
     <svg
       viewBox="0 0 24 24"
-      className={cn("h-6 w-6", className)}
+      className={cn("h-6 w-6 text-current", className)}
       aria-hidden
     >
       <rect
@@ -23,7 +25,9 @@ export function CenterIcon({ active, className }: CenterIconProps) {
         width={11}
         height={11}
         rx={1}
-        className={cn(base, active ? white : gray)}
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className={cn(transition, active ? "fill-white" : "fill-none")}
       />
       <rect
         x={13}
@@ -31,7 +35,9 @@ export function CenterIcon({ active, className }: CenterIconProps) {
         width={11}
         height={11}
         rx={1}
-        className={cn(base, gray)}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
       />
       <rect
         x={0}
@@ -39,7 +45,9 @@ export function CenterIcon({ active, className }: CenterIconProps) {
         width={11}
         height={11}
         rx={1}
-        className={cn(base, gray)}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
       />
       <rect
         x={13}
@@ -47,7 +55,9 @@ export function CenterIcon({ active, className }: CenterIconProps) {
         width={11}
         height={11}
         rx={1}
-        className={cn(base, gray)}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
       />
     </svg>
   );
