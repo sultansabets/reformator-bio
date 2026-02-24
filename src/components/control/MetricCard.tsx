@@ -10,13 +10,6 @@ export function getColorFromPercent(percent: number): string {
   return "rgb(34, 197, 94)";
 }
 
-function getGlowColorFromPercent(percent: number): string {
-  if (percent <= 40) return "rgba(220, 38, 38, 0.4)";
-  if (percent <= 60) return "rgba(249, 115, 22, 0.4)";
-  if (percent <= 75) return "rgba(234, 179, 8, 0.4)";
-  return "rgba(34, 197, 94, 0.4)";
-}
-
 export interface MetricCardProps {
   percent: number;
   icon: React.ReactNode;
@@ -32,49 +25,6 @@ const CIRCLE_SIZE_LARGE = 120;
 const STROKE_WIDTH = 0.3;
 const STROKE_WIDTH_LARGE = 0.4;
 
-function MetricGlassRing({ size }: { size: number }) {
-  const center = size / 2;
-  const radius = size / 2 - 2;
-
-  return (
-    <motion.svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className="absolute inset-0 pointer-events-none"
-      animate={{ rotate: 360 }}
-      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-    >
-      <defs>
-        <radialGradient id="metric-glass-gradient" cx="50%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.24)" />
-          <stop offset="40%" stopColor="rgba(255,255,255,0.12)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
-        </radialGradient>
-      </defs>
-      <motion.ellipse
-        cx={center}
-        cy={center}
-        rx={radius}
-        ry={radius * 0.96}
-        fill="url(#metric-glass-gradient)"
-        stroke="rgba(255,255,255,0.28)"
-        strokeWidth={0.7}
-        animate={{
-          scaleX: [1, 1.02, 1],
-          scaleY: [1, 0.98, 1],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        style={{ transformOrigin: "50% 50%" }}
-      />
-    </motion.svg>
-  );
-}
-
 export function MetricCard({
   percent,
   icon,
@@ -85,7 +35,6 @@ export function MetricCard({
 }: MetricCardProps) {
   const clamped = Math.min(100, Math.max(0, Math.round(percent)));
   const color = getColorFromPercent(clamped);
-  const glowColor = getGlowColorFromPercent(clamped);
 
   const circleSize = size === "large" ? CIRCLE_SIZE_LARGE : CIRCLE_SIZE;
   const strokeWidth = size === "large" ? STROKE_WIDTH_LARGE : STROKE_WIDTH;
@@ -106,7 +55,6 @@ export function MetricCard({
       )}
     >
       <div className="relative" style={{ width: circleSize, height: circleSize }}>
-        {size === "large" && <MetricGlassRing size={circleSize} />}
         <svg
           width={circleSize}
           height={circleSize}
@@ -135,7 +83,6 @@ export function MetricCard({
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashOffset }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
