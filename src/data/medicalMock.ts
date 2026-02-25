@@ -88,8 +88,8 @@ export const medicalSections = [
     title: "Спортивный врач",
     content: [
       {
-        type: "pdf",
-        url: "/medical/sport/medass.pdf"
+        type: "image",
+        url: "/medical/sport/medass.jpg"
       },
       {
         type: "text",

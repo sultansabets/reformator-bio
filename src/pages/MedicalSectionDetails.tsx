@@ -45,48 +45,90 @@ export default function MedicalSectionDetails() {
             {section?.title || "Раздел медкарты"}
           </h2>
 
+          {/* Плейсхолдер для пустых разделов (особенно Главврач / Реабилитолог) */}
           {!hasContent && (
             <p className="text-sm text-muted-foreground mt-2">
-              Нет данных.
+              Раздел в процессе заполнения.
             </p>
           )}
 
-          {hasContent && (
+          {hasContent && section?.id === "analyses" && (
             <div className="mt-2 space-y-3">
-              {section!.content.map((item, index) => {
-                if (item.type === "image") {
-                  return (
-                    <img
-                      key={index}
-                      src={item.url}
-                      className="w-full rounded-xl mb-4"
-                      alt=""
-                    />
-                  );
-                }
-
-                if (item.type === "pdf") {
-                  return (
-                    <iframe
-                      key={index}
-                      src={item.url}
-                      className="w-full h-[600px] rounded-xl border border-border mb-4"
-                    />
-                  );
-                }
-
-                if (item.type === "text") {
-                  return (
-                    <p key={index} className="mb-4 whitespace-pre-line">
-                      {item.text}
-                    </p>
-                  );
-                }
-
-                return null;
-              })}
+              <object
+                data="/medical/analyses/blood-urine.pdf"
+                type="application/pdf"
+                width="100%"
+                height="800px"
+              >
+                <p className="text-sm text-muted-foreground">
+                  PDF не поддерживается браузером.
+                </p>
+              </object>
             </div>
           )}
+
+          {hasContent && section?.id === "uzi" && (
+            <div className="mt-2 space-y-4">
+              <div className="space-y-4">
+                <img src="/medical/uzi/uzi1.jpg" className="w-full rounded-xl" alt="" />
+                <img src="/medical/uzi/uzi2.jpg" className="w-full rounded-xl" alt="" />
+                <img src="/medical/uzi/uzi3.jpg" className="w-full rounded-xl" alt="" />
+                <img src="/medical/uzi/uzi4.jpg" className="w-full rounded-xl" alt="" />
+                <img src="/medical/uzi/uzi5.jpg" className="w-full rounded-xl" alt="" />
+              </div>
+              {section.content
+                .filter((item) => item.type === "text")
+                .map((item, index) => (
+                  <p key={index} className="text-sm whitespace-pre-line">
+                    {(item as { type: "text"; text: string }).text}
+                  </p>
+                ))}
+            </div>
+          )}
+
+          {hasContent && section?.id === "sport-doctor" && (
+            <div className="mt-2 space-y-3">
+              <img
+                src="/medical/sport/medass.jpg"
+                alt="Биоимпеданс"
+                className="w-full rounded-xl"
+              />
+              {section.content
+                .filter((item) => item.type === "text")
+                .map((item, index) => (
+                  <p key={index} className="text-sm whitespace-pre-line">
+                    {(item as { type: "text"; text: string }).text}
+                  </p>
+                ))}
+            </div>
+          )}
+
+          {hasContent &&
+            section &&
+            !["analyses", "uzi", "sport-doctor"].includes(section.id) && (
+              <div className="mt-2 space-y-3">
+                {section.content.map((item, index) => {
+                  if (item.type === "image") {
+                    return (
+                      <img
+                        key={index}
+                        src={item.url}
+                        className="w-full rounded-xl mb-4"
+                        alt=""
+                      />
+                    );
+                  }
+                  if (item.type === "text") {
+                    return (
+                      <p key={index} className="text-sm whitespace-pre-line">
+                        {item.text}
+                      </p>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
         </CardContent>
       </Card>
     </div>
