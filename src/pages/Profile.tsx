@@ -121,9 +121,6 @@ function MedicalTab() {
       try {
         const res = await fetch("http://localhost:3001/medical-card");
         const data = await res.json();
-        // Временный вывод для проверки структуры
-        // eslint-disable-next-line no-console
-        console.log("Medical card from server:", data);
         setMedicalCard(data);
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -135,8 +132,65 @@ function MedicalTab() {
     loadMedicalCard();
   }, []);
 
+  const patient = medicalCard?.patient;
+
+  const hasPatientInfo =
+    patient &&
+    (patient.name ||
+      patient.phone ||
+      patient.birthDate ||
+      patient.admissionDate ||
+      patient.checkup ||
+      patient.status);
+
   return (
     <div className="space-y-4">
+      {hasPatientInfo && (
+        <Card className="border border-border">
+          <CardContent className="p-4 space-y-2">
+            {patient.name && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("profile.firstName")}: </span>
+                <span className="font-medium text-foreground">{patient.name}</span>
+              </div>
+            )}
+            {patient.phone && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("auth.phone")}: </span>
+                <span className="font-medium text-foreground">{patient.phone}</span>
+              </div>
+            )}
+            {patient.birthDate && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("profile.dob")}: </span>
+                <span className="font-medium text-foreground">{patient.birthDate}</span>
+              </div>
+            )}
+            {patient.admissionDate && (
+              <div className="text-sm">
+                <span className="text-muted-foreground">{t("profile.admissionDate")}: </span>
+                <span className="font-medium text-foreground">{patient.admissionDate}</span>
+              </div>
+            )}
+            {(patient.checkup || patient.status) && (
+              <div className="flex gap-4 text-sm">
+                {patient.checkup && (
+                  <span>
+                    <span className="text-muted-foreground">{t("profile.checkup")}: </span>
+                    <span className="font-medium text-foreground">{patient.checkup}</span>
+                  </span>
+                )}
+                {patient.status && (
+                  <span>
+                    <span className="text-muted-foreground">{t("settings.status")}: </span>
+                    <span className="font-medium text-foreground">{patient.status}</span>
+                  </span>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
       <Card className="border border-border">
         <CardContent className="divide-y divide-border p-0">
           {LAB_ITEM_KEYS.map((key) => (
