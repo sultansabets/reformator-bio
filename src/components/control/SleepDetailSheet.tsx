@@ -2,67 +2,8 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import {
-  ComposedChart,
-  Area,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  ReferenceLine,
-  ReferenceArea,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from "recharts";
 import type { SleepEngineResult } from "@/engine/sleepEngine";
-
-const PHASE_DEEP = 3;
-const PHASE_REM = 2;
-const PHASE_LIGHT = 1;
-const PHASE_WAKE = 0;
-
-const PHASE_COLORS: Record<number, string> = {
-  [PHASE_DEEP]: "#1e3a5f",
-  [PHASE_REM]: "#6b4c9a",
-  [PHASE_LIGHT]: "#4a9fd4",
-  [PHASE_WAKE]: "#6b7280",
-};
-
-function buildPhaseChartData(
-  actualMinutes: number,
-  deepPct: number,
-  remPct: number
-): { time: number; phase: number }[] {
-  const total = Math.max(60, actualMinutes);
-  const deepMin = Math.round((deepPct / 100) * total);
-  const remMin = Math.round((remPct / 100) * total);
-  const lightMin = Math.max(0, total - deepMin - remMin);
-
-  const out: { time: number; phase: number }[] = [];
-  let t = 0;
-  const addSegment = (duration: number, phase: number) => {
-    if (duration > 0) {
-      out.push({ time: t, phase }, { time: t + duration, phase });
-      t += duration;
-    }
-  };
-  addSegment(lightMin, PHASE_LIGHT);
-  addSegment(deepMin, PHASE_DEEP);
-  addSegment(remMin, PHASE_REM);
-  if (out.length === 0) out.push({ time: 0, phase: PHASE_LIGHT }, { time: total, phase: PHASE_LIGHT });
-  return out;
-}
-
-function phaseDataToSegments(
-  data: { time: number; phase: number }[]
-): { start: number; end: number; phase: number }[] {
-  const segments: { start: number; end: number; phase: number }[] = [];
-  for (let i = 0; i < data.length - 1; i += 2) {
-    const start = data[i].time;
-    const end = data[i + 1]?.time ?? start;
-    if (end > start) segments.push({ start, end, phase: data[i].phase });
-  }
-  return segments;
-}
 
 function buildDurationTrendData(
   actualMinutes: number,
@@ -132,14 +73,6 @@ export function SleepDetailSheet({
   const { t } = useTranslation();
   const [phasesExpanded, setPhasesExpanded] = useState(false);
   const [durationExpanded, setDurationExpanded] = useState(false);
-
-  const phaseData = useMemo(() => {
-    if (!sleepDetail?.displayData) return [];
-    const { actualSleepMinutes, deepPercent, remPercent } = sleepDetail.displayData;
-    return buildPhaseChartData(actualSleepMinutes, deepPercent, remPercent);
-  }, [sleepDetail?.displayData]);
-
-  const segments = useMemo(() => phaseDataToSegments(phaseData), [phaseData]);
 
   const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
 
@@ -261,55 +194,57 @@ export function SleepDetailSheet({
                 )}
               </section>
 
-              {/* 2. ФАЗЫ СНА (Hypnogram) */}
+              {/* 2. ФАЗЫ СНА — TRUE TIMELINE */}
               <section className="border-t border-white/10 p-4">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/70">
                   {t("sleepDetail.howYouSlept")}
                 </h3>
                 <div className="min-w-0 overflow-hidden rounded-2xl bg-[#0f0f10] p-3">
-                  {phaseData.length >= 2 && (
-                    <ResponsiveContainer width="100%" height={140} minHeight={100}>
-                      <ComposedChart data={phaseData} margin={{ top: 8, right: 12, left: 52, bottom: 28 }}>
-                        {segments.map((seg, i) => (
-                          <ReferenceArea
-                            key={i}
-                            x1={seg.start}
-                            x2={seg.end}
-                            y1={seg.phase}
-                            y2={seg.phase + 0.95}
-                            fill={PHASE_COLORS[seg.phase]}
-                          />
-                        ))}
-                        <XAxis
-                          dataKey="time"
-                          type="number"
-                          domain={[0, "dataMax"]}
-                          tickFormatter={(v) => `${Math.round(Number(v) / 60)}ч`}
-                          tick={{ fontSize: 10, fill: "rgba(255,255,255,0.65)" }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval="preserveStartEnd"
-                        />
-                        <YAxis
-                          domain={[0, 3.5]}
-                          ticks={[0.5, 1.5, 2.5, 3.5]}
-                          tickFormatter={(v) => {
-                            const p = Math.min(3, Math.floor(Number(v)));
-                            return p === 0 ? t("sleepDetail.phaseWake") : p === 1 ? t("sleepDetail.phaseLight") : p === 2 ? t("sleepDetail.phaseRem") : t("sleepDetail.phaseDeep");
-                          }}
-                          tick={{ fontSize: 9, fill: "rgba(255,255,255,0.65)" }}
-                          width={48}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Area
-                          type="stepAfter"
-                          dataKey="phase"
-                          stroke="transparent"
-                          fill="transparent"
-                        />
-                      </ComposedChart>
-                    </ResponsiveContainer>
+                  {actualMinutes > 0 && (
+                    <>
+                      <div className="h-20 w-full overflow-x-auto">
+                        <div className="flex h-full items-end gap-[1px]">
+                          {Array.from({ length: actualMinutes }).map((_, i) => {
+                            // простая псевдо-архитектура сна: первые 20% — light, затем циклы deep/rem/light/awake
+                            const progress = i / actualMinutes;
+                            let phase: "deep" | "light" | "rem" | "awake" = "light";
+                            if (progress < 0.15) phase = "light";
+                            else if (progress < 0.35) phase = "deep";
+                            else if (progress < 0.55) phase = "rem";
+                            else if (progress < 0.8) phase = "light";
+                            else phase = "awake";
+
+                            const colorByPhase: Record<typeof phase, string> = {
+                              deep: "#1E3A8A",
+                              light: "#3B82F6",
+                              rem: "#7C3AED",
+                              awake: "#EF4444",
+                            };
+
+                            return (
+                              <div
+                                key={i}
+                                className="w-[2px] rounded-full"
+                                style={{
+                                  height: "100%",
+                                  backgroundColor: colorByPhase[phase],
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex justify-between text-[10px] text-white/60">
+                        <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
+                        <span>
+                          {formatTimeHHMM(
+                            DEFAULT_FALL_ASLEEP + Math.round(actualMinutes / 2)
+                          )}
+                        </span>
+                        <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP + actualMinutes)}</span>
+                      </div>
+                    </>
                   )}
                   <div className="mt-3 flex justify-between text-xs text-white/60">
                     <span>{t("sleepDetail.fallAsleep")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>

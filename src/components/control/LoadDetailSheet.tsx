@@ -16,10 +16,10 @@ const STATUS_LABEL: Record<LoadStatus, string> = {
   low_activity: "Мало активности",
 };
 
-const STATUS_COLOR_CLASS: Record<LoadStatus, string> = {
-  balanced: "bg-status-green",
-  overloaded: "bg-status-red",
-  low_activity: "bg-status-amber",
+const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
+  balanced: "#22C55E",
+  overloaded: "#EF4444",
+  low_activity: "#F59E0B",
 };
 
 export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
@@ -70,7 +70,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
       <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold">
-            {t("loadDetail.title")} — {totalLoad}%
+            {t("loadDetail.title")}
           </h2>
         </DrawerHeader>
 
@@ -79,56 +79,120 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="space-y-5">
+            {/* Общая нагрузка: большой круг */}
             <section className="rounded-2xl border border-border bg-card p-4">
               <h3 className="mb-3 text-sm font-medium text-foreground">
                 Общая нагрузка
               </h3>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-3xl font-bold text-foreground">
-                    {totalLoad}%
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Сводный индекс нагрузки за день
+              <div className="flex items-center gap-4">
+                {/* Основной круг */}
+                <div className="flex flex-col items-center justify-center">
+                  <div
+                    className={[
+                      "relative flex items-center justify-center rounded-full",
+                      status === "low_activity" ? "h-[96px] w-[96px]" : "h-20 w-20",
+                      status === "overloaded" ? "animate-pulse" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    style={{
+                      backgroundColor: STATUS_COLOR_HEX[status],
+                      boxShadow:
+                        status === "low_activity"
+                          ? "0 0 30px rgba(245,158,11,0.35)"
+                          : "none",
+                    }}
+                  >
+                    <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#020817] text-foreground">
+                      <span className="text-2xl font-bold tabular-nums">
+                        {totalLoad}%
+                      </span>
+                    </div>
+                  </div>
+                  <p
+                    className={[
+                      "mt-2 text-sm text-foreground",
+                      status === "low_activity" ? "font-semibold" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {STATUS_LABEL[status]}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`h-3 w-3 rounded-full ${STATUS_COLOR_CLASS[status]}`}
-                  />
-                  <span className="text-xs font-medium text-foreground">
-                    {STATUS_LABEL[status]}
-                  </span>
+
+                <div className="flex-1 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Индекс рассчитывается на основе силовых, кардио, шагов, уровня стресса, сна и
+                    пробуждений.
+                  </p>
+                  {status === "overloaded" && (
+                    <p className="text-xs text-status-red font-medium">
+                      Рекомендуется восстановление и снижение нагрузки.
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
 
-            <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+            {/* Физическая и нейронная нагрузка: мини-круги + stacked bar */}
+            <section className="rounded-2xl border border-border bg-card p-4 space-y-4">
               <h3 className="mb-1 text-sm font-medium text-foreground">
                 Физическая и нейронная нагрузка
               </h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col items-center text-sm">
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-border bg-background">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-card">
+                      <span className="text-lg font-semibold text-foreground">
+                        {physicalScore}%
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground text-center max-w-[120px]">
                     Физическая нагрузка
                   </p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {physicalScore}%
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Силовые, кардио и шаги
+                </div>
+
+                <div className="flex flex-col items-center text-sm">
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-border bg-background">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-card">
+                      <span className="text-lg font-semibold text-foreground">
+                        {neuroScore}%
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground text-center max-w-[120px]">
+                    Нервная система
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Нагрузка на нервную систему
-                  </p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {neuroScore}%
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Стресс, сон и пробуждения
-                  </p>
+              </div>
+
+              {/* Stacked bar: физическая vs нейронная */}
+              <div className="mt-3">
+                <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
+                  <span>Физическая</span>
+                  <span>Нервная система</span>
+                </div>
+                <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
+                  {physicalScore + neuroScore > 0 ? (
+                    <div className="flex h-full w-full">
+                      <div
+                        className="h-full bg-[#3B82F6]"
+                        style={{
+                          width: `${(physicalScore / (physicalScore + neuroScore)) * 100}%`,
+                        }}
+                      />
+                      <div
+                        className="h-full bg-[#EF4444]"
+                        style={{
+                          width: `${(neuroScore / (physicalScore + neuroScore)) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-full w-1/2 bg-[#3B82F6]" />
+                  )}
                 </div>
               </div>
             </section>
