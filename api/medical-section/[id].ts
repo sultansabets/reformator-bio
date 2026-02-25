@@ -5,19 +5,6 @@ const notion = new Client({
   auth: process.env.NOTION_TOKEN,
 });
 
-/*
-  Разрешённые id разделов (строго из Notion ссылок)
-*/
-const ALLOWED_IDS = [
-  "30f595e6e9d681c7a2f6ca6a618d260f",
-  "30f595e6e9d681f29991ca2559df6c18",
-  "30f595e6e9d681dd8987cb8c9f53a80f",
-  "30f595e6e9d681789cc8eedd1aa92c7e",
-  "30f595e6e9d6818e8d96fe90f8aa6c49",
-  "30f595e6e9d6818bb2a7e2d5c110fc7f",
-  "30f595e6e9d681ba8303eb0d3b879148",
-];
-
 function parseMedicalSection(blocks: any) {
   const content = (blocks.results || [])
     .map((block: any) => {
@@ -89,29 +76,25 @@ export default async function handler(
       return res.status(400).json({ error: "Missing section id" });
     }
 
-    const rawId = Array.isArray(id) ? id[0] : id;
-
-    // удаляем дефисы если вдруг пришли
-    const cleanId = rawId.replace(/-/g, "");
-
-    // проверяем что id разрешён
-    if (!ALLOWED_IDS.includes(cleanId)) {
-      return res.status(403).json({ error: "Invalid section id" });
-    }
+    // ВАЖНО: используем id как есть
+    const blockId = Array.isArray(id) ? id[0] : id;
 
     const blocks = await notion.blocks.children.list({
-      block_id: cleanId,
+      block_id: blockId,
     });
 
     const content = parseMedicalSection(blocks);
 
     return res.status(200).json({
-      id: cleanId,
+      id: blockId,
       content,
     });
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
+
 
 
