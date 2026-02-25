@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
 import { type NutritionGoal } from "@/lib/health";
+import { medicalSections } from "@/data/medicalMock";
 
 function calculateAge(dob: string): number {
   const d = new Date(dob);
@@ -118,80 +119,13 @@ function MedicalTab() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadMedicalCard = async () => {
-      try {
-        const res = await fetch("/api/medical-card");
-        const data = await res.json();
-        setMedicalCard(data);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to load medical card:", error);
-        setMedicalCard(null);
-      }
-    };
-
-    loadMedicalCard();
+    setMedicalCard({
+      sections: medicalSections,
+    });
   }, []);
-
-  const patient = medicalCard?.patient;
-
-  const hasPatientInfo =
-    patient &&
-    (patient.name ||
-      patient.phone ||
-      patient.birthDate ||
-      patient.admissionDate ||
-      patient.checkup ||
-      patient.status);
 
   return (
     <div className="space-y-4">
-      {hasPatientInfo && (
-        <Card className="border border-border">
-          <CardContent className="p-4 space-y-2">
-            {patient.name && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">{t("profile.firstName")}: </span>
-                <span className="font-medium text-foreground">{patient.name}</span>
-              </div>
-            )}
-            {patient.phone && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">{t("auth.phone")}: </span>
-                <span className="font-medium text-foreground">{patient.phone}</span>
-              </div>
-            )}
-            {patient.birthDate && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">{t("profile.dob")}: </span>
-                <span className="font-medium text-foreground">{patient.birthDate}</span>
-              </div>
-            )}
-            {patient.admissionDate && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">{t("profile.admissionDate")}: </span>
-                <span className="font-medium text-foreground">{patient.admissionDate}</span>
-              </div>
-            )}
-            {(patient.checkup || patient.status) && (
-              <div className="flex gap-4 text-sm">
-                {patient.checkup && (
-                  <span>
-                    <span className="text-muted-foreground">{t("profile.checkup")}: </span>
-                    <span className="font-medium text-foreground">{patient.checkup}</span>
-                  </span>
-                )}
-                {patient.status && (
-                  <span>
-                    <span className="text-muted-foreground">{t("settings.status")}: </span>
-                    <span className="font-medium text-foreground">{patient.status}</span>
-                  </span>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
       <Card className="border border-border">
         <CardContent className="divide-y divide-border p-0">
           {(medicalCard?.sections || []).map((section: any) => (
