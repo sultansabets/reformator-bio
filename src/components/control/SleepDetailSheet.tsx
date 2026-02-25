@@ -200,52 +200,73 @@ export function SleepDetailSheet({
                   {t("sleepDetail.howYouSlept")}
                 </h3>
                 <div className="min-w-0 overflow-hidden rounded-2xl bg-[#0f0f10] p-3">
-                  {actualMinutes > 0 && (
-                    <>
-                      <div className="h-20 w-full overflow-x-auto">
-                        <div className="flex h-full items-end gap-[1px]">
-                          {Array.from({ length: actualMinutes }).map((_, i) => {
-                            // простая псевдо-архитектура сна: первые 20% — light, затем циклы deep/rem/light/awake
-                            const progress = i / actualMinutes;
-                            let phase: "deep" | "light" | "rem" | "awake" = "light";
-                            if (progress < 0.15) phase = "light";
-                            else if (progress < 0.35) phase = "deep";
-                            else if (progress < 0.55) phase = "rem";
-                            else if (progress < 0.8) phase = "light";
-                            else phase = "awake";
+                  {(() => {
+                    const total = actualMinutes && actualMinutes > 0 ? actualMinutes : 450;
+                    return (
+                      <>
+                        <div className="min-h-[100px] h-[100px] w-full overflow-x-auto">
+                          <div className="flex h-full items-end gap-[1px]">
+                            {Array.from({ length: total }).map((_, i) => {
+                              const progress = i / total;
+                              let phase: "deep" | "light" | "rem" | "awake" = "light";
+                              if (progress < 0.15) phase = "light";
+                              else if (progress < 0.35) phase = "deep";
+                              else if (progress < 0.55) phase = "rem";
+                              else if (progress < 0.8) phase = "light";
+                              else phase = "awake";
 
-                            const colorByPhase: Record<typeof phase, string> = {
-                              deep: "#1E3A8A",
-                              light: "#3B82F6",
-                              rem: "#7C3AED",
-                              awake: "#EF4444",
-                            };
+                              const colorByPhase: Record<typeof phase, string> = {
+                                deep: "#1E3A8A",
+                                light: "#3B82F6",
+                                rem: "#7C3AED",
+                                awake: "#EF4444",
+                              };
 
-                            return (
-                              <div
-                                key={i}
-                                className="w-[2px] rounded-full"
-                                style={{
-                                  height: "100%",
-                                  backgroundColor: colorByPhase[phase],
-                                }}
-                              />
-                            );
-                          })}
+                              return (
+                                <div
+                                  key={i}
+                                  className="w-[2px] rounded-full"
+                                  style={{
+                                    height: "100%",
+                                    backgroundColor: colorByPhase[phase],
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="mt-2 flex justify-between text-[10px] text-white/60">
-                        <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
-                        <span>
-                          {formatTimeHHMM(
-                            DEFAULT_FALL_ASLEEP + Math.round(actualMinutes / 2)
-                          )}
-                        </span>
-                        <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP + actualMinutes)}</span>
-                      </div>
-                    </>
-                  )}
+                        <div className="mt-2 flex justify-between text-[10px] text-white/60">
+                          <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
+                          <span>
+                            {formatTimeHHMM(
+                              DEFAULT_FALL_ASLEEP + Math.round(total / 2)
+                            )}
+                          </span>
+                          <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP + total)}</span>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] text-white/60">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#1E3A8A" }} />
+                            <span>Глубокий</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3B82F6" }} />
+                            <span>Лёгкий</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#7C3AED" }} />
+                            <span>Быстрый сон (REM)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#EF4444" }} />
+                            <span>Бодрствование</span>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                   <div className="mt-3 flex justify-between text-xs text-white/60">
                     <span>{t("sleepDetail.fallAsleep")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
                     <span>{t("sleepDetail.wakeUp")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP + actualMinutes)}</span>
