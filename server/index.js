@@ -32,30 +32,57 @@ function parseMedicalCard(page, blocks) {
     analyses: [],
     ultrasound: [],
     ecg: [],
-    doctors: [],
+    doctors: {
+      main: null,
+      urologist: null,
+      sport: null,
+      rehab: null,
+      psychotherapist: null,
+    },
   };
 
-  const results = blocks?.results || [];
+  (blocks?.results || []).forEach((block) => {
+    if (block.type !== "heading_2") return;
 
-  results.forEach((block) => {
-    if (block.type === "heading_2") {
-      const title = block.heading_2?.rich_text?.[0]?.plain_text;
+    const title = block.heading_2?.rich_text?.[0]?.plain_text || "";
 
-      if (title === "Результаты анализов") {
-        sections.analyses.push(title);
-      }
+    if (title === "Результаты анализов") {
+      sections.analyses.push({ title });
+      return;
+    }
 
-      if (title === "УЗИ") {
-        sections.ultrasound.push(title);
-      }
+    if (title === "УЗИ") {
+      sections.ultrasound.push({ title });
+      return;
+    }
 
-      if (title === "ЭКГ") {
-        sections.ecg.push(title);
-      }
+    if (title === "ЭКГ") {
+      sections.ecg.push({ title });
+      return;
+    }
 
-      if (title === "Врачи") {
-        sections.doctors.push(title);
-      }
+    if (title.startsWith("Главный врач")) {
+      sections.doctors.main = title.replace("Главный врач ", "");
+      return;
+    }
+
+    if (title.startsWith("Уролог")) {
+      sections.doctors.urologist = title.replace("Уролог ", "");
+      return;
+    }
+
+    if (title.startsWith("Спортивный врач")) {
+      sections.doctors.sport = title.replace("Спортивный врач ", "");
+      return;
+    }
+
+    if (title.startsWith("Реабилитолог")) {
+      sections.doctors.rehab = title.replace("Реабилитолог ", "");
+      return;
+    }
+
+    if (title.startsWith("Психотерапевт")) {
+      sections.doctors.psychotherapist = title.replace("Психотерапевт ", "");
     }
   });
 
