@@ -32,7 +32,7 @@ export default function MedicalSectionDetails() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:3001/medical-section/${encodeURIComponent(id)}`);
+        const res = await fetch(`/api/medical-section/${encodeURIComponent(id)}`);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }

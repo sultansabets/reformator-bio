@@ -120,7 +120,7 @@ function MedicalTab() {
   useEffect(() => {
     const loadMedicalCard = async () => {
       try {
-        const res = await fetch("http://localhost:3001/medical-card");
+        const res = await fetch("/api/medical-card");
         const data = await res.json();
         setMedicalCard(data);
       } catch (error) {
