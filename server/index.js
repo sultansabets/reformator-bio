@@ -7,18 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+console.log("SERVER STARTING...");
+
 const notion = new Client({
   auth: process.env.NOTION_TOKEN,
 });
 
 const TEST_PAGE_ID = "30f595e6e9d6802b9a86c920c5207210";
-
-function normalizeTitle(title) {
-  return title
-    .replace(/[^\w\sА-Яа-яЁё]/g, "")
-    .trim()
-    .toLowerCase();
-}
 
 function parseMedicalCard(page, blocks) {
   const properties = page?.properties || {};
@@ -36,94 +31,36 @@ function parseMedicalCard(page, blocks) {
   };
 
   const sections = [];
-  let currentSection = null;
 
   (blocks?.results || []).forEach((block) => {
-    if (block.type === "heading_2") {
-      const rawTitle = block.heading_2?.rich_text?.[0]?.plain_text || "";
-      const titleNorm = normalizeTitle(rawTitle);
+    if (block.type === "child_page") {
+      const title = block.child_page?.title || "";
+      const titleNorm = title.toLowerCase();
 
-      currentSection = {
-        id: rawTitle,
-        title: rawTitle,
-        type: "generic",
-        content: [],
-      };
+      let type = "generic";
 
       if (titleNorm.includes("результаты анализов")) {
-        currentSection.type = "analyses";
+        type = "analyses";
       } else if (titleNorm.includes("узи")) {
-        currentSection.type = "ultrasound";
+        type = "ultrasound";
       } else if (titleNorm.includes("экг")) {
-        currentSection.type = "ecg";
+        type = "ecg";
       } else if (titleNorm.includes("главный врач")) {
-        currentSection.type = "doctor-main";
+        type = "doctor-main";
       } else if (titleNorm.includes("уролог")) {
-        currentSection.type = "doctor-urologist";
+        type = "doctor-urologist";
       } else if (titleNorm.includes("спортивный врач")) {
-        currentSection.type = "doctor-sport";
+        type = "doctor-sport";
       } else if (titleNorm.includes("реабилитолог")) {
-        currentSection.type = "doctor-rehab";
+        type = "doctor-rehab";
       } else if (titleNorm.includes("психотерапевт")) {
-        currentSection.type = "doctor-psychotherapist";
+        type = "doctor-psychotherapist";
       }
 
-      sections.push(currentSection);
-      return;
-    }
-
-    if (!currentSection) return;
-
-    if (block.type === "paragraph") {
-      currentSection.content.push({
-        type: "paragraph",
-        text:
-          block.paragraph?.rich_text
-            ?.map((r) => r.plain_text)
-            .join("") || "",
-      });
-      return;
-    }
-
-    if (block.type === "bulleted_list_item") {
-      currentSection.content.push({
-        type: "bulleted_list_item",
-        text:
-          block.bulleted_list_item?.rich_text
-            ?.map((r) => r.plain_text)
-            .join("") || "",
-      });
-      return;
-    }
-
-    if (block.type === "numbered_list_item") {
-      currentSection.content.push({
-        type: "numbered_list_item",
-        text:
-          block.numbered_list_item?.rich_text
-            ?.map((r) => r.plain_text)
-            .join("") || "",
-      });
-      return;
-    }
-
-    if (block.type === "file") {
-      currentSection.content.push({
-        type: "file",
-        url: block.file?.file?.url || block.file?.external?.url || "",
-        name: block.file?.file?.expiry_time || "",
-      });
-      return;
-    }
-
-    if (block.type === "image") {
-      currentSection.content.push({
-        type: "image",
-        url: block.image?.file?.url || block.image?.external?.url || "",
-        caption:
-          block.image?.caption
-            ?.map((r) => r.plain_text)
-            .join("") || "",
+      sections.push({
+        id: block.id,
+        title,
+        type,
       });
     }
   });
@@ -131,6 +68,7 @@ function parseMedicalCard(page, blocks) {
   return { patient, sections };
 }
 
+// 🔹 Получить медкарту
 app.get("/medical-card", async (req, res) => {
   try {
     const page = await notion.pages.retrieve({
@@ -142,10 +80,60 @@ app.get("/medical-card", async (req, res) => {
     });
 
     const parsed = parseMedicalCard(page, blocks);
+
     res.json(parsed);
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Error fetching medical card from Notion:", error);
+    console.error("Error fetching medical card:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 🔹 Получить конкретный раздел
+app.get("/medical-section/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const blocks = await notion.blocks.children.list({
+      block_id: id,
+    });
+
+    const content = [];
+
+    (blocks?.results || []).forEach((block) => {
+      if (block.type === "paragraph") {
+        content.push({
+          type: "paragraph",
+          text:
+            block.paragraph?.rich_text
+              ?.map((r) => r.plain_text)
+              .join("") || "",
+        });
+      }
+
+      if (block.type === "bulleted_list_item") {
+        content.push({
+          type: "bulleted_list_item",
+          text:
+            block.bulleted_list_item?.rich_text
+              ?.map((r) => r.plain_text)
+              .join("") || "",
+        });
+      }
+
+      if (block.type === "image") {
+        content.push({
+          type: "image",
+          url:
+            block.image?.file?.url ||
+            block.image?.external?.url ||
+            "",
+        });
+      }
+    });
+
+    res.json({ content });
+  } catch (error) {
+    console.error("Error fetching section:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -153,7 +141,5 @@ app.get("/medical-card", async (req, res) => {
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
   console.log(`Server running on http://localhost:${PORT}`);
 });
-

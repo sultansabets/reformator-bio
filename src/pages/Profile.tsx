@@ -115,6 +115,7 @@ const MOCK_SUBSCRIPTIONS = [
 function MedicalTab() {
   const { t } = useTranslation();
   const [medicalCard, setMedicalCard] = useState<any | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadMedicalCard = async () => {
@@ -193,14 +194,18 @@ function MedicalTab() {
       )}
       <Card className="border border-border">
         <CardContent className="divide-y divide-border p-0">
-          {LAB_ITEM_KEYS.map((key) => (
-            <div
-              key={key}
-              className="flex items-center justify-between px-4 py-3"
+          {(medicalCard?.sections || []).map((section: any) => (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => navigate(`/medical/${encodeURIComponent(section.id)}`)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
             >
-              <span className="text-sm font-medium text-foreground">{t(`profile.${key}`)}</span>
+              <span className="text-sm font-medium text-foreground">
+                {section.title}
+              </span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </div>
+            </button>
           ))}
         </CardContent>
       </Card>

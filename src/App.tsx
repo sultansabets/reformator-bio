@@ -20,6 +20,7 @@ import Labs from "@/pages/Labs";
 import Store from "@/pages/Store";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
+import MedicalSectionDetails from "@/pages/MedicalSectionDetails";
 import Community from "@/pages/Community";
 import SmartWake from "@/pages/SmartWake";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/shop" element={<Store />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/medical/:id" element={<MedicalSectionDetails />} />
               <Route path="/community" element={<Community />} />
             </Route>
             {/* Standalone pages without AppLayout */}
