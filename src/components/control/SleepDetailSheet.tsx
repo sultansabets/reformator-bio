@@ -54,9 +54,9 @@ const DEFAULT_FALL_ASLEEP = 22 * 60;
 const WEAKEST_SUMMARY: Record<string, string> = {
   duration: "sleepDetail.aiDuration",
   continuity: "sleepDetail.aiContinuity",
-  hr: "sleepDetail.aiHR",
+  deep: "sleepDetail.aiArchitecture",
+  rem: "sleepDetail.aiArchitecture",
   hrv: "sleepDetail.aiHRV",
-  architecture: "sleepDetail.aiArchitecture",
 };
 
 interface SleepDetailSheetProps {
@@ -156,7 +156,7 @@ export function SleepDetailSheet({
                 </button>
 
                 {durationExpanded && hrChartData.length >= 2 && (
-                  <div className="mt-3 min-w-0 overflow-hidden rounded-xl bg-[#0f0f10] p-3">
+                  <div className="mt-3 min-w-0 overflow-hidden">
                     <ResponsiveContainer width="100%" height={100} minHeight={80}>
                       <LineChart data={hrChartData} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
                         <ReferenceLine x={0} stroke="rgba(255,255,255,0.4)" strokeDasharray="4 4" strokeWidth={1} />
@@ -165,15 +165,7 @@ export function SleepDetailSheet({
                           dataKey="minute"
                           type="number"
                           domain={[0, Math.max(60, actualMinutes)]}
-                          tickFormatter={(m) => {
-                            const h = Math.floor(m / 60);
-                            const min = Math.round(m % 60);
-                            return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-                          }}
-                          tick={{ fontSize: 9, fill: "rgba(255,255,255,0.6)" }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval="preserveStartEnd"
+                          hide
                         />
                         <YAxis domain={["auto", "auto"]} hide />
                         <Line
@@ -194,18 +186,41 @@ export function SleepDetailSheet({
                 )}
               </section>
 
-              {/* 2. ФАЗЫ СНА — TRUE TIMELINE */}
+              {/* 2. ФАЗЫ СНА — WHOOP-STYLE TIMELINE */}
               <section className="border-t border-white/10 p-4">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/70">
                   {t("sleepDetail.howYouSlept")}
                 </h3>
-                <div className="min-w-0 overflow-hidden rounded-2xl bg-[#0f0f10] p-3">
-                  {(() => {
-                    const total = actualMinutes && actualMinutes > 0 ? actualMinutes : 450;
-                    return (
-                      <>
-                        <div className="min-h-[100px] h-[100px] w-full overflow-x-auto">
-                          <div className="flex h-full items-end gap-[1px]">
+                {(() => {
+                  const total = actualMinutes && actualMinutes > 0 ? actualMinutes : 450;
+                  const awakenings = displayData.awakenings ?? 0;
+                  const awakeningMinutes = Array.from(
+                    { length: awakenings },
+                    (_, i) => Math.round(((i + 1) / (awakenings + 1)) * total)
+                  );
+                  const phaseColors: Record<string, string> = {
+                    deep: "rgba(30,58,138,0.15)",
+                    light: "rgba(59,130,246,0.15)",
+                    rem: "rgba(124,58,237,0.15)",
+                    awake: "rgba(239,68,68,0.2)",
+                  };
+                  const pts = hrChartData;
+                  const hrPath =
+                    pts.length >= 2 && total > 0
+                      ? pts
+                          .map((p, i) => {
+                            const x = (p.minute / total) * 100;
+                            const y = Math.max(5, Math.min(95, 100 - (p.hr - 50) * 2.5));
+                            return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+                          })
+                          .join(" ")
+                      : "";
+                  return (
+                    <>
+                      <div className="min-h-[100px] h-[100px] w-full overflow-x-auto">
+                        <div className="relative h-full w-full" style={{ minWidth: total * 2 }}>
+                          {/* Layer 1: фоновые фазы */}
+                          <div className="absolute inset-0 flex h-full gap-[1px]">
                             {Array.from({ length: total }).map((_, i) => {
                               const progress = i / total;
                               let phase: "deep" | "light" | "rem" | "awake" = "light";
@@ -214,67 +229,54 @@ export function SleepDetailSheet({
                               else if (progress < 0.55) phase = "rem";
                               else if (progress < 0.8) phase = "light";
                               else phase = "awake";
-
-                              const colorByPhase: Record<typeof phase, string> = {
-                                deep: "#1E3A8A",
-                                light: "#3B82F6",
-                                rem: "#7C3AED",
-                                awake: "#EF4444",
-                              };
-
                               return (
                                 <div
                                   key={i}
-                                  className="w-[2px] rounded-full"
-                                  style={{
-                                    height: "100%",
-                                    backgroundColor: colorByPhase[phase],
-                                  }}
+                                  className="w-[2px] rounded-full shrink-0"
+                                  style={{ height: "100%", backgroundColor: phaseColors[phase] }}
                                 />
                               );
                             })}
                           </div>
-                        </div>
-
-                        <div className="mt-2 flex justify-between text-[10px] text-white/60">
-                          <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
-                          <span>
-                            {formatTimeHHMM(
-                              DEFAULT_FALL_ASLEEP + Math.round(total / 2)
+                          {/* Layer 2: линия пульса + вертикальные dashed при пробуждениях */}
+                          <svg
+                            className="absolute inset-0 h-full w-full"
+                            preserveAspectRatio="none"
+                            viewBox="0 0 100 100"
+                          >
+                            {awakeningMinutes.map((min) => (
+                              <line
+                                key={min}
+                                x1={(min / total) * 100}
+                                y1={0}
+                                x2={(min / total) * 100}
+                                y2={100}
+                                stroke="rgba(255,255,255,0.4)"
+                                strokeWidth={0.5}
+                                strokeDasharray="3 3"
+                              />
+                            ))}
+                            {hrPath && (
+                              <path
+                                d={hrPath}
+                                fill="none"
+                                stroke="#9ED0FF"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                vectorEffect="non-scaling-stroke"
+                              />
                             )}
-                          </span>
-                          <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP + total)}</span>
+                          </svg>
                         </div>
-
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] text-white/60">
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#1E3A8A" }} />
-                            <span>Глубокий</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3B82F6" }} />
-                            <span>Лёгкий</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#7C3AED" }} />
-                            <span>Быстрый сон (REM)</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#EF4444" }} />
-                            <span>Бодрствование</span>
-                          </div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                  <div className="mt-3 flex justify-between text-xs text-white/60">
-                    <span>{t("sleepDetail.fallAsleep")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
-                    <span>{t("sleepDetail.wakeUp")}: {formatTimeHHMM(DEFAULT_FALL_ASLEEP + actualMinutes)}</span>
-                  </div>
-                  <p className="mt-1 text-center text-xs text-white/50">
-                    {t("sleepDetail.totalSleep")}: {formatDurationShort(actualMinutes)}
-                  </p>
-                </div>
+                      </div>
+                      <div className="mt-2 flex justify-between text-[10px] text-white/60">
+                        <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP)}</span>
+                        <span>{formatTimeHHMM(DEFAULT_FALL_ASLEEP + total)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {phasesExpanded && (
                   <div className="mt-3 space-y-1.5 rounded-xl bg-white/5 px-4 py-3 text-sm">

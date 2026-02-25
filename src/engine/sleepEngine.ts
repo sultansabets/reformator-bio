@@ -29,7 +29,7 @@ export interface SleepEngineInput {
 }
 
 export interface SleepBlock {
-  key: "duration" | "continuity" | "hr" | "hrv" | "architecture";
+  key: "duration" | "continuity" | "deep" | "rem" | "hrv";
   score: number;
   weight: number;
   labelKey: string;
@@ -54,9 +54,9 @@ export interface SleepEngineResult {
   sleepScore: number;
   durationScore: number;
   continuityScore: number;
-  hrScore: number;
+  deepScore: number;
+  remScore: number;
   hrvScore: number;
-  architectureScore: number;
   blocks: SleepBlock[];
   weakestBlockKey: SleepBlock["key"];
   displayData: SleepDisplayData;
@@ -86,31 +86,22 @@ function calcContinuityScore(awakenings: number, totalWakeMinutes: number): numb
   return clamp(score);
 }
 
-/** 3. Ночной пульс (15%) */
-function calcHRScore(currentNightHR: number, baselineNightHR: number): number {
-  const baseline = baselineNightHR > 0 ? baselineNightHR : currentNightHR;
-  let score = 100 - (currentNightHR - baseline) * 5;
-  return clamp(score);
+/** 3. Глубокий сон (20%) */
+function calcDeepScore(deepPercent: number, optimalDeepPercent: number): number {
+  const ratio = optimalDeepPercent > 0 ? deepPercent / optimalDeepPercent : 1;
+  return clamp(ratio * 100);
 }
 
-/** 4. HRV (25%) */
+/** 4. REM (10%) */
+function calcRemScore(remPercent: number, optimalRemPercent: number): number {
+  const ratio = optimalRemPercent > 0 ? remPercent / optimalRemPercent : 1;
+  return clamp(ratio * 100);
+}
+
+/** 5. HRV (10%) */
 function calcHRVScore(currentNightHRV: number, baselineHRV: number): number {
   const baseline = baselineHRV > 0 ? baselineHRV : currentNightHRV;
   let score = 100 + (currentNightHRV - baseline) * 2;
-  return clamp(score);
-}
-
-/** 5. Архитектура (10%) */
-function calcArchitectureScore(
-  deepPercent: number,
-  optimalDeepPercent: number,
-  remPercent: number,
-  optimalRemPercent: number,
-  sleepLatencyMinutes: number
-): number {
-  const deepRatio = optimalDeepPercent > 0 ? deepPercent / optimalDeepPercent : 1;
-  const remRatio = optimalRemPercent > 0 ? remPercent / optimalRemPercent : 1;
-  let score = (deepRatio * 100 * 0.6 + remRatio * 100 * 0.4) - sleepLatencyMinutes * 0.5;
   return clamp(score);
 }
 
@@ -136,30 +127,24 @@ export function calculateSleepFromBlocks(input: SleepEngineInput): SleepEngineRe
 
   const durationScore = calcDurationScore(actualSleepMinutes, personalOptimalSleepMinutes, sleepDebtMinutes);
   const continuityScore = calcContinuityScore(awakenings, totalWakeMinutes);
-  const hrScore = calcHRScore(currentNightHR, baselineNightHR);
+  const deepScore = calcDeepScore(deepPercent, optimalDeepPercent);
+  const remScore = calcRemScore(remPercent, optimalRemPercent);
   const hrvScore = calcHRVScore(currentNightHRV, baselineHRV);
-  const architectureScore = calcArchitectureScore(
-    deepPercent,
-    optimalDeepPercent,
-    remPercent,
-    optimalRemPercent,
-    sleepLatencyMinutes
-  );
 
   let sleepScore =
     durationScore * 0.35 +
-    continuityScore * 0.15 +
-    hrScore * 0.15 +
-    hrvScore * 0.25 +
-    architectureScore * 0.1;
+    continuityScore * 0.25 +
+    deepScore * 0.2 +
+    remScore * 0.1 +
+    hrvScore * 0.1;
   sleepScore = clamp(Math.round(sleepScore * 10) / 10);
 
   const blocks: SleepBlock[] = [
     { key: "duration", score: durationScore, weight: 0.35, labelKey: "sleepDetail.duration" },
-    { key: "continuity", score: continuityScore, weight: 0.15, labelKey: "sleepDetail.continuity" },
-    { key: "hr", score: hrScore, weight: 0.15, labelKey: "sleepDetail.nightHR" },
-    { key: "hrv", score: hrvScore, weight: 0.25, labelKey: "sleepDetail.hrv" },
-    { key: "architecture", score: architectureScore, weight: 0.1, labelKey: "sleepDetail.architecture" },
+    { key: "continuity", score: continuityScore, weight: 0.25, labelKey: "sleepDetail.continuity" },
+    { key: "deep", score: deepScore, weight: 0.2, labelKey: "sleepDetail.archDeep" },
+    { key: "rem", score: remScore, weight: 0.1, labelKey: "sleepDetail.archRem" },
+    { key: "hrv", score: hrvScore, weight: 0.1, labelKey: "sleepDetail.hrv" },
   ];
 
   const weakestBlockKey = blocks.reduce((min, b) => (b.score < min.score ? b : min)).key;
@@ -183,9 +168,9 @@ export function calculateSleepFromBlocks(input: SleepEngineInput): SleepEngineRe
     sleepScore: Math.round(sleepScore),
     durationScore,
     continuityScore,
-    hrScore,
+    deepScore,
+    remScore,
     hrvScore,
-    architectureScore,
     blocks,
     weakestBlockKey,
     displayData,
