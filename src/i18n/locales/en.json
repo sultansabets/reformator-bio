@@ -169,7 +169,17 @@
     "sleepEfficiency": "Sleep efficiency",
     "sleepDebt": "Sleep debt",
     "showMore": "More",
-    "showLess": "Less"
+    "showLess": "Less",
+    "resultsBlock": "Sleep results",
+    "regularityBlock": "Regularity",
+    "sleepStartBlock": "Sleep start",
+    "wakeUpBlock": "Wake up",
+    "efficiencyBlock": "Efficiency",
+    "timeInBedBlock": "Time in bed",
+    "inSleepBlock": "During sleep",
+    "noiseBlock": "Noise",
+    "snoringBlock": "Snoring",
+    "notEnoughData": "Not enough data to build trends. Minimum 5 nights required."
   },
   "energyDetail": {
     "title": "State",

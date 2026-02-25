@@ -170,7 +170,17 @@
     "sleepEfficiency": "Эффективность сна",
     "sleepDebt": "Дефицит сна",
     "showMore": "Подробнее",
-    "showLess": "Скрыть"
+    "showLess": "Скрыть",
+    "resultsBlock": "Итоги сна",
+    "regularityBlock": "Регулярность",
+    "sleepStartBlock": "Начало сна",
+    "wakeUpBlock": "Подъём",
+    "efficiencyBlock": "Эффективность",
+    "timeInBedBlock": "Время в постели",
+    "inSleepBlock": "Во сне",
+    "noiseBlock": "Шум",
+    "snoringBlock": "Храп",
+    "notEnoughData": "Недостаточно данных для трендов. Минимум 5 ночей."
   },
   "energyDetail": {
     "title": "Состояние",

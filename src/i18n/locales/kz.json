@@ -154,7 +154,17 @@
     "sleepEfficiency": "Ұйқы тиімділігі",
     "sleepDebt": "Ұйқы тапшылығы",
     "showMore": "Толығырақ",
-    "showLess": "Жасыру"
+    "showLess": "Жасыру",
+    "resultsBlock": "Ұйқы қорытындысы",
+    "regularityBlock": "Тұрақтылық",
+    "sleepStartBlock": "Ұйқы басы",
+    "wakeUpBlock": "Ояну",
+    "efficiencyBlock": "Тиімділік",
+    "timeInBedBlock": "Төсекте уақыт",
+    "inSleepBlock": "Ұйқыда",
+    "noiseBlock": "Шу",
+    "snoringBlock": "Қорынды",
+    "notEnoughData": "Тренд құру үшін деректер жеткіліксіз. Минимум 5 түн қажет."
   },
   "energyDetail": {
     "title": "Күй",
