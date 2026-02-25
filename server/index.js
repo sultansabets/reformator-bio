@@ -13,6 +13,13 @@ const notion = new Client({
 
 const TEST_PAGE_ID = "30f595e6e9d6802b9a86c920c5207210";
 
+function normalizeTitle(title) {
+  return title
+    .replace(/[^\w\sА-Яа-яЁё]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 function parseMedicalCard(page, blocks) {
   const properties = page?.properties || {};
 
@@ -28,61 +35,96 @@ function parseMedicalCard(page, blocks) {
     status: properties.Status?.select?.name || "",
   };
 
-  const sections = {
-    analyses: [],
-    ultrasound: [],
-    ecg: [],
-    doctors: {
-      main: null,
-      urologist: null,
-      sport: null,
-      rehab: null,
-      psychotherapist: null,
-    },
-  };
+  const sections = [];
+  let currentSection = null;
 
   (blocks?.results || []).forEach((block) => {
-    if (block.type !== "heading_2") return;
+    if (block.type === "heading_2") {
+      const rawTitle = block.heading_2?.rich_text?.[0]?.plain_text || "";
+      const titleNorm = normalizeTitle(rawTitle);
 
-    const title = block.heading_2?.rich_text?.[0]?.plain_text || "";
+      currentSection = {
+        id: rawTitle,
+        title: rawTitle,
+        type: "generic",
+        content: [],
+      };
 
-    if (title === "Результаты анализов") {
-      sections.analyses.push({ title });
+      if (titleNorm.includes("результаты анализов")) {
+        currentSection.type = "analyses";
+      } else if (titleNorm.includes("узи")) {
+        currentSection.type = "ultrasound";
+      } else if (titleNorm.includes("экг")) {
+        currentSection.type = "ecg";
+      } else if (titleNorm.includes("главный врач")) {
+        currentSection.type = "doctor-main";
+      } else if (titleNorm.includes("уролог")) {
+        currentSection.type = "doctor-urologist";
+      } else if (titleNorm.includes("спортивный врач")) {
+        currentSection.type = "doctor-sport";
+      } else if (titleNorm.includes("реабилитолог")) {
+        currentSection.type = "doctor-rehab";
+      } else if (titleNorm.includes("психотерапевт")) {
+        currentSection.type = "doctor-psychotherapist";
+      }
+
+      sections.push(currentSection);
       return;
     }
 
-    if (title === "УЗИ") {
-      sections.ultrasound.push({ title });
+    if (!currentSection) return;
+
+    if (block.type === "paragraph") {
+      currentSection.content.push({
+        type: "paragraph",
+        text:
+          block.paragraph?.rich_text
+            ?.map((r) => r.plain_text)
+            .join("") || "",
+      });
       return;
     }
 
-    if (title === "ЭКГ") {
-      sections.ecg.push({ title });
+    if (block.type === "bulleted_list_item") {
+      currentSection.content.push({
+        type: "bulleted_list_item",
+        text:
+          block.bulleted_list_item?.rich_text
+            ?.map((r) => r.plain_text)
+            .join("") || "",
+      });
       return;
     }
 
-    if (title.startsWith("Главный врач")) {
-      sections.doctors.main = title.replace("Главный врач ", "");
+    if (block.type === "numbered_list_item") {
+      currentSection.content.push({
+        type: "numbered_list_item",
+        text:
+          block.numbered_list_item?.rich_text
+            ?.map((r) => r.plain_text)
+            .join("") || "",
+      });
       return;
     }
 
-    if (title.startsWith("Уролог")) {
-      sections.doctors.urologist = title.replace("Уролог ", "");
+    if (block.type === "file") {
+      currentSection.content.push({
+        type: "file",
+        url: block.file?.file?.url || block.file?.external?.url || "",
+        name: block.file?.file?.expiry_time || "",
+      });
       return;
     }
 
-    if (title.startsWith("Спортивный врач")) {
-      sections.doctors.sport = title.replace("Спортивный врач ", "");
-      return;
-    }
-
-    if (title.startsWith("Реабилитолог")) {
-      sections.doctors.rehab = title.replace("Реабилитолог ", "");
-      return;
-    }
-
-    if (title.startsWith("Психотерапевт")) {
-      sections.doctors.psychotherapist = title.replace("Психотерапевт ", "");
+    if (block.type === "image") {
+      currentSection.content.push({
+        type: "image",
+        url: block.image?.file?.url || block.image?.external?.url || "",
+        caption:
+          block.image?.caption
+            ?.map((r) => r.plain_text)
+            .join("") || "",
+      });
     }
   });
 
