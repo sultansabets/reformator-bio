@@ -1,8 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import { BarChart, Bar, Cell, XAxis, YAxis, ResponsiveContainer, ReferenceArea } from "recharts";
-import { calculateLoadDetail } from "@/engine/loadEngine";
+import { calculateLoadDetail, type LoadStatus } from "@/engine/loadEngine";
 import { useHealthStore } from "@/store/healthStore";
 
 interface LoadDetailSheetProps {
@@ -11,85 +10,126 @@ interface LoadDetailSheetProps {
   loadPercent: number;
 }
 
-const ZONE_COLORS = {
-  optimal: "hsl(var(--status-green))",
-  high: "hsl(var(--status-amber))",
-  overload: "hsl(var(--status-red))",
+const STATUS_LABEL: Record<LoadStatus, string> = {
+  balanced: "В балансе",
+  overloaded: "Перегружен",
+  low_activity: "Мало активности",
 };
 
-export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailSheetProps) {
+const STATUS_COLOR_CLASS: Record<LoadStatus, string> = {
+  balanced: "bg-status-green",
+  overloaded: "bg-status-red",
+  low_activity: "bg-status-amber",
+};
+
+export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
   const { t } = useTranslation();
-  const trainingLoad = useHealthStore((s) => s.trainingLoad);
-  const steps = useHealthStore((s) => s.steps);
   const workouts = useHealthStore((s) => s.workouts);
-  const dayLabels = t("center.dayLabels", { returnObjects: true }) as string[];
+  const steps = useHealthStore((s) => s.steps);
+  const stressPercent = useHealthStore((s) => s.stress);
+  const sleepDetail = useHealthStore((s) => s.sleepDetail);
 
-  const detail = useMemo(
-    () =>
-      calculateLoadDetail({
-        loadPercent,
-        trainingLoad,
-        steps,
-        workoutsCount: workouts.length,
-        dayLabels,
-      }),
-    [loadPercent, trainingLoad, steps, workouts.length, dayLabels]
-  );
+  const { strengthMinutes, cardioMinutes } = useMemo(() => {
+    let strengthSec = 0;
+    let cardioSec = 0;
+    workouts.forEach((w) => {
+      const sec = w.durationSec || 0;
+      const type = (w.type || "").toLowerCase();
+      if (type.includes("сил") || type.includes("strength") || type.includes("gym")) {
+        strengthSec += sec;
+      } else {
+        cardioSec += sec;
+      }
+    });
+    return {
+      strengthMinutes: strengthSec / 60,
+      cardioMinutes: cardioSec / 60,
+    };
+  }, [workouts]);
 
-  const { loadScore, chartData, optimalMin, optimalMax, breakdown } = detail;
+  const detail = useMemo(() => {
+    const totalSleepMinutes = sleepDetail?.displayData.actualSleepMinutes ?? 0;
+    const awakenings = sleepDetail?.displayData.awakenings ?? 0;
+    const stress0to10 = Math.max(0, Math.min(10, (stressPercent || 0) / 10));
+
+    return calculateLoadDetail({
+      strengthMinutes,
+      cardioMinutes,
+      steps,
+      intensity: 1,
+      stress: stress0to10,
+      totalSleepMinutes,
+      awakenings,
+    });
+  }, [strengthMinutes, cardioMinutes, steps, stressPercent, sleepDetail]);
+
+  const { physicalScore, neuroScore, totalLoad, status } = detail;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold">
-            {t("loadDetail.title")} — {loadScore}%
+            {t("loadDetail.title")} — {totalLoad}%
           </h2>
         </DrawerHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           <div className="space-y-5">
-            <section>
-                <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card">
-                <ResponsiveContainer width="100%" height={140}>
-                  <BarChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 4 }}>
-                    <ReferenceArea y1={optimalMin} y2={optimalMax} fill="hsl(var(--status-green))" fillOpacity={0.15} />
-                    <XAxis
-                      dataKey="day"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 10, fill: "hsl(var(--foreground) / 0.7)" }}
-                    />
-                    <YAxis domain={[0, 100]} hide />
-                    <Bar dataKey="load" radius={[4, 4, 0, 0]}>
-                      {chartData.map((entry, i) => (
-                        <Cell key={i} fill={ZONE_COLORS[entry.zone] ?? ZONE_COLORS.optimal} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+            <section className="rounded-2xl border border-border bg-card p-4">
+              <h3 className="mb-3 text-sm font-medium text-foreground">
+                Общая нагрузка
+              </h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-3xl font-bold text-foreground">
+                    {totalLoad}%
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Сводный индекс нагрузки за день
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`h-3 w-3 rounded-full ${STATUS_COLOR_CLASS[status]}`}
+                  />
+                  <span className="text-xs font-medium text-foreground">
+                    {STATUS_LABEL[status]}
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t("loadDetail.optimalRange", { min: optimalMin, max: optimalMax })}
-              </p>
             </section>
 
-            <section>
-              <h3 className="mb-3 text-sm font-medium text-foreground">
-                {t("loadDetail.breakdownTitle")}
+            <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+              <h3 className="mb-1 text-sm font-medium text-foreground">
+                Физическая и нейронная нагрузка
               </h3>
-              <div className="space-y-2">
-                {breakdown.map((item) => (
-                  <div
-                    key={item.key}
-                    className="rounded-lg border border-border bg-card px-4 py-3"
-                  >
-                    <p className="font-medium text-foreground">
-                      {t(`loadDetail.${item.key}`)} — {t(item.valueKey)}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{t(item.descKey)}</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Физическая нагрузка
+                  </p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {physicalScore}%
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Силовые, кардио и шаги
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Нагрузка на нервную систему
+                  </p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {neuroScore}%
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Стресс, сон и пробуждения
+                  </p>
+                </div>
               </div>
             </section>
           </div>

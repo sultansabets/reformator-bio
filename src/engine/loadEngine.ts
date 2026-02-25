@@ -1,87 +1,68 @@
 /**
- * Load Engine — данные для графика нагрузки и разбора.
+ * Load Engine — новая модель нагрузки.
  * Чистые функции. Без UI.
  */
 
 const clamp = (v: number): number => Math.max(0, Math.min(100, Number.isFinite(v) ? v : 0));
 
-const OPTIMAL_LOAD_MIN = 30;
-const OPTIMAL_LOAD_MAX = 65;
-const HIGH_LOAD_THRESHOLD = 75;
-
-export type LoadZone = "optimal" | "high" | "overload";
-
-export interface LoadDayPoint {
-  day: string;
-  load: number;
-  zone: LoadZone;
-}
-
-export interface LoadBreakdownItem {
-  key: string;
-  valueKey: string;
-  descKey: string;
-  value: number;
-}
+export type LoadStatus = "balanced" | "overloaded" | "low_activity";
 
 export interface LoadEngineResult {
-  loadScore: number;
-  chartData: LoadDayPoint[];
-  optimalMin: number;
-  optimalMax: number;
-  breakdown: LoadBreakdownItem[];
+  physicalScore: number;
+  neuroScore: number;
+  totalLoad: number;
+  status: LoadStatus;
 }
 
-function getZone(load: number): LoadZone {
-  if (load > HIGH_LOAD_THRESHOLD) return "overload";
-  if (load > OPTIMAL_LOAD_MAX) return "high";
-  return "optimal";
-}
-
-/**
- * Генерирует данные графика за 7–14 дней.
- * При отсутствии истории использует текущий loadPercent с вариацией.
- */
-export function calculateLoadDetail(data: {
-  loadPercent: number;
-  trainingLoad: number;
+export interface LoadEngineInput {
+  strengthMinutes: number;
+  cardioMinutes: number;
   steps: number;
-  workoutsCount: number;
-  dayLabels: string[];
-}): LoadEngineResult {
-  const loadPercent = clamp(data.loadPercent);
-  const dayLabels = data.dayLabels?.length >= 7 ? data.dayLabels : ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-  const days = Math.min(14, Math.max(7, dayLabels.length));
+  intensity: number;
+  stress: number; // 0–10
+  totalSleepMinutes: number;
+  awakenings: number;
+}
 
-  const chartData: LoadDayPoint[] = [];
-  for (let i = 0; i < days; i++) {
-    const variance = (i % 3 - 1) * 8 + (Math.sin(i * 0.7) * 5);
-    const load = clamp(loadPercent + variance);
-    chartData.push({
-      day: dayLabels[i % dayLabels.length],
-      load: Math.round(load),
-      zone: getZone(load),
-    });
+export function calculateLoadDetail(input: LoadEngineInput): LoadEngineResult {
+  const strengthMinutes = Math.max(0, input.strengthMinutes);
+  const cardioMinutes = Math.max(0, input.cardioMinutes);
+  const steps = Math.max(0, input.steps);
+
+  const stress = clamp(input.stress * 10) / 10; // нормируем к 0–10
+  const totalSleepMinutes = Math.max(0, input.totalSleepMinutes);
+  const awakenings = Math.max(0, input.awakenings);
+
+  // Физическая нагрузка
+  const strengthLoad = strengthMinutes * 1.2;
+  const cardioLoad = cardioMinutes * 1.0;
+  const stepsLoad = (steps / 1000) * 2;
+  const physicalLoad = strengthLoad + cardioLoad + stepsLoad;
+  const physicalScore = clamp(physicalLoad / 20);
+
+  // Нагрузка на нервную систему
+  const stressLoad = stress * 8;
+  const sleepPenalty = Math.max(0, 450 - totalSleepMinutes) / 10;
+  const awakeningPenalty = awakenings * 3;
+  const neuroLoad = stressLoad + sleepPenalty + awakeningPenalty;
+  const neuroScore = clamp(neuroLoad);
+
+  // Общая нагрузка
+  const totalLoad = clamp(physicalScore * 0.6 + neuroScore * 0.4);
+
+  let status: LoadStatus = "balanced";
+  if (totalLoad > 70 || neuroScore > 80 || totalSleepMinutes < 360) {
+    status = "overloaded";
+  } else if (totalLoad < 40 && physicalScore < 35) {
+    status = "low_activity";
+  } else if (totalLoad >= 40 && totalLoad <= 70 && neuroScore < 70) {
+    status = "balanced";
   }
 
-  const physicalShare = Math.min(1, (data.trainingLoad / 100) * 1.2 + (data.steps / 10000) * 0.3);
-  const physicalValue = Math.round(physicalShare * 100);
-  const dayStressValue = Math.round(data.workoutsCount > 0 ? 60 + data.workoutsCount * 10 : 40);
-  const bodyPressureValue = Math.round(clamp(data.trainingLoad * 0.9 + 10));
-  const behavioralValue = Math.round(clamp(100 - data.steps / 150));
-
-  const breakdown: LoadBreakdownItem[] = [
-    { key: "physical", valueKey: physicalValue >= 70 ? "loadDetail.high" : physicalValue >= 40 ? "loadDetail.medium" : "loadDetail.low", descKey: "loadDetail.physicalDesc", value: physicalValue },
-    { key: "dayStress", valueKey: dayStressValue >= 70 ? "loadDetail.high" : "loadDetail.medium", descKey: "loadDetail.dayStressDesc", value: dayStressValue },
-    { key: "bodyPressure", valueKey: bodyPressureValue >= 75 ? "loadDetail.high" : "loadDetail.medium", descKey: "loadDetail.bodyPressureDesc", value: bodyPressureValue },
-    { key: "behavioral", valueKey: behavioralValue >= 60 ? "loadDetail.high" : "loadDetail.medium", descKey: "loadDetail.behavioralDesc", value: behavioralValue },
-  ];
-
   return {
-    loadScore: Math.round(loadPercent),
-    chartData,
-    optimalMin: OPTIMAL_LOAD_MIN,
-    optimalMax: OPTIMAL_LOAD_MAX,
-    breakdown,
+    physicalScore: Math.round(physicalScore),
+    neuroScore: Math.round(neuroScore),
+    totalLoad: Math.round(totalLoad),
+    status,
   };
 }
