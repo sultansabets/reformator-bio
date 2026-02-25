@@ -9,7 +9,6 @@ import {
   calculateNutritionScore,
   calculateTrainingLoad,
   hrvToScore,
-  calculateRecovery,
   calculateStress,
   testosteroneToScore,
   calculateEnergy,
@@ -74,7 +73,6 @@ export interface HealthComputedState {
   energyDetail: EnergyEngineResult;
   nutritionScore: number;
   trainingLoad: number;
-  recovery: number;
   stress: number;
   mainStateScore: number;
   sleepPercent: number;
@@ -115,11 +113,6 @@ function recompute(raw: HealthRawState): HealthComputedState {
   });
   const trainingLoad = calculateTrainingLoad(workoutEntries, raw.steps);
   const hrvScore = hrvToScore(raw.hrv);
-  const recovery = calculateRecovery({
-    sleepScore,
-    hrvScore,
-    trainingLoad,
-  });
   const stress = calculateStress({
     hrvScore,
     trainingLoad,
@@ -130,12 +123,10 @@ function recompute(raw: HealthRawState): HealthComputedState {
   const loadPercent = calculateLoadPercent(workoutEntries, raw.steps);
   const mainStateScore = calculateEnergy({
     sleep: sleepScore,
-    adaptation: recovery,
     load: loadPercent,
   });
   const energyDetail = calculateEnergyDetail({
     sleep: sleepScore,
-    adaptation: recovery,
     load: loadPercent,
   });
 
@@ -145,7 +136,6 @@ function recompute(raw: HealthRawState): HealthComputedState {
     energyDetail,
     nutritionScore,
     trainingLoad,
-    recovery,
     stress,
     mainStateScore,
     sleepPercent,

@@ -4,10 +4,9 @@ import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { SleepDetailSheet } from "./SleepDetailSheet";
 import { EnergyDetailSheet } from "./EnergyDetailSheet";
 import { LoadDetailSheet } from "./LoadDetailSheet";
-import { AdaptationDetailSheet } from "./AdaptationDetailSheet";
 import { useHealthStore } from "@/store/healthStore";
 
-export type MetricKey = "energy" | "hormones" | "strength" | "sleep" | "load" | "recovery";
+export type MetricKey = "energy" | "hormones" | "strength" | "sleep" | "load";
 
 export interface MetricDetail {
   key: MetricKey;
@@ -47,11 +46,6 @@ const METRIC_KEYS: Record<MetricKey, { desc: string; formula: string; sources: s
     formula: "metrics.detailLoadFormula",
     sources: ["systems.volume", "systems.intensity"],
   },
-  recovery: {
-    desc: "metrics.detailRecovery",
-    formula: "metrics.detailRecoveryFormula",
-    sources: ["systems.sleep", "systems.hrv", "systems.recovery"],
-  },
 };
 
 export function MetricDetailSheet({
@@ -79,16 +73,6 @@ export function MetricDetailSheet({
       />
     );
   }
-  if (detail?.key === "recovery") {
-    return (
-      <AdaptationDetailSheet
-        open={open}
-        onOpenChange={onOpenChange}
-        adaptationPercent={detail.percent}
-      />
-    );
-  }
-
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh] flex flex-col">

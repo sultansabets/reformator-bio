@@ -30,7 +30,6 @@ export interface HealthEngineInput {
 export interface HealthEngineOutput {
   energyScore: number;
   stressScore: number;
-  recoveryScore: number;
   testosteroneIndex: number | null;
   liverLoad: number;
   metabolicStress: number;
@@ -60,12 +59,6 @@ function getLiverLoad(bilirubin: number | undefined): number {
 function getMetabolicStress(uricAcid: number | undefined): number {
   if (uricAcid == null || !Number.isFinite(uricAcid) || uricAcid <= 339) return 0;
   return (uricAcid - 339) * 0.05;
-}
-
-/** Recovery penalty if platelets < 180 */
-function getRecoveryPenalty(platelets: number | undefined): number {
-  if (platelets == null || !Number.isFinite(platelets) || platelets >= 180) return 0;
-  return 5;
 }
 
 /** Sleep factor: ideal 7.5h, clamp((sleepHours - 7.5) * 8, -20, 15) */
@@ -123,7 +116,6 @@ export function computeHealthMetrics(input: HealthEngineInput): HealthEngineOutp
   const testosteroneFactor = getTestosteroneFactor(testosteroneNmolL);
   const liverLoad = getLiverLoad(labs?.bilirubin);
   const metabolicStress = getMetabolicStress(labs?.uricAcid);
-  const recoveryPenalty = getRecoveryPenalty(labs?.platelets);
   const sleepFactor = getSleepFactor(sleepHours);
   const sleepDeficit = getSleepDeficitStress(sleepHours);
   const { factor: nutritionFactor, stressBonus: nutritionStress } = getNutritionFactor(
@@ -136,19 +128,12 @@ export function computeHealthMetrics(input: HealthEngineInput): HealthEngineOutp
   const baseStress = 35;
   const baseRecovery = 70;
 
-  const recoveryScore = clamp(
-    baseRecovery + sleepFactor + testosteroneFactor - liverLoad - recoveryPenalty,
-    0,
-    100
-  );
-
   const stressScore = clamp(
     baseStress +
       workoutIntensity * 1.5 +
       sleepDeficit +
       metabolicStress +
-      nutritionStress -
-      recoveryScore * 0.3,
+      nutritionStress,
     0,
     100
   );
@@ -168,7 +153,6 @@ export function computeHealthMetrics(input: HealthEngineInput): HealthEngineOutp
   return {
     energyScore: Math.round(energyScore),
     stressScore: Math.round(stressScore),
-    recoveryScore: Math.round(recoveryScore),
     testosteroneIndex,
     liverLoad,
     metabolicStress,

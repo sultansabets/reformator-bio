@@ -114,36 +114,17 @@ export function testosteroneToScore(nmolL: number | undefined): number {
 }
 
 /**
- * MainStateScore = sleepScore*0.25 + nutritionScore*0.25 + recovery*0.25 + testosterone*0.25
- * @deprecated Use calculateEnergy for main display
- */
-export function calculateMainState(data: {
-  sleepScore: number;
-  nutritionScore: number;
-  recovery: number;
-  testosteroneNormalized: number;
-}): number {
-  const s = data.sleepScore * 0.25;
-  const n = data.nutritionScore * 0.25;
-  const r = data.recovery * 0.25;
-  const te = data.testosteroneNormalized * 0.25;
-  return clamp(Math.round(s + n + r + te), 0, 100);
-}
-
-/**
- * Energy = readiness for physical/mental load today.
- * Based on: Sleep (replenishment), Adaptation (nervous system), Load (pressure on body).
+ * Energy = состояние для физической/умственной нагрузки сегодня.
+ * Based on: Sleep (replenishment) и Load (pressure on body).
  */
 export function calculateEnergy(data: {
   sleep: number;
-  adaptation: number;
   load: number;
 }): number {
   const sleep = Number.isFinite(data.sleep) ? data.sleep : 50;
-  const adaptation = Number.isFinite(data.adaptation) ? data.adaptation : 50;
   const load = Number.isFinite(data.load) ? data.load : 0;
 
-  const recoveryCapacity = sleep * 0.5 + adaptation * 0.5;
+  const recoveryCapacity = sleep;
   let energy = recoveryCapacity - load * 0.6;
 
   if (load > recoveryCapacity) {
