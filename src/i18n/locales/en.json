@@ -179,6 +179,11 @@
     "inSleepBlock": "During sleep",
     "noiseBlock": "Noise",
     "snoringBlock": "Snoring",
+    "coughBlock": "Cough",
+    "chartsBlock": "Sleep statistics",
+    "actualSleepBlock": "Actual sleep",
+    "sleepLatencyBlock": "Fell asleep after",
+    "heartRateBlock": "Heart rate during sleep",
     "notEnoughData": "Not enough data to build trends. Minimum 5 nights required."
   },
   "energyDetail": {

@@ -164,6 +164,11 @@
     "inSleepBlock": "Ұйқыда",
     "noiseBlock": "Шу",
     "snoringBlock": "Қорынды",
+    "coughBlock": "Жөтел",
+    "chartsBlock": "Ұйқы статистикасы",
+    "actualSleepBlock": "Ұйқы уақыты",
+    "sleepLatencyBlock": "Ұйықтағаннан кейін",
+    "heartRateBlock": "Ұйқыда пульс",
     "notEnoughData": "Тренд құру үшін деректер жеткіліксіз. Минимум 5 түн қажет."
   },
   "energyDetail": {

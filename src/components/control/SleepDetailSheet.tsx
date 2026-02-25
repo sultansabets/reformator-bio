@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, CartesianGrid } from "recharts";
 import type { SleepEngineResult } from "@/engine/sleepEngine";
+import { SleepCharts } from "@/components/control/SleepCharts";
 
 const NIGHTS_FOR_TREND = 5;
 const CHART_HEIGHT = 80;
@@ -399,6 +400,7 @@ export function SleepDetailSheet({
               </section>
             )}
           </div>
+          <SleepCharts sleepDetail={sleepDetail} nightsCount={nightsCount} />
         </div>
       </DrawerContent>
     </Drawer>

@@ -180,6 +180,11 @@
     "inSleepBlock": "Во сне",
     "noiseBlock": "Шум",
     "snoringBlock": "Храп",
+    "coughBlock": "Кашель",
+    "chartsBlock": "Статистика сна",
+    "actualSleepBlock": "Время сна",
+    "sleepLatencyBlock": "Заснул после",
+    "heartRateBlock": "Пульс во сне",
     "notEnoughData": "Недостаточно данных для трендов. Минимум 5 ночей."
   },
   "energyDetail": {
