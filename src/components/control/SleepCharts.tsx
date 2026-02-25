@@ -15,8 +15,8 @@ import {
 import type { SleepEngineResult } from "@/engine/sleepEngine";
 
 const NIGHTS_FOR_CHARTS = 5;
-const CHART_HEIGHT = 240;
-const CHART_MARGIN = { top: 20, right: 20, left: 10, bottom: 20 };
+const CHART_HEIGHT = 220;
+const CHART_MARGIN = { top: 20, right: 16, left: 8, bottom: 20 };
 const BAR_FILL = "#37BE7E";
 const LINE_STROKE = "#37BE7E";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
@@ -24,14 +24,22 @@ const REF_LINE_STROKE = "rgba(255,255,255,0.35)";
 
 const DAY_LABELS_RU = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
-function minutesToHHMM(min: number): string {
-  const h = Math.floor(min / 60) % 24;
-  const m = Math.round(min % 60);
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+/** Округляет минуты до 5 (22:47 → 22:45, 06:52 → 06:50) */
+function roundTo5Minutes(min: number): number {
+  return Math.round(min / 5) * 5;
 }
 
+function minutesToHHMM(min: number, round5 = true): string {
+  const m = round5 ? roundTo5Minutes(min) : min;
+  const total = Math.round(m);
+  const h = Math.floor(total / 60) % 24;
+  const mins = ((total % 60) + 60) % 60;
+  return `${String(h).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}
+
+/** Часы с шагом 30 минут (4.5, 5.0, 5.5) */
 function minutesToHours(min: number): number {
-  return Math.round((min / 60) * 10) / 10;
+  return Math.round((min / 60) * 2) / 2;
 }
 
 export interface SleepChartsProps {
@@ -48,15 +56,19 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
     const d = sleepDetail.displayData;
     const today = new Date();
     const data: Record<string, number | string>[] = [];
-    const baseQuality = sleepDetail.sleepScore;
+
+    // Базовые значения в реалистичных диапазонах
+    const baseQuality = Math.max(75, Math.min(98, sleepDetail.sleepScore));
     const baseActual = d.actualSleepMinutes;
     const baseTimeInBed = baseActual + d.totalWakeMinutes;
     const baseEfficiency = Math.round(
       100 - (d.totalWakeMinutes / Math.max(1, baseTimeInBed)) * 100
     );
-    const baseSleepStart = 22 * 60 + 15;
+    // Начало сна: 22:00–01:00 (минуты от полуночи)
+    const baseSleepStart = 22 * 60 + 30; // 22:30
     const baseWakeUp = baseSleepStart + baseActual;
-    const baseLatency = d.sleepLatencyMinutes;
+    // Подъём: 05:00–09:00
+    const baseLatency = Math.max(5, Math.min(30, d.sleepLatencyMinutes));
     const baseHR = d.currentNightHR;
 
     for (let i = 6; i >= 0; i--) {
@@ -69,25 +81,43 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
       const vary = (v: number, pct: number) =>
         Math.round(v * (1 + (seed / 100 - 0.5) * pct * 2));
 
-      const regStart = baseSleepStart + (seed % 30) - 15;
-      const regEnd = baseWakeUp + (seed % 20) - 10;
+      // Регулярность: разброс ±40 мин
+      const regOffset = ((seed % 81) - 40);
+      const regStart = roundTo5Minutes(baseSleepStart + regOffset);
+      const regSpan = Math.max(360, baseActual - 60);
+      const regEnd = regStart + regSpan;
+
+      // Начало сна 22:00–01:00, округлено до 5 мин
+      const sleepStartOffset = ((seed % 61) - 30) * 5;
+      const sleepStart = roundTo5Minutes(Math.max(22 * 60, Math.min(25 * 60, baseSleepStart + sleepStartOffset)));
+
+      // Подъём 05:00–09:00, округлено до 5 мин (300–540 мин от полуночи)
+      const wakeUp = roundTo5Minutes(5 * 60 + (seed % 49) * 5);
+
+      // Заснул после: 5–30 мин, шаг 5
+      const latency = roundTo5Minutes(Math.max(5, Math.min(30, baseLatency + (seed % 11) - 5)));
+
+      // timeInBed, actualSleep — часы с шагом 30 мин (4.0, 4.5, 5.0 ... 8.0)
+      const timeInBedH = Math.round(minutesToHours(baseTimeInBed) * 2) / 2 + (seed % 5) * 0.5 - 1;
+      const actualSleepH = Math.round(minutesToHours(baseActual) * 2) / 2 + (seed % 5) * 0.5 - 1;
+
       data.push({
         label,
-        quality: Math.max(50, Math.min(100, vary(baseQuality, 0.15))),
+        quality: Math.max(75, Math.min(98, vary(baseQuality, 0.08))),
         regularityStart: regStart,
         regularityEnd: regEnd,
-        regularitySpan: Math.max(60, regEnd - regStart),
-        regularityPercent: Math.max(70, Math.min(100, baseEfficiency + (seed % 20) - 10)),
-        sleepStart: baseSleepStart + (seed % 60) - 30,
-        wakeUp: baseWakeUp + (seed % 45) - 22,
-        efficiency: Math.max(70, Math.min(100, vary(baseEfficiency, 0.1))),
-        timeInBed: Math.max(4, Math.min(8, minutesToHours(baseTimeInBed) + (seed % 20) / 10 - 1)),
-        actualSleep: Math.max(4, Math.min(7, minutesToHours(baseActual) + (seed % 15) / 10 - 0.7)),
-        sleepLatency: Math.max(0, Math.min(60, baseLatency + (seed % 25) - 12)),
-        snoring: Math.min(5, (seed % 50) / 15),
-        cough: Math.min(1.5, (seed % 30) / 25),
-        noise: 27 + (seed % 30) / 10,
-        heartRate: Math.max(50, Math.min(90, baseHR + (seed % 20) - 10)),
+        regularitySpan: regSpan,
+        regularityPercent: Math.max(70, Math.min(100, Math.round(baseEfficiency + (seed % 15) - 7))),
+        sleepStart,
+        wakeUp,
+        efficiency: Math.max(75, Math.min(98, Math.round(vary(baseEfficiency, 0.06)))),
+        timeInBed: Math.max(4, Math.min(8, timeInBedH)),
+        actualSleep: Math.max(4, Math.min(7, actualSleepH)),
+        sleepLatency: latency,
+        snoring: Math.min(5, Math.round((seed % 30) / 10) * 0.5),
+        cough: Math.min(1.5, Math.round((seed % 20) / 15) * 0.5),
+        noise: Math.round((27 + (seed % 30) / 10) * 2) / 2,
+        heartRate: Math.round(Math.max(50, Math.min(90, baseHR + (seed % 15) - 7))),
       });
     }
     return data;
@@ -164,7 +194,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
               />
             )}
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[50, 100]} {...commonAxisProps} tickFormatter={(v) => `${v}%`} />
+            <YAxis domain={[70, 100]} {...commonAxisProps} tickFormatter={(v) => `${Math.round(v)}%`} />
             <Bar dataKey="quality" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -192,9 +222,13 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
             )}
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
             <YAxis
-              domain={["dataMin - 60", "dataMax + 60"]}
+              domain={[20 * 60, 34 * 60]}
+              ticks={[20 * 60, 22 * 60, 24 * 60, 26 * 60, 28 * 60, 30 * 60, 32 * 60, 34 * 60]}
               {...commonAxisProps}
-              tickFormatter={(v) => minutesToHHMM(Number(v))}
+              tickFormatter={(v) => {
+                const m = Number(v) % (24 * 60);
+                return minutesToHHMM(m, false);
+              }}
             />
             <Bar dataKey="regularityStart" stackId="reg" fill="transparent" radius={[0, 0, 0, 0]} />
             <Bar dataKey="regularitySpan" stackId="reg" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
@@ -225,9 +259,10 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
             <YAxis
-              domain={[22 * 60, 1 * 60 + 59]}
+              domain={[22 * 60, 25 * 60]}
+              ticks={[22 * 60, 22.5 * 60, 23 * 60, 23.5 * 60, 24 * 60, 24.5 * 60, 25 * 60]}
               {...commonAxisProps}
-              tickFormatter={(v) => minutesToHHMM(Number(v))}
+              tickFormatter={(v) => minutesToHHMM(Number(v), false)}
             />
             <Line
               type="monotone"
@@ -247,9 +282,10 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
             <YAxis
-              domain={[4 * 60, 7 * 60 + 59]}
+              domain={[5 * 60, 9 * 60]}
+              ticks={[5 * 60, 5.5 * 60, 6 * 60, 6.5 * 60, 7 * 60, 7.5 * 60, 8 * 60, 8.5 * 60, 9 * 60]}
               {...commonAxisProps}
-              tickFormatter={(v) => minutesToHHMM(Number(v))}
+              tickFormatter={(v) => minutesToHHMM(Number(v), false)}
             />
             <Line
               type="monotone"
@@ -276,7 +312,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
               />
             )}
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[70, 100]} {...commonAxisProps} tickFormatter={(v) => `${v}%`} />
+            <YAxis domain={[70, 100]} {...commonAxisProps} tickFormatter={(v) => `${Math.round(v)}%`} />
             <Bar dataKey="efficiency" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -295,7 +331,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
               />
             )}
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[4, 8]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
+            <YAxis domain={[4, 8]} ticks={[4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
             <Bar dataKey="timeInBed" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -314,7 +350,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
               />
             )}
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[4, 7]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
+            <YAxis domain={[4, 7]} ticks={[4, 4.5, 5, 5.5, 6, 6.5, 7]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
             <Bar dataKey="actualSleep" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -333,7 +369,12 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
               />
             )}
             <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[0, 60]} {...commonAxisProps} tickFormatter={(v) => `${v}м`} />
+            <YAxis
+              domain={[0, 35]}
+              ticks={[0, 5, 10, 15, 20, 25, 30]}
+              {...commonAxisProps}
+              tickFormatter={(v) => `${Math.round(v)}м`}
+            />
             <Line
               type="monotone"
               dataKey="sleepLatency"

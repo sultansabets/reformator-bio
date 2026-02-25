@@ -35,7 +35,9 @@ export function SleepDetailSheet({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh] flex flex-col">
+      <DrawerContent
+        className="flex max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      >
         <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold text-foreground">
             {t("center.sleep")} — {sleepScore}%
