@@ -19,7 +19,7 @@ function getStatusColor(devices: Device[]): string {
   if (!hasConnected) return "rgb(239, 68, 68)";
   const hasLowBattery = devices.some((d) => d.connected && d.battery < 20);
   if (hasLowBattery) return "rgb(234, 179, 8)";
-  return "rgb(34, 197, 94)";
+  return "rgb(55, 190, 126)";
 }
 
 export function DevicesPopover() {

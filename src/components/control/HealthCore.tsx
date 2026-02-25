@@ -7,7 +7,7 @@ const PARTICLE_COUNT = 200;
 /** Score-based theme: 0-40 red, 41-70 orange, 71-100 green */
 const getThemeFromScore = (score: number) => {
   const s = Math.min(100, Math.max(0, score));
-  if (s >= 71) return { hex: "#22C55E", label: "ВЫСОКОЕ" };
+  if (s >= 71) return { hex: "#37BE7E", label: "ВЫСОКОЕ" };
   if (s >= 41) return { hex: "#F59E0B", label: "УМЕРЕННОЕ" };
   return { hex: "#EF4444", label: "НИЗКОЕ" };
 };

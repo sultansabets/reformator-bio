@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<LoadStatus, string> = {
 };
 
 const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
-  balanced: "#22C55E",
+  balanced: "#37BE7E",
   overloaded: "#EF4444",
   low_activity: "#F59E0B",
 };

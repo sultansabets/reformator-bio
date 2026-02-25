@@ -100,7 +100,7 @@ function formatBedtime(hours: number): string {
 }
 
 function getSleepQualityColor(quality: number): string {
-  if (quality >= 75) return "#22C55E";
+  if (quality >= 75) return "#37BE7E";
   if (quality >= 55) return "#F59E0B";
   return "#EF4444";
 }
@@ -329,8 +329,8 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" />
-            <stop offset="100%" stopColor="rgba(34, 197, 94, 0)" />
+            <stop offset="0%" stopColor="rgba(55, 190, 126, 0.3)" />
+            <stop offset="100%" stopColor="rgba(55, 190, 126, 0)" />
           </linearGradient>
         </defs>
         
@@ -342,7 +342,7 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
         <polyline
           points={points}
           fill="none"
-          stroke="#22C55E"
+          stroke="#37BE7E"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -358,7 +358,7 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
               cx={x}
               cy={y}
               r="2"
-              fill="#22C55E"
+              fill="#37BE7E"
               className="opacity-60"
             />
           );

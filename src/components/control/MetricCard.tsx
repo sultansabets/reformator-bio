@@ -7,7 +7,7 @@ export function getColorFromPercent(percent: number): string {
   if (percent <= 40) return "rgb(220, 38, 38)";
   if (percent <= 60) return "rgb(249, 115, 22)";
   if (percent <= 75) return "rgb(234, 179, 8)";
-  return "rgb(34, 197, 94)";
+  return "rgb(55, 190, 126)";
 }
 
 export interface MetricCardProps {

@@ -20,7 +20,7 @@ interface MuscleMapProps {
 function getProgressColor(percent: number): string {
   if (percent === 0) return "hsl(var(--muted-foreground) / 0.3)";
   if (percent < 50) return "rgb(249, 115, 22)";
-  return "rgb(34, 197, 94)";
+  return "rgb(55, 190, 126)";
 }
 
 function MuscleRing({ 
