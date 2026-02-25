@@ -117,7 +117,7 @@ export function WorkoutProgram({ weekPlan, onPlanChange, todayWorkouts }: Workou
               <div className={`
                 mt-1 w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold
                 ${isCompleted 
-                  ? "bg-green-500 text-white" 
+                  ? "bg-status-green text-white" 
                   : hasPlan 
                     ? "bg-muted text-foreground" 
                     : "bg-transparent text-muted-foreground/50"

@@ -530,7 +530,7 @@ function CalendarModal({
 
         <div className="mt-5 mb-1 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-green-500" /> Хороший
+            <span className="h-2 w-2 rounded-full bg-status-green" /> Хороший
           </span>
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-orange-500" /> Средний

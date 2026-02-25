@@ -120,7 +120,7 @@ export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: Workout
   };
 
   const statusColors: Record<DayStatus, string> = {
-    completed: "bg-green-500",
+    completed: "bg-status-green",
     partial: "bg-orange-500",
     missed: "bg-red-500/60",
     planned: "bg-primary/30",
@@ -201,7 +201,7 @@ export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: Workout
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 mt-4 text-[10px] text-muted-foreground">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-green-500" /> Выполнено
+          <span className="w-2 h-2 rounded-full bg-status-green" /> Выполнено
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-orange-500" /> Частично

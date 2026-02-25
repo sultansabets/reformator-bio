@@ -102,7 +102,7 @@ export function DevicesPopover() {
                   ? t("settings.connected")
                   : t("settings.notConnected");
                 const statusTextColor = device.connected
-                  ? "text-green-500"
+                  ? "text-status-green"
                   : "text-muted-foreground";
 
                 return (
