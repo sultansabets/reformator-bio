@@ -13,8 +13,8 @@ import {
 } from "recharts";
 import type { LoadEngineResult } from "@/engine/loadEngine";
 
-const CHART_HEIGHT = 200;
-const CHART_MARGIN = { top: 20, right: 16, left: 8, bottom: 20 };
+const CHART_HEIGHT = 240;
+const CHART_MARGIN = { top: 20, right: 16, left: 4, bottom: 20 };
 const BODY_STRENGTH = "#3B82F6";
 const BODY_CARDIO = "#37BE7E";
 const BODY_STEPS = "#22D3EE";

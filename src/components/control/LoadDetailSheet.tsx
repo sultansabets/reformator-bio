@@ -18,7 +18,7 @@ const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
 };
 
 const RING_SIZE = 88;
-const RING_STROKE = 6;
+const RING_STROKE = 4;
 
 interface RingProps {
   percent: number;

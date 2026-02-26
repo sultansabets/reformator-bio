@@ -16,7 +16,7 @@ import type { SleepEngineResult } from "@/engine/sleepEngine";
 
 const NIGHTS_FOR_CHARTS = 5;
 const CHART_HEIGHT = 240;
-const CHART_MARGIN = { top: 20, right: 16, left: 8, bottom: 20 };
+const CHART_MARGIN = { top: 20, right: 16, left: 4, bottom: 20 };
 const BAR_FILL = "#37BE7E";
 const LINE_STROKE = "#37BE7E";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
@@ -130,12 +130,9 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
     return {
       quality: sum("quality"),
       efficiency: sum("efficiency"),
-      timeInBed: sum("timeInBed"),
       actualSleep: sum("actualSleep"),
       sleepLatency: sum("sleepLatency"),
       snoring: sum("snoring"),
-      cough: sum("cough"),
-      noise: sum("noise"),
       heartRate: sum("heartRate"),
     };
   }, [chartData]);
@@ -318,25 +315,6 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
         </ResponsiveContainer>
       </ChartSection>
 
-      <ChartSection title={t("sleepDetail.timeInBedBlock")} isEmpty={!hasEnoughNights}>
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            {avg && (
-              <ReferenceLine
-                y={avg.timeInBed}
-                stroke={REF_LINE_STROKE}
-                strokeDasharray="4 4"
-                strokeWidth={1}
-              />
-            )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[4, 8]} ticks={[4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
-            <Bar dataKey="timeInBed" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartSection>
-
       <ChartSection title={t("sleepDetail.actualSleepBlock")} isEmpty={!hasEnoughNights}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <BarChart data={chartData} margin={CHART_MARGIN}>
@@ -387,62 +365,6 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
         </ResponsiveContainer>
       </ChartSection>
 
-      <ChartSection title={t("sleepDetail.snoringBlock")} isEmpty={!hasEnoughNights}>
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            {avg && (
-              <ReferenceLine
-                y={avg.snoring}
-                stroke={REF_LINE_STROKE}
-                strokeDasharray="4 4"
-                strokeWidth={1}
-              />
-            )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[0, 5]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
-            <Bar dataKey="snoring" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartSection>
-
-      <ChartSection title={t("sleepDetail.coughBlock")} isEmpty={!hasEnoughNights}>
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            {avg && (
-              <ReferenceLine
-                y={avg.cough}
-                stroke={REF_LINE_STROKE}
-                strokeDasharray="4 4"
-                strokeWidth={1}
-              />
-            )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[0, 1.5]} {...commonAxisProps} tickFormatter={(v) => `${v}`} />
-            <Bar dataKey="cough" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartSection>
-
-      <ChartSection title={t("sleepDetail.noiseBlock")} isEmpty={!hasEnoughNights}>
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            {avg && (
-              <ReferenceLine
-                y={avg.noise}
-                stroke={REF_LINE_STROKE}
-                strokeDasharray="4 4"
-                strokeWidth={1}
-              />
-            )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[27, 30]} {...commonAxisProps} tickFormatter={(v) => `${v} дБ`} />
-            <Bar dataKey="noise" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartSection>
 
       <ChartSection title={t("sleepDetail.heartRateBlock")} isEmpty={!hasEnoughNights}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
