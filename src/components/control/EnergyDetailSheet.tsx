@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import type { EnergyEngineResult } from "@/engine/energyEngine";
@@ -12,6 +13,12 @@ interface EnergyDetailSheetProps {
 
 export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDetailSheetProps) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!open) setExpanded(false);
+  }, [open]);
+
   if (!energyDetail) return null;
 
   const { energyScore, contributions, recommendationKey } = energyDetail;
@@ -23,9 +30,30 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
           <h2 className="text-xl font-semibold">
             {t("energyDetail.title")} — {energyScore}%
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("energyDetail.subtitle")}
-          </p>
+          <div className="mt-1 text-sm text-muted-foreground">
+            {expanded ? (
+              <p className="whitespace-pre-line">{t("energyDetail.subtitleFull")}</p>
+            ) : (
+              <p>{t("energyDetail.subtitleShort")}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => !e)}
+              className="mt-1.5 inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground/80 transition-colors"
+            >
+              {expanded ? (
+                <>
+                  {t("energyDetail.showLess")}
+                  <ChevronUp className="h-3 w-3" />
+                </>
+              ) : (
+                <>
+                  {t("energyDetail.showMore")}
+                  <ChevronDown className="h-3 w-3" />
+                </>
+              )}
+            </button>
+          </div>
         </DrawerHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4" style={{ WebkitOverflowScrolling: "touch" }}>

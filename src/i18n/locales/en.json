@@ -189,6 +189,10 @@
   "energyDetail": {
     "title": "State",
     "subtitle": "State is the readiness assessment for physical and mental load today.",
+    "subtitleShort": "State is an assessment of your readiness for physical and mental load today.",
+    "subtitleFull": "State is an assessment of your readiness for physical and mental load today.\n\nIt is calculated from three body systems:\n\nSleep – resource replenishment.\nLoad – overall pressure on the body.\n\nIf you recovered well, manage stress and are not overloaded – energy is high.\n\nIf load exceeds recovery capacity – energy decreases.",
+    "showMore": "More",
+    "showLess": "Collapse",
     "whyTitle": "Why is state {{score}}% today",
     "sleep": "Sleep",
     "adaptation": "Adaptation",
