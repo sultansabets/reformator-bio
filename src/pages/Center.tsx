@@ -585,6 +585,8 @@ export default function Center() {
     return todayWorkouts.flatMap(w => w.bodyParts || []) as ("chest" | "back" | "shoulders" | "arms" | "legs" | "abs")[];
   }, [workoutHistory]);
 
+  const currentHeartRate = useHealthStore((s) => s.heartRate);
+
   const autoWorkout = useMemo(() => {
     const today = getTodayDateString();
     const todays = workoutHistory.filter((w) => w.date === today);
@@ -619,7 +621,6 @@ export default function Center() {
   }, [storageKeys]);
 
   const addNutrition = useHealthStore((s) => s.addNutrition);
-  const currentHeartRate = useHealthStore((s) => s.heartRate);
 
   const addProductEntry = useCallback(() => {
     if (!selectedProduct || grams <= 0) return;
