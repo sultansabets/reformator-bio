@@ -38,7 +38,7 @@ export function SleepDetailSheet({
       <DrawerContent
         className="flex max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       >
-        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
+        <DrawerHeader className="shrink-0 border-b border-border px-4 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold text-foreground">
             {t("center.sleep")} — {sleepScore}%
           </h2>
@@ -46,11 +46,11 @@ export function SleepDetailSheet({
         </DrawerHeader>
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4"
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pt-6 pb-10"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {/* 1. ИТОГИ СНА */}
-          <section className="px-4 py-6">
+          <section className="pb-6">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("sleepDetail.resultsBlock")}
             </h3>

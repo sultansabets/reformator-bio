@@ -15,7 +15,7 @@ import {
 import type { SleepEngineResult } from "@/engine/sleepEngine";
 
 const NIGHTS_FOR_CHARTS = 5;
-const CHART_HEIGHT = 220;
+const CHART_HEIGHT = 240;
 const CHART_MARGIN = { top: 20, right: 16, left: 8, bottom: 20 };
 const BAR_FILL = "#37BE7E";
 const LINE_STROKE = "#37BE7E";
@@ -176,7 +176,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
   if (chartData.length === 0) return null;
 
   return (
-    <section className="px-4 py-6">
+    <section className="mt-6 pb-6">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
         {t("sleepDetail.chartsBlock")}
       </h2>
