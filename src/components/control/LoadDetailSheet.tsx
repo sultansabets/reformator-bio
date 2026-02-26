@@ -17,35 +17,31 @@ const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
   low_activity: "#F59E0B",
 };
 
-const MAIN_RING_SIZE = 140;
-const MAIN_RING_STROKE = 6;
-const MINI_RING_SIZE = 64;
-const MINI_RING_STROKE = 4;
+const RING_SIZE = 88;
+const RING_STROKE = 6;
 
 interface RingProps {
-  size: number;
-  strokeWidth: number;
   percent: number;
   color: string;
 }
 
-function LoadRing({ size, strokeWidth, percent, color }: RingProps) {
-  const center = size / 2;
-  const radius = center - strokeWidth / 2;
+function LoadRing({ percent, color }: RingProps) {
+  const center = RING_SIZE / 2;
+  const radius = center - RING_STROKE / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(100, percent));
   const dashOffset = circumference - (clamped / 100) * circumference;
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0">
+    <div className="relative" style={{ width: RING_SIZE, height: RING_SIZE }}>
+      <svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} className="absolute inset-0">
         <circle
           cx={center}
           cy={center}
           r={radius}
           fill="none"
           stroke="rgba(255,255,255,0.12)"
-          strokeWidth={strokeWidth}
+          strokeWidth={RING_STROKE}
         />
         <circle
           cx={center}
@@ -53,7 +49,7 @@ function LoadRing({ size, strokeWidth, percent, color }: RingProps) {
           r={radius}
           fill="none"
           stroke={color}
-          strokeWidth={strokeWidth}
+          strokeWidth={RING_STROKE}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
@@ -61,7 +57,7 @@ function LoadRing({ size, strokeWidth, percent, color }: RingProps) {
         />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-semibold tabular-nums">{Math.round(clamped)}%</span>
+        <span className="text-lg font-semibold tabular-nums">{Math.round(clamped)}%</span>
       </div>
     </div>
   );
@@ -119,14 +115,17 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
       ? "loadDetail.recLowActivity"
       : "loadDetail.recBalanced";
 
-  const bodyTotal = bodyLoad + neuroLoad || 1;
-  const bodyPct = (bodyLoad / bodyTotal) * 100;
-  const neuroPct = (neuroLoad / bodyTotal) * 100;
+  // Взвешенный вклад в TotalLoad: 0.6×Body + 0.4×Neuro
+  const bodyContribution = 0.6 * bodyLoad;
+  const neuroContribution = 0.4 * neuroLoad;
+  const totalContribution = bodyContribution + neuroContribution || 1;
+  const bodyPct = (bodyContribution / totalContribution) * 100;
+  const neuroPct = (neuroContribution / totalContribution) * 100;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent
-        className="flex max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+        className="flex max-h-[85vh] flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       >
         <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold text-foreground">
@@ -139,17 +138,12 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {/* 1. СТАТУС НАГРУЗКИ */}
-          <section className="px-4 py-6">
+          <section className="px-4 pt-0 pb-6">
             <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.statusTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing
-                size={MAIN_RING_SIZE}
-                strokeWidth={MAIN_RING_STROKE}
-                percent={totalLoad}
-                color={STATUS_COLOR_HEX[status]}
-              />
+              <LoadRing percent={totalLoad} color={STATUS_COLOR_HEX[status]} />
               <p className="text-sm font-medium text-foreground">
                 {t(STATUS_LABEL[status])}
               </p>
@@ -160,7 +154,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           </section>
 
           {/* 2. ОБЩИЙ ИНДЕКС — тело / нервная система */}
-          <section className="px-4 py-6">
+          <section className="px-4 pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.breakdownTitle")}
             </h3>
@@ -174,19 +168,25 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
                 style={{ width: `${neuroPct}%`, backgroundColor: "rgba(239,68,68,0.85)" }}
               />
             </div>
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              <span>{t("loadDetail.body")} {bodyLoad}%</span>
-              <span>{t("loadDetail.neuro")} {neuroLoad}%</span>
+            <div className="mt-3 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3B82F6" }} />
+                {t("loadDetail.body")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.85)" }} />
+                {t("loadDetail.neuro")}
+              </span>
             </div>
           </section>
 
           {/* 3. ФИЗИЧЕСКАЯ НАГРУЗКА */}
-          <section className="px-4 py-6">
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <section className="px-4 pb-6">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.physicalTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing size={MINI_RING_SIZE} strokeWidth={MINI_RING_STROKE} percent={bodyLoad} color="#3B82F6" />
+              <LoadRing percent={bodyLoad} color="#3B82F6" />
               <ul className="w-full space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">{t("loadDetail.strength")}</span>
@@ -205,12 +205,12 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           </section>
 
           {/* 4. НЕРВНАЯ СИСТЕМА */}
-          <section className="px-4 py-6">
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <section className="px-4 pb-6">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.neuroTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing size={MINI_RING_SIZE} strokeWidth={MINI_RING_STROKE} percent={neuroLoad} color="rgba(239,68,68,0.9)" />
+              <LoadRing percent={neuroLoad} color="rgba(239,68,68,0.9)" />
               <ul className="w-full space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">{t("loadDetail.stress")}</span>
@@ -232,25 +232,13 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           <LoadCharts loadDetail={detail} />
 
           {/* 6. РЕКОМЕНДАЦИИ */}
-          <section className="px-4 py-6">
+          <section className="px-4 pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.recommendationTitle")}
             </h3>
             <p className="text-sm text-foreground">
               {t(recommendation)}
             </p>
-          </section>
-
-          {/* 7. ОБЪЯСНЕНИЕ РАСЧЁТА */}
-          <section className="px-4 py-6">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("loadDetail.formulaTitle")}
-            </h3>
-            <div className="space-y-3 text-xs text-muted-foreground">
-              <p><strong className="text-foreground">BodyLoad</strong> = 0.5×Силовые + 0.3×Кардио + 0.2×Шаги</p>
-              <p><strong className="text-foreground">NeuroLoad</strong> = 0.5×Стресс + 0.3×Недосып + 0.2×HRV</p>
-              <p><strong className="text-foreground">TotalLoad</strong> = 0.6×BodyLoad + 0.4×NeuroLoad</p>
-            </div>
           </section>
         </div>
       </DrawerContent>

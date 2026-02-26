@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import type { LoadEngineResult } from "@/engine/loadEngine";
 
-const CHART_HEIGHT = 220;
+const CHART_HEIGHT = 200;
 const CHART_MARGIN = { top: 20, right: 16, left: 8, bottom: 20 };
 const BODY_STRENGTH = "#3B82F6";
 const BODY_CARDIO = "#37BE7E";
@@ -68,23 +68,26 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
   const ChartSection = ({
     title,
     children,
+    legend,
   }: {
     title: string;
     children: React.ReactNode;
+    legend?: React.ReactNode;
   }) => (
-    <section className="py-6 first:pt-0">
+    <section className="pb-6">
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
       <div className="w-full">{children}</div>
+      {legend && <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">{legend}</div>}
     </section>
   );
 
   if (!loadDetail || chartData.length === 0) return null;
 
   return (
-    <section className="px-4 py-6">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="px-4 pb-6">
+      <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {t("loadDetail.trend7d")}
       </h2>
 
@@ -106,7 +109,25 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
         </ResponsiveContainer>
       </ChartSection>
 
-      <ChartSection title={t("loadDetail.chartBodyLoad")}>
+      <ChartSection
+        title={t("loadDetail.chartBodyLoad")}
+        legend={
+          <>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: BODY_STRENGTH }} />
+              {t("loadDetail.strength")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: BODY_CARDIO }} />
+              {t("loadDetail.cardio")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: BODY_STEPS }} />
+              {t("loadDetail.steps")}
+            </span>
+          </>
+        }
+      >
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="12%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
@@ -119,7 +140,25 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
         </ResponsiveContainer>
       </ChartSection>
 
-      <ChartSection title={t("loadDetail.chartNeuroLoad")}>
+      <ChartSection
+        title={t("loadDetail.chartNeuroLoad")}
+        legend={
+          <>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: NEURO_SLEEP }} />
+              {t("loadDetail.sleepDebt")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: NEURO_STRESS }} />
+              {t("loadDetail.stress")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: NEURO_HRV }} />
+              {t("loadDetail.hrv")}
+            </span>
+          </>
+        }
+      >
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <ComposedChart data={chartData} margin={CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
