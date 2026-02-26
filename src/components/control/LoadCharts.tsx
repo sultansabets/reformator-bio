@@ -94,7 +94,7 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
   if (!loadDetail || chartData.length === 0) return null;
 
   return (
-    <section className="px-4 pb-6">
+    <section className="pb-6">
       <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {t("loadDetail.trend7d")}
       </h2>

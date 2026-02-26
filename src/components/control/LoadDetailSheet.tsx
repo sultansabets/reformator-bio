@@ -138,7 +138,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {/* 1. СТАТУС НАГРУЗКИ */}
-          <section className="px-4 pt-0 pb-6">
+          <section className="pt-0 pb-6">
             <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.statusTitle")}
             </h3>
@@ -154,7 +154,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           </section>
 
           {/* 2. ОБЩИЙ ИНДЕКС — тело / нервная система */}
-          <section className="px-4 pb-6">
+          <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.breakdownTitle")}
             </h3>
@@ -181,7 +181,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           </section>
 
           {/* 3. ФИЗИЧЕСКАЯ НАГРУЗКА */}
-          <section className="px-4 pb-6">
+          <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.physicalTitle")}
             </h3>
@@ -205,7 +205,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           </section>
 
           {/* 4. НЕРВНАЯ СИСТЕМА */}
-          <section className="px-4 pb-6">
+          <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.neuroTitle")}
             </h3>
@@ -232,7 +232,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           <LoadCharts loadDetail={detail} />
 
           {/* 6. РЕКОМЕНДАЦИИ */}
-          <section className="px-4 pb-6">
+          <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.recommendationTitle")}
             </h3>
