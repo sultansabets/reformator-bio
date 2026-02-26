@@ -17,6 +17,9 @@ interface WorkoutCalendarProps {
   workoutDays: WorkoutDay[];
   weekPlan: Record<string, string[]>;
   onDateSelect?: (date: string) => void;
+  selectedDate?: string | null;
+  headerAction?: React.ReactNode;
+  showSelectedDetails?: boolean;
 }
 
 const MONTH_NAMES = [
@@ -92,11 +95,19 @@ function formatDuration(seconds: number): string {
   return `${mins} мин`;
 }
 
-export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: WorkoutCalendarProps) {
+export function WorkoutCalendar({
+  workoutDays,
+  weekPlan,
+  onDateSelect,
+  selectedDate: selectedDateProp,
+  headerAction,
+  showSelectedDetails = true,
+}: WorkoutCalendarProps) {
   const { t } = useTranslation();
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [internalSelected, setInternalSelected] = useState<string | null>(null);
+  const selectedDate = selectedDateProp !== undefined ? selectedDateProp : internalSelected;
 
   const days = useMemo(() => getDaysInMonth(viewDate.getFullYear(), viewDate.getMonth()), [viewDate]);
 
@@ -115,8 +126,9 @@ export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: Workout
 
   const handleDateClick = (date: Date) => {
     const dateStr = getDateString(date);
-    setSelectedDate(selectedDate === dateStr ? null : dateStr);
-    onDateSelect?.(dateStr);
+    const next = selectedDate === dateStr ? null : dateStr;
+    if (selectedDateProp === undefined) setInternalSelected(next);
+    onDateSelect?.(next ?? dateStr);
   };
 
   const statusColors: Record<DayStatus, string> = {
@@ -134,6 +146,7 @@ export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: Workout
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Календарь
         </h3>
+        {headerAction}
       </div>
 
       {/* Month navigation */}
@@ -212,6 +225,7 @@ export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: Workout
       </div>
 
       {/* Selected day details */}
+      {showSelectedDetails && (
       <AnimatePresence>
         {selectedDate && selectedDayWorkouts && (
           <motion.div
@@ -247,6 +261,7 @@ export function WorkoutCalendar({ workoutDays, weekPlan, onDateSelect }: Workout
           </motion.div>
         )}
       </AnimatePresence>
+      )}
     </div>
   );
 }

@@ -57,6 +57,13 @@ function getDateString(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function getDayKeyFromDateStr(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const dayIndex = (d.getDay() + 6) % 7;
+  const keys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  return keys[dayIndex] ?? "monday";
+}
+
 function getWeekDays(dayLabels: string[]): { date: Date; dayName: string; dateStr: string; isToday: boolean }[] {
   const today = new Date();
   const dayOfWeek = today.getDay();
@@ -510,6 +517,8 @@ export default function Center() {
   const [weekPlan, setWeekPlan] = useState<WeekPlan>({ monday: ["chest"], wednesday: ["back"], friday: ["legs"] });
   const [workoutLog, setWorkoutLog] = useState<WorkoutLogEntry[]>([]);
   const [logEditorOpen, setLogEditorOpen] = useState(false);
+  const [selectedSportDate, setSelectedSportDate] = useState(() => getTodayDateString());
+  const [programEditorOpen, setProgramEditorOpen] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutLogEntry | null>(null);
   const [logForm, setLogForm] = useState<{
     type: WorkoutType;
@@ -737,11 +746,11 @@ export default function Center() {
     }, {});
   }, [workoutLog, todayDateStr]);
 
-  const openNewWorkoutEditor = () => {
+  const openNewWorkoutEditor = (date?: string) => {
     setEditingWorkout(null);
     setLogForm({
       type: "strength",
-      date: todayDateStr,
+      date: date ?? todayDateStr,
       duration: 60,
       feeling: 3,
       notes: "",
@@ -1041,112 +1050,99 @@ export default function Center() {
               </motion.div>
             )}
 
-            {/* Calendar - right under tabs */}
+            {/* Calendar */}
             <WorkoutCalendar
               workoutDays={workoutDays}
               weekPlan={weekPlan}
-            />
-
-            {/* Weekly Program */}
-            <WorkoutProgram
-              weekPlan={weekPlan}
-              onPlanChange={handleWeekPlanChange}
-              todayWorkouts={todayMuscles}
-            />
-
-            {/* Workout log */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Журнал тренировок
-                </h3>
+              selectedDate={selectedSportDate}
+              onDateSelect={(d) => setSelectedSportDate(d ?? todayDateStr)}
+              headerAction={
                 <button
                   type="button"
-                  onClick={openNewWorkoutEditor}
+                  onClick={() => setProgramEditorOpen(true)}
                   className="text-xs text-primary hover:underline"
                 >
-                  + Добавить тренировку
+                  Изменить программу
                 </button>
+              }
+              showSelectedDetails={false}
+            />
+
+            {/* Day block — Plan + Completed + Add */}
+            <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                День — {new Date(selectedSportDate + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+
+              {/* Plan */}
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">План на день</p>
+                {(() => {
+                  const dayKey = getDayKeyFromDateStr(selectedSportDate);
+                  const plannedMuscles = weekPlan[dayKey] ?? [];
+                  if (plannedMuscles.length === 0) {
+                    return <p className="text-sm text-muted-foreground">На этот день нет плана</p>;
+                  }
+                  return (
+                    <div className="rounded-xl bg-muted/30 px-3 py-2">
+                      <p className="text-sm font-medium text-foreground">
+                        Силовая — {plannedMuscles.map((m) => t(`center.${m}`)).join(", ")}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
 
-              {/* Today */}
-              {todaysLog.length > 0 && (
-                <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Сегодня</p>
-                  {todaysLog.map((entry) => (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      onClick={() => openEditWorkoutEditor(entry)}
-                      className="w-full text-left rounded-xl bg-background/60 border border-border px-4 py-3 flex flex-col gap-1"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">
-                          {entry.type === "strength"
-                            ? "Силовая"
-                            : entry.type === "cardio"
-                            ? "Кардио"
-                            : entry.type === "hiit"
-                            ? "HIIT"
-                            : "Восстановление"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleWorkoutCompleted(entry);
-                          }}
-                          className="text-[10px] text-primary hover:underline"
-                        >
-                          {entry.status === "completed" ? "Снять отметку" : "Выполнено"}
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {entry.duration} мин · самочувствие {entry.feeling}/5
-                      </p>
-                      {entry.exercises && entry.exercises.length > 0 && (
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {entry.exercises.slice(0, 2).map((ex) => ex.name).join(", ")}
-                          {entry.exercises.length > 2 && " …"}
-                        </p>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Completed */}
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Выполнено</p>
+                {(() => {
+                  const dayLogEntries = workoutLog.filter((w) => w.date === selectedSportDate);
+                  const dayKey = getDayKeyFromDateStr(selectedSportDate);
+                  const hasPlan = (weekPlan[dayKey] ?? []).length > 0;
+                  const isPast = selectedSportDate < todayDateStr;
+                  const showSkipped = hasPlan && dayLogEntries.length === 0 && isPast;
 
-              {/* History */}
-              {Object.keys(historyLogByDate).length > 0 && (
-                <div className="space-y-2">
-                  {Object.entries(historyLogByDate).map(([date, entries]) => (
-                    <div key={date} className="space-y-2">
-                      <p className="mt-2 text-[11px] text-muted-foreground">
-                        {new Date(date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
-                      </p>
-                      {entries.map((entry) => (
+                  if (showSkipped) {
+                    return (
+                      <div className="rounded-xl bg-muted/30 px-3 py-2">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">Пропущено</span>
+                      </div>
+                    );
+                  }
+                  if (dayLogEntries.length === 0) {
+                    return null;
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {dayLogEntries.map((entry) => (
                         <button
                           key={entry.id}
                           type="button"
                           onClick={() => openEditWorkoutEditor(entry)}
-                          className="w-full text-left rounded-xl bg-card border border-border px-4 py-3 flex flex-col gap-1"
+                          className="w-full text-left rounded-xl bg-background/60 border border-border px-4 py-3 flex flex-col gap-1"
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-foreground">
-                              {entry.type === "strength"
-                                ? "Силовая"
-                                : entry.type === "cardio"
-                                ? "Кардио"
-                                : entry.type === "hiit"
-                                ? "HIIT"
-                                : "Восстановление"}
+                              {entry.type === "strength" ? "Силовая" : entry.type === "cardio" ? "Кардио" : entry.type === "hiit" ? "HIIT" : "Восстановление"}
                             </span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                              {entry.status === "completed"
-                                ? "Выполнено"
-                                : entry.status === "skipped"
-                                ? "Пропущено"
-                                : "Запланировано"}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              {selectedSportDate === todayDateStr && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleWorkoutCompleted(entry);
+                                  }}
+                                  className="text-[10px] text-primary hover:underline"
+                                >
+                                  {entry.status === "completed" ? "Снять отметку" : "Выполнено"}
+                                </button>
+                              )}
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                {entry.status === "completed" ? "Выполнено" : entry.status === "skipped" ? "Пропущено" : "Запланировано"}
+                              </span>
+                            </div>
                           </div>
                           <p className="text-xs text-muted-foreground">
                             {entry.duration} мин · самочувствие {entry.feeling}/5
@@ -1160,10 +1156,60 @@ export default function Center() {
                         </button>
                       ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })()}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openNewWorkoutEditor(selectedSportDate)}
+                className="w-full text-xs text-primary hover:underline py-2"
+              >
+                + Добавить тренировку
+              </button>
             </div>
+
+            {/* History */}
+            {Object.keys(historyLogByDate).length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  История
+                </h3>
+                {Object.entries(historyLogByDate).map(([date, entries]) => (
+                  <div key={date} className="space-y-2">
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      {new Date(date + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
+                    </p>
+                    {entries.map((entry) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        onClick={() => openEditWorkoutEditor(entry)}
+                        className="w-full text-left rounded-xl bg-card border border-border px-4 py-3 flex flex-col gap-1"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">
+                            {entry.type === "strength" ? "Силовая" : entry.type === "cardio" ? "Кардио" : entry.type === "hiit" ? "HIIT" : "Восстановление"}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            {entry.status === "completed" ? "Выполнено" : entry.status === "skipped" ? "Пропущено" : "Запланировано"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {entry.duration} мин · самочувствие {entry.feeling}/5
+                        </p>
+                        {entry.exercises && entry.exercises.length > 0 && (
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {entry.exercises.slice(0, 2).map((ex) => ex.name).join(", ")}
+                            {entry.exercises.length > 2 && " …"}
+                          </p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
       </div>
 
@@ -1175,6 +1221,30 @@ export default function Center() {
         onSelectDate={setSelectedDate}
         nutritionKey={storageKeys?.nutrition || null}
       />
+
+      {/* Program editor */}
+      <Dialog open={programEditorOpen} onOpenChange={(open) => !open && setProgramEditorOpen(false)}>
+        <DialogContent hideClose className="max-w-[400px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">Программа недели</h2>
+            <button
+              type="button"
+              onClick={() => setProgramEditorOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+          <WorkoutProgram
+            weekPlan={weekPlan}
+            onPlanChange={(plan) => {
+              handleWeekPlanChange(plan);
+              setProgramEditorOpen(false);
+            }}
+            todayWorkouts={todayMuscles}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Workout log editor */}
       <Dialog open={logEditorOpen} onOpenChange={(open) => !open && setLogEditorOpen(false)}>
