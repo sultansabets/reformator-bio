@@ -14,7 +14,7 @@ import {
 import type { LoadEngineResult } from "@/engine/loadEngine";
 
 const CHART_HEIGHT = 240;
-const CHART_MARGIN = { top: 20, right: 16, left: 4, bottom: 20 };
+const CHART_MARGIN = { top: 24, right: 24, left: 24, bottom: 32 };
 const BODY_STRENGTH = "#3B82F6";
 const BODY_CARDIO = "#37BE7E";
 const BODY_STEPS = "#22D3EE";
@@ -59,8 +59,16 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
     return data;
   }, [loadDetail]);
 
-  const commonAxisProps = {
-    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)" },
+  const commonXAxisProps = {
+    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dy: 10 },
+    height: 40,
+    axisLine: false,
+    tickLine: false,
+  };
+
+  const commonYAxisProps = {
+    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dx: -8 },
+    width: 40,
     axisLine: false,
     tickLine: false,
   };
@@ -78,7 +86,7 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
-      <div className="w-full">{children}</div>
+      <div className="w-full pt-2">{children}</div>
       {legend && <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">{legend}</div>}
     </section>
   );
@@ -95,8 +103,8 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <LineChart data={chartData} margin={CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[0, 100]} {...commonAxisProps} tickFormatter={(v) => `${v}%`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[0, 100]} {...commonYAxisProps} tickFormatter={(v) => `${v}%`} />
             <Line
               type="monotone"
               dataKey="totalLoad"
@@ -129,10 +137,10 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
         }
       >
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="12%">
+          <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[0, 100]} {...commonAxisProps} tickFormatter={(v) => `${v}%`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[0, 100]} {...commonYAxisProps} tickFormatter={(v) => `${v}%`} />
             <Bar dataKey="strengthLoad" stackId="body" fill={BODY_STRENGTH} radius={[0, 0, 0, 0]} />
             <Bar dataKey="cardioLoad" stackId="body" fill={BODY_CARDIO} radius={[0, 0, 0, 0]} />
             <Bar dataKey="stepsLoad" stackId="body" fill={BODY_STEPS} radius={[2, 2, 0, 0]} />
@@ -160,10 +168,10 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
         }
       >
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <ComposedChart data={chartData} margin={CHART_MARGIN}>
+          <ComposedChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[0, 100]} {...commonAxisProps} tickFormatter={(v) => `${v}%`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[0, 100]} {...commonYAxisProps} tickFormatter={(v) => `${v}%`} />
             <Bar dataKey="sleepDebtLoad" fill={NEURO_SLEEP} radius={[2, 2, 0, 0]} opacity={0.7} />
             <Line
               type="monotone"

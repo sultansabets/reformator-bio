@@ -16,7 +16,7 @@ import type { SleepEngineResult } from "@/engine/sleepEngine";
 
 const NIGHTS_FOR_CHARTS = 5;
 const CHART_HEIGHT = 240;
-const CHART_MARGIN = { top: 20, right: 16, left: 4, bottom: 20 };
+const CHART_MARGIN = { top: 24, right: 24, left: 24, bottom: 32 };
 const BAR_FILL = "#37BE7E";
 const LINE_STROKE = "#37BE7E";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
@@ -139,8 +139,16 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
 
   if (!sleepDetail) return null;
 
-  const commonAxisProps = {
-    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)" },
+  const commonXAxisProps = {
+    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dy: 10 },
+    height: 40,
+    axisLine: false,
+    tickLine: false,
+  };
+
+  const commonYAxisProps = {
+    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dx: -8 },
+    width: 40,
     axisLine: false,
     tickLine: false,
   };
@@ -163,7 +171,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
           {t("sleepDetail.notEnoughData")}
         </p>
       ) : (
-        <div className="w-full" style={{ opacity: hasEnoughNights ? 1 : 0.5 }}>
+        <div className="w-full pt-2" style={{ opacity: hasEnoughNights ? 1 : 0.5 }}>
           {children}
         </div>
       )}
@@ -180,7 +188,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
 
       <ChartSection title={t("sleepDetail.qualityBlock")} isEmpty={!hasEnoughNights}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
+          <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
             {avg && (
               <ReferenceLine
@@ -190,8 +198,8 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
                 strokeWidth={1}
               />
             )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[70, 100]} {...commonAxisProps} tickFormatter={(v) => `${Math.round(v)}%`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[70, 100]} {...commonYAxisProps} tickFormatter={(v) => `${Math.round(v)}%`} />
             <Bar dataKey="quality" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -199,7 +207,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
 
       <ChartSection title={t("sleepDetail.regularityBlock")} isEmpty={!hasEnoughNights}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
+          <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
             {chartData.length > 0 && (
               <>
@@ -217,11 +225,11 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
                 />
               </>
             )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis
               domain={[20 * 60, 34 * 60]}
               ticks={[20 * 60, 22 * 60, 24 * 60, 26 * 60, 28 * 60, 30 * 60, 32 * 60, 34 * 60]}
-              {...commonAxisProps}
+              {...commonYAxisProps}
               tickFormatter={(v) => {
                 const m = Number(v) % (24 * 60);
                 return minutesToHHMM(m, false);
@@ -254,11 +262,11 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <LineChart data={chartData} margin={CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis
               domain={[22 * 60, 25 * 60]}
               ticks={[22 * 60, 22.5 * 60, 23 * 60, 23.5 * 60, 24 * 60, 24.5 * 60, 25 * 60]}
-              {...commonAxisProps}
+              {...commonYAxisProps}
               tickFormatter={(v) => minutesToHHMM(Number(v), false)}
             />
             <Line
@@ -277,11 +285,11 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <LineChart data={chartData} margin={CHART_MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis
               domain={[5 * 60, 9 * 60]}
               ticks={[5 * 60, 5.5 * 60, 6 * 60, 6.5 * 60, 7 * 60, 7.5 * 60, 8 * 60, 8.5 * 60, 9 * 60]}
-              {...commonAxisProps}
+              {...commonYAxisProps}
               tickFormatter={(v) => minutesToHHMM(Number(v), false)}
             />
             <Line
@@ -298,7 +306,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
 
       <ChartSection title={t("sleepDetail.efficiencyBlock")} isEmpty={!hasEnoughNights}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
+          <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
             {avg && (
               <ReferenceLine
@@ -308,8 +316,8 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
                 strokeWidth={1}
               />
             )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[70, 100]} {...commonAxisProps} tickFormatter={(v) => `${Math.round(v)}%`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[70, 100]} {...commonYAxisProps} tickFormatter={(v) => `${Math.round(v)}%`} />
             <Bar dataKey="efficiency" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -317,7 +325,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
 
       <ChartSection title={t("sleepDetail.actualSleepBlock")} isEmpty={!hasEnoughNights}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <BarChart data={chartData} margin={CHART_MARGIN}>
+          <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
             {avg && (
               <ReferenceLine
@@ -327,8 +335,8 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
                 strokeWidth={1}
               />
             )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[4, 7]} ticks={[4, 4.5, 5, 5.5, 6, 6.5, 7]} {...commonAxisProps} tickFormatter={(v) => `${v}ч`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[4, 7]} ticks={[4, 4.5, 5, 5.5, 6, 6.5, 7]} {...commonYAxisProps} tickFormatter={(v) => `${v}ч`} />
             <Bar dataKey="actualSleep" fill={BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -346,11 +354,11 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
                 strokeWidth={1}
               />
             )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis
               domain={[0, 35]}
               ticks={[0, 5, 10, 15, 20, 25, 30]}
-              {...commonAxisProps}
+              {...commonYAxisProps}
               tickFormatter={(v) => `${Math.round(v)}м`}
             />
             <Line
@@ -378,8 +386,8 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
                 strokeWidth={1}
               />
             )}
-            <XAxis dataKey="label" {...commonAxisProps} interval="preserveStartEnd" />
-            <YAxis domain={[50, 90]} {...commonAxisProps} tickFormatter={(v) => `${v}`} />
+            <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
+            <YAxis domain={[50, 90]} {...commonYAxisProps} tickFormatter={(v) => `${v}`} />
             <Line
               type="monotone"
               dataKey="heartRate"
