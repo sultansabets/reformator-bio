@@ -185,9 +185,11 @@ function drawSmoothBlob(
 
 interface HealthOrbProps {
   score: number;
+  /** Override color (e.g. for demo mode). When set, orb, contour, and particles use this color. */
+  forceColor?: string;
 }
 
-export default function HealthOrb({ score }: HealthOrbProps) {
+export default function HealthOrb({ score, forceColor }: HealthOrbProps) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<"energy" | "quote">("energy");
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -204,7 +206,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const modeRef = useRef<"energy" | "quote">("energy");
   const modeChangeTimeRef = useRef<number>(0);
 
-  const color = useMemo(() => getColorFromScore(score), [score]);
+  const color = useMemo(() => forceColor ?? getColorFromScore(score), [score, forceColor]);
   colorRef.current = color;
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 

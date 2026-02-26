@@ -67,9 +67,11 @@ interface LoadDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   loadPercent: number;
+  demoMode?: boolean;
+  displayLoad?: number;
 }
 
-export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
+export function LoadDetailSheet({ open, onOpenChange, loadPercent, demoMode, displayLoad = 12 }: LoadDetailSheetProps) {
   const { t } = useTranslation();
   const workouts = useHealthStore((s) => s.workouts);
   const steps = useHealthStore((s) => s.steps);
@@ -109,9 +111,13 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
 
   const { totalLoad, bodyLoad, neuroLoad, strengthLoad, cardioLoad, stepsLoad, stressLoad, sleepDebtLoad, hrvLoad, status } = detail;
 
-  const recommendation = status === "overloaded"
+  const showTotalLoad = demoMode ? displayLoad : totalLoad;
+  const showStatus = demoMode ? "balanced" : status;
+  const showColor = demoMode ? STATUS_COLOR_HEX.balanced : STATUS_COLOR_HEX[status];
+
+  const recommendation = showStatus === "overloaded"
     ? "loadDetail.recOverloaded"
-    : status === "low_activity"
+    : showStatus === "low_activity"
       ? "loadDetail.recLowActivity"
       : "loadDetail.recBalanced";
 
@@ -143,9 +149,9 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
               {t("loadDetail.statusTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing percent={totalLoad} color={STATUS_COLOR_HEX[status]} />
+              <LoadRing percent={showTotalLoad} color={showColor} />
               <p className="text-sm font-medium text-foreground">
-                {t(STATUS_LABEL[status])}
+                {t(STATUS_LABEL[showStatus])}
               </p>
               <p className="text-center text-xs text-muted-foreground">
                 {t("loadDetail.statusDesc")}

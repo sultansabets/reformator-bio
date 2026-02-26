@@ -43,6 +43,7 @@ const ControlCenter = () => {
   const displaySleep = DEMO_MAX_STATE ? 98 : sleepPercent;
   const displayLoad = DEMO_MAX_STATE ? 12 : loadPercent;
   const demoGreen = DEMO_MAX_STATE ? "rgb(55, 190, 126)" : undefined;
+  const demoGreenHex = DEMO_MAX_STATE ? "#34c759" : undefined;
   const steps = useHealthStore((s) => s.steps);
   const heartRate = useHealthStore((s) => s.heartRate);
   const testosterone = useHealthStore((s) => s.testosterone);
@@ -97,7 +98,7 @@ const ControlCenter = () => {
           onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: displayState })}
           className="relative mx-auto flex w-full max-w-[420px] cursor-pointer items-center justify-center overflow-visible"
         >
-          <HealthOrb score={displayState} />
+          <HealthOrb score={displayState} forceColor={demoGreenHex} />
         </div>
       </motion.div>
 
@@ -150,6 +151,10 @@ const ControlCenter = () => {
         open={metricSheetOpen}
         onOpenChange={setMetricSheetOpen}
         detail={selectedMetric}
+        demoMode={DEMO_MAX_STATE}
+        displayState={displayState}
+        displaySleep={displaySleep}
+        displayLoad={displayLoad}
       />
     </motion.div>
   );

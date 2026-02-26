@@ -18,6 +18,10 @@ interface MetricDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   detail: MetricDetail | null;
+  demoMode?: boolean;
+  displayState?: number;
+  displaySleep?: number;
+  displayLoad?: number;
 }
 
 const METRIC_KEYS: Record<MetricKey, { desc: string; formula: string; sources: string[] }> = {
@@ -52,6 +56,10 @@ export function MetricDetailSheet({
   open,
   onOpenChange,
   detail,
+  demoMode,
+  displayState = 98,
+  displaySleep = 98,
+  displayLoad = 12,
 }: MetricDetailSheetProps) {
   const { t } = useTranslation();
   const sleepDetail = useHealthStore((s) => s.sleepDetail);
@@ -59,10 +67,26 @@ export function MetricDetailSheet({
   const info = detail ? METRIC_KEYS[detail.key] : null;
 
   if (detail?.key === "sleep") {
-    return <SleepDetailSheet open={open} onOpenChange={onOpenChange} sleepDetail={sleepDetail} />;
+    return (
+      <SleepDetailSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        sleepDetail={sleepDetail}
+        demoMode={demoMode}
+        displayScore={displaySleep}
+      />
+    );
   }
   if (detail?.key === "energy") {
-    return <EnergyDetailSheet open={open} onOpenChange={onOpenChange} energyDetail={energyDetail} />;
+    return (
+      <EnergyDetailSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        energyDetail={energyDetail}
+        demoMode={demoMode}
+        displayScore={displayState}
+      />
+    );
   }
   if (detail?.key === "load") {
     return (
@@ -70,6 +94,8 @@ export function MetricDetailSheet({
         open={open}
         onOpenChange={onOpenChange}
         loadPercent={detail.percent}
+        demoMode={demoMode}
+        displayLoad={displayLoad}
       />
     );
   }

@@ -9,9 +9,11 @@ interface EnergyDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   energyDetail: EnergyEngineResult | null;
+  demoMode?: boolean;
+  displayScore?: number;
 }
 
-export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDetailSheetProps) {
+export function EnergyDetailSheet({ open, onOpenChange, energyDetail, demoMode, displayScore = 98 }: EnergyDetailSheetProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
@@ -22,13 +24,14 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
   if (!energyDetail) return null;
 
   const { energyScore, contributions, recommendationKey } = energyDetail;
+  const showScore = demoMode ? displayScore : energyScore;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold">
-            {t("energyDetail.title")} — {energyScore}%
+            {t("energyDetail.title")} — {showScore}%
           </h2>
           <div className="mt-1 text-sm text-muted-foreground">
             {expanded ? (
@@ -60,7 +63,7 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
         <div className="space-y-4">
             <section>
               <h3 className="mb-3 text-sm font-medium text-foreground">
-                {t("energyDetail.whyTitle", { score: energyScore })}
+                {t("energyDetail.whyTitle", { score: showScore })}
               </h3>
               <div className="flex flex-wrap gap-3">
                 {contributions.map((c) => (
@@ -68,11 +71,11 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
                     key={c.key}
                     className={cn(
                       "rounded-lg border px-3 py-2 text-sm",
-                      c.delta >= 0 ? "border-border bg-muted/30" : "border-border bg-muted/50"
+                      demoMode ? "border-border bg-muted/30" : c.delta >= 0 ? "border-border bg-muted/30" : "border-border bg-muted/50"
                     )}
                   >
                     <span className="text-muted-foreground">{t(c.labelKey)}: </span>
-                    <span className={c.delta >= 0 ? "text-emerald-600" : "text-amber-600"}>
+                    <span className={demoMode ? "text-emerald-600" : c.delta >= 0 ? "text-emerald-600" : "text-amber-600"}>
                       {c.delta >= 0 ? "+" : ""}{c.delta}%
                     </span>
                   </div>
