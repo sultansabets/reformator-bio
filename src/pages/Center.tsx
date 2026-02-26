@@ -17,7 +17,6 @@ import {
   Square,
   Heart,
   Search,
-  X,
   Minus,
   Dumbbell,
 } from "lucide-react";
@@ -122,6 +121,30 @@ interface WorkoutHistoryEntry {
   bodyParts?: string[];
 }
 
+interface WorkoutExercise {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  weight: number;
+}
+
+type WorkoutStatus = "planned" | "completed" | "skipped";
+
+type WorkoutType = "strength" | "cardio" | "hiit" | "recovery";
+
+interface WorkoutLogEntry {
+  id: string;
+  date: string;
+  type: WorkoutType;
+  duration: number;
+  feeling: number;
+  notes: string;
+  exercises?: WorkoutExercise[];
+  status: WorkoutStatus;
+  createdAt: number;
+}
+
 function loadDayData(key: string, dateStr: string): DayData {
   try {
     const raw = localStorage.getItem(`${key}_${dateStr}`);
@@ -151,6 +174,22 @@ function loadWorkoutHistory(key: string): WorkoutHistoryEntry[] {
 function saveWorkoutHistory(key: string, entries: WorkoutHistoryEntry[]): void {
   try {
     localStorage.setItem(key, JSON.stringify(entries.slice(-50)));
+  } catch {}
+}
+
+function loadWorkoutLog(key: string): WorkoutLogEntry[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    return JSON.parse(raw) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveWorkoutLog(key: string, entries: WorkoutLogEntry[]): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(entries.slice(-200)));
   } catch {}
 }
 
@@ -449,6 +488,7 @@ export default function Center() {
       nutrition: getStorageKey(user.id, "nutrition_v2"),
       workout_history: getStorageKey(user.id, "workout_history"),
       week_plan: getStorageKey(user.id, "week_plan"),
+      workout_log: getStorageKey(user.id, "workout_log"),
     };
   }, [user?.id]);
 
@@ -468,6 +508,24 @@ export default function Center() {
 
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
   const [weekPlan, setWeekPlan] = useState<WeekPlan>({ monday: ["chest"], wednesday: ["back"], friday: ["legs"] });
+  const [workoutLog, setWorkoutLog] = useState<WorkoutLogEntry[]>([]);
+  const [logEditorOpen, setLogEditorOpen] = useState(false);
+  const [editingWorkout, setEditingWorkout] = useState<WorkoutLogEntry | null>(null);
+  const [logForm, setLogForm] = useState<{
+    type: WorkoutType;
+    date: string;
+    duration: number;
+    feeling: number;
+    notes: string;
+    exercises: WorkoutExercise[];
+  }>({
+    type: "strength",
+    date: getTodayDateString(),
+    duration: 60,
+    feeling: 3,
+    notes: "",
+    exercises: [],
+  });
 
   useEffect(() => {
     if (!storageKeys) return;
@@ -476,6 +534,7 @@ export default function Center() {
     setDayData(day);
     setWorkoutHistory(history);
     setWeekPlan(loadWeekPlan(storageKeys.week_plan));
+    setWorkoutLog(loadWorkoutLog(storageKeys.workout_log));
     if (selectedDate === getTodayDateString()) {
       const agg = day.entries.reduce(
         (a, e) => ({
@@ -535,8 +594,8 @@ export default function Center() {
 
   const weight = user?.weight || 75;
   const height = user?.height || 175;
-  const age = user?.age || 30;
-  const isMale = user?.gender !== "female";
+  const age = user?.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : 30;
+  const isMale = true;
   const activityLevel = user?.activityLevel || "moderate";
 
   const bmr = calculateBMR(weight, height, age, isMale);
@@ -615,6 +674,18 @@ export default function Center() {
     };
   }, [workoutHistory, currentHeartRate]);
 
+  const handleWorkoutLogChange = useCallback(
+    (updater: (prev: WorkoutLogEntry[]) => WorkoutLogEntry[]) => {
+      if (!storageKeys) return;
+      setWorkoutLog((prev) => {
+        const next = updater(prev);
+        saveWorkoutLog(storageKeys.workout_log, next);
+        return next;
+      });
+    },
+    [storageKeys],
+  );
+
   const handleWeekPlanChange = useCallback((newPlan: WeekPlan) => {
     setWeekPlan(newPlan);
     if (storageKeys) saveWeekPlan(storageKeys.week_plan, newPlan);
@@ -647,6 +718,99 @@ export default function Center() {
     setGrams(100);
     setSearchQuery("");
   }, [selectedProduct, grams, calculatedNutrients, dayData.entries, saveData, addNutrition]);
+
+  const todayDateStr = getTodayDateString();
+
+  const todaysLog = useMemo(
+    () => workoutLog.filter((w) => w.date === todayDateStr),
+    [workoutLog, todayDateStr],
+  );
+
+  const historyLogByDate = useMemo(() => {
+    const past = workoutLog
+      .filter((w) => w.date < todayDateStr)
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    return past.reduce<Record<string, WorkoutLogEntry[]>>((acc, w) => {
+      if (!acc[w.date]) acc[w.date] = [];
+      acc[w.date].push(w);
+      return acc;
+    }, {});
+  }, [workoutLog, todayDateStr]);
+
+  const openNewWorkoutEditor = () => {
+    setEditingWorkout(null);
+    setLogForm({
+      type: "strength",
+      date: todayDateStr,
+      duration: 60,
+      feeling: 3,
+      notes: "",
+      exercises: [],
+    });
+    setLogEditorOpen(true);
+  };
+
+  const openEditWorkoutEditor = (entry: WorkoutLogEntry) => {
+    setEditingWorkout(entry);
+    setLogForm({
+      type: entry.type,
+      date: entry.date,
+      duration: entry.duration,
+      feeling: entry.feeling,
+      notes: entry.notes,
+      exercises: entry.exercises ?? [],
+    });
+    setLogEditorOpen(true);
+  };
+
+  const handleSaveWorkout = () => {
+    if (!storageKeys) return;
+    if (editingWorkout) {
+      handleWorkoutLogChange((prev) =>
+        prev.map((w) =>
+          w.id === editingWorkout.id
+            ? {
+                ...w,
+                ...logForm,
+              }
+            : w,
+        ),
+      );
+    } else {
+      const entry: WorkoutLogEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        date: logForm.date,
+        type: logForm.type,
+        duration: logForm.duration,
+        feeling: logForm.feeling,
+        notes: logForm.notes,
+        exercises: logForm.type === "strength" ? logForm.exercises : [],
+        status: "planned",
+        createdAt: Date.now(),
+      };
+      handleWorkoutLogChange((prev) => [entry, ...prev]);
+    }
+    setLogEditorOpen(false);
+  };
+
+  const handleDeleteWorkout = () => {
+    if (!editingWorkout) return;
+    handleWorkoutLogChange((prev) => prev.filter((w) => w.id !== editingWorkout.id));
+    setLogEditorOpen(false);
+  };
+
+  const toggleWorkoutCompleted = (entry: WorkoutLogEntry) => {
+    handleWorkoutLogChange((prev) =>
+      prev.map((w) =>
+        w.id === entry.id
+          ? {
+              ...w,
+              status: w.status === "completed" ? "planned" : "completed",
+            }
+          : w,
+      ),
+    );
+  };
 
   const removeEntry = useCallback((id: string) => {
     saveData({ entries: dayData.entries.filter((e) => e.id !== id) });
@@ -890,13 +1054,116 @@ export default function Center() {
               todayWorkouts={todayMuscles}
             />
 
-            {/* Empty state CTA */}
-            {workoutHistory.length === 0 && (
-              <div className="flex flex-col items-center py-6 text-center">
-                <p className="mb-2 text-lg font-medium text-foreground">Пора качнуть форму</p>
-                <p className="mb-4 text-sm text-muted-foreground">Начнем?</p>
+            {/* Workout log */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Журнал тренировок
+                </h3>
+                <button
+                  type="button"
+                  onClick={openNewWorkoutEditor}
+                  className="text-xs text-primary hover:underline"
+                >
+                  + Добавить тренировку
+                </button>
               </div>
-            )}
+
+              {/* Today */}
+              {todaysLog.length > 0 && (
+                <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Сегодня</p>
+                  {todaysLog.map((entry) => (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      onClick={() => openEditWorkoutEditor(entry)}
+                      className="w-full text-left rounded-xl bg-background/60 border border-border px-4 py-3 flex flex-col gap-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          {entry.type === "strength"
+                            ? "Силовая"
+                            : entry.type === "cardio"
+                            ? "Кардио"
+                            : entry.type === "hiit"
+                            ? "HIIT"
+                            : "Восстановление"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleWorkoutCompleted(entry);
+                          }}
+                          className="text-[10px] text-primary hover:underline"
+                        >
+                          {entry.status === "completed" ? "Снять отметку" : "Выполнено"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {entry.duration} мин · самочувствие {entry.feeling}/5
+                      </p>
+                      {entry.exercises && entry.exercises.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {entry.exercises.slice(0, 2).map((ex) => ex.name).join(", ")}
+                          {entry.exercises.length > 2 && " …"}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* History */}
+              {Object.keys(historyLogByDate).length > 0 && (
+                <div className="space-y-2">
+                  {Object.entries(historyLogByDate).map(([date, entries]) => (
+                    <div key={date} className="space-y-2">
+                      <p className="mt-2 text-[11px] text-muted-foreground">
+                        {new Date(date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
+                      </p>
+                      {entries.map((entry) => (
+                        <button
+                          key={entry.id}
+                          type="button"
+                          onClick={() => openEditWorkoutEditor(entry)}
+                          className="w-full text-left rounded-xl bg-card border border-border px-4 py-3 flex flex-col gap-1"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-foreground">
+                              {entry.type === "strength"
+                                ? "Силовая"
+                                : entry.type === "cardio"
+                                ? "Кардио"
+                                : entry.type === "hiit"
+                                ? "HIIT"
+                                : "Восстановление"}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                              {entry.status === "completed"
+                                ? "Выполнено"
+                                : entry.status === "skipped"
+                                ? "Пропущено"
+                                : "Запланировано"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {entry.duration} мин · самочувствие {entry.feeling}/5
+                          </p>
+                          {entry.exercises && entry.exercises.length > 0 && (
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {entry.exercises.slice(0, 2).map((ex) => ex.name).join(", ")}
+                              {entry.exercises.length > 2 && " …"}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
       </div>
 
@@ -908,6 +1175,255 @@ export default function Center() {
         onSelectDate={setSelectedDate}
         nutritionKey={storageKeys?.nutrition || null}
       />
+
+      {/* Workout log editor */}
+      <Dialog open={logEditorOpen} onOpenChange={(open) => !open && setLogEditorOpen(false)}>
+        <DialogContent className="max-w-[380px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">
+              {editingWorkout ? "Редактировать тренировку" : "Добавить тренировку"}
+            </h2>
+            <button
+              type="button"
+              onClick={() => setLogEditorOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Тип тренировки</p>
+              <div className="grid grid-cols-2 gap-2">
+                {["strength", "cardio", "hiit", "recovery"].map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setLogForm((f) => ({ ...f, type: type as WorkoutType }))}
+                    className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                      logForm.type === type
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {type === "strength"
+                      ? "Силовая"
+                      : type === "cardio"
+                      ? "Кардио"
+                      : type === "hiit"
+                      ? "HIIT"
+                      : "Восстановление"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-1">
+                <p className="text-xs text-muted-foreground">Дата</p>
+                <Input
+                  type="date"
+                  value={logForm.date}
+                  onChange={(e) => setLogForm((f) => ({ ...f, date: e.target.value }))}
+                  className="h-9 bg-muted/30 border-border text-xs"
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <p className="text-xs text-muted-foreground">Длительность (мин)</p>
+                <Input
+                  type="number"
+                  min={1}
+                  max={600}
+                  value={logForm.duration}
+                  onChange={(e) =>
+                    setLogForm((f) => ({ ...f, duration: Math.max(1, Number(e.target.value) || 0) }))
+                  }
+                  className="h-9 bg-muted/30 border-border text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Самочувствие (1–5)</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setLogForm((f) => ({ ...f, feeling: v }))}
+                    className={`flex-1 rounded-lg py-1 text-xs font-medium ${
+                      logForm.feeling === v
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Комментарий</p>
+              <textarea
+                value={logForm.notes}
+                onChange={(e) => setLogForm((f) => ({ ...f, notes: e.target.value }))}
+                rows={3}
+                className="w-full rounded-xl bg-muted/30 border border-border px-3 py-2 text-xs text-foreground resize-none"
+                placeholder="Как прошла тренировка?"
+              />
+            </div>
+
+            {logForm.type === "strength" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">Упражнения</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLogForm((f) => ({
+                        ...f,
+                        exercises: [
+                          ...f.exercises,
+                          {
+                            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                            name: "",
+                            sets: 4,
+                            reps: 8,
+                            weight: 0,
+                          },
+                        ],
+                      }))
+                    }
+                    className="text-[11px] text-primary hover:underline"
+                  >
+                    + Упражнение
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {logForm.exercises.map((ex) => (
+                    <div
+                      key={ex.id}
+                      className="rounded-xl bg-muted/20 border border-border px-3 py-2 space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <Input
+                          value={ex.name}
+                          onChange={(e) =>
+                            setLogForm((f) => ({
+                              ...f,
+                              exercises: f.exercises.map((it) =>
+                                it.id === ex.id ? { ...it, name: e.target.value } : it,
+                              ),
+                            }))
+                          }
+                          placeholder="Упражнение"
+                          className="h-8 bg-background/60 border-border text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setLogForm((f) => ({
+                              ...f,
+                              exercises: f.exercises.filter((it) => it.id !== ex.id),
+                            }))
+                          }
+                          className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted"
+                        >
+                          <X className="h-3 w-3 text-muted-foreground" />
+                        </button>
+                      </div>
+                      <div className="flex gap-2 text-[11px]">
+                        <div className="flex-1">
+                          <p className="text-muted-foreground mb-0.5">Подходы</p>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={ex.sets}
+                            onChange={(e) =>
+                              setLogForm((f) => ({
+                                ...f,
+                                exercises: f.exercises.map((it) =>
+                                  it.id === ex.id
+                                    ? { ...it, sets: Math.max(1, Number(e.target.value) || 1) }
+                                    : it,
+                                ),
+                              }))
+                            }
+                            className="h-8 bg-background/60 border-border text-xs"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-muted-foreground mb-0.5">Повторы</p>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={ex.reps}
+                            onChange={(e) =>
+                              setLogForm((f) => ({
+                                ...f,
+                                exercises: f.exercises.map((it) =>
+                                  it.id === ex.id
+                                    ? { ...it, reps: Math.max(1, Number(e.target.value) || 1) }
+                                    : it,
+                                ),
+                              }))
+                            }
+                            className="h-8 bg-background/60 border-border text-xs"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-muted-foreground mb-0.5">Вес (кг)</p>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={500}
+                            value={ex.weight}
+                            onChange={(e) =>
+                              setLogForm((f) => ({
+                                ...f,
+                                exercises: f.exercises.map((it) =>
+                                  it.id === ex.id
+                                    ? { ...it, weight: Math.max(0, Number(e.target.value) || 0) }
+                                    : it,
+                                ),
+                              }))
+                            }
+                            className="h-8 bg-background/60 border-border text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 flex gap-2">
+              {editingWorkout && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 text-xs"
+                  onClick={handleDeleteWorkout}
+                >
+                  Удалить
+                </Button>
+              )}
+              <Button
+                type="button"
+                className="flex-1 text-xs"
+                onClick={handleSaveWorkout}
+              >
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Fullscreen add product modal - rendered via Portal at document.body */}
       <FullscreenModal open={searchModalOpen} onClose={() => !selectedProduct && setSearchModalOpen(false)}>
