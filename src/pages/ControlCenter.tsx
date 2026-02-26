@@ -13,7 +13,7 @@ import { DateNavigator } from "@/components/control/DateNavigator";
 import { useDateStore } from "@/store/dateStore";
 
 /** Временный флаг: при true показываются идеальные значения для демонстрации UI (98% состояние, 98% сон, 12% нагрузка, всё зелёное) */
-const DEMO_MAX_STATE = false;
+const DEMO_MAX_STATE = true;
 
 function formatDateShort(iso: string | undefined): string {
   if (!iso) return "";
@@ -42,7 +42,6 @@ const ControlCenter = () => {
   const displayState = DEMO_MAX_STATE ? 98 : mainStateScore;
   const displaySleep = DEMO_MAX_STATE ? 98 : sleepPercent;
   const displayLoad = DEMO_MAX_STATE ? 12 : loadPercent;
-  const demoGreen = DEMO_MAX_STATE ? "rgb(55, 190, 126)" : undefined;
   const demoGreenHex = DEMO_MAX_STATE ? "#34c759" : undefined;
   const steps = useHealthStore((s) => s.steps);
   const heartRate = useHealthStore((s) => s.heartRate);
@@ -85,6 +84,11 @@ const ControlCenter = () => {
       initial="hidden"
       animate="show"
     >
+      {DEMO_MAX_STATE && (
+        <div className="mb-2 text-center text-xs font-medium" style={{ color: "red" }}>
+          DEMO MODE ACTIVE
+        </div>
+      )}
       <motion.div variants={item} className="mb-4 flex flex-col items-center text-center">
         <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
@@ -107,7 +111,7 @@ const ControlCenter = () => {
           <SleepCard
             percent={displaySleep}
             size="large"
-            overrideColor={demoGreen}
+            overrideColor={demoGreenHex}
             onClick={() =>
               openMetricSheet({
                 key: "sleep",
@@ -119,7 +123,7 @@ const ControlCenter = () => {
           <LoadCard
             percent={displayLoad}
             size="large"
-            overrideColor={demoGreen}
+            overrideColor={demoGreenHex}
             onClick={() =>
               openMetricSheet({
                 key: "load",
