@@ -7,9 +7,10 @@ export interface SleepCardProps {
   percent: number;
   onClick?: () => void;
   size?: "default" | "large";
+  overrideColor?: string;
 }
 
-export function SleepCard({ percent, onClick, size }: SleepCardProps) {
+export function SleepCard({ percent, onClick, size, overrideColor }: SleepCardProps) {
   const { t } = useTranslation();
   const iconSize = size === "large" ? "h-10 w-10" : "h-7 w-7";
   return (
@@ -19,6 +20,7 @@ export function SleepCard({ percent, onClick, size }: SleepCardProps) {
       label={t("center.sleep")}
       onClick={onClick}
       size={size}
+      overrideColor={overrideColor}
     />
   );
 }

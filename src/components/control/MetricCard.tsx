@@ -18,6 +18,8 @@ export interface MetricCardProps {
   className?: string;
   /** Larger circle for main page 2-card layout */
   size?: "default" | "large";
+  /** Override color (e.g. for demo mode) */
+  overrideColor?: string;
 }
 
 const CIRCLE_SIZE = 76;
@@ -32,9 +34,10 @@ export function MetricCard({
   onClick,
   className,
   size = "default",
+  overrideColor,
 }: MetricCardProps) {
   const clamped = Math.min(100, Math.max(0, Math.round(percent)));
-  const color = getColorFromPercent(clamped);
+  const color = overrideColor ?? getColorFromPercent(clamped);
 
   const circleSize = size === "large" ? CIRCLE_SIZE_LARGE : CIRCLE_SIZE;
   const strokeWidth = size === "large" ? STROKE_WIDTH_LARGE : STROKE_WIDTH;

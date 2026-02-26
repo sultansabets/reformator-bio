@@ -12,6 +12,9 @@ import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 import { DateNavigator } from "@/components/control/DateNavigator";
 import { useDateStore } from "@/store/dateStore";
 
+/** Временный флаг: при true показываются идеальные значения для демонстрации UI (98% состояние, 98% сон, 12% нагрузка, всё зелёное) */
+const DEMO_MAX_STATE = false;
+
 function formatDateShort(iso: string | undefined): string {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
@@ -35,6 +38,11 @@ const ControlCenter = () => {
   const loadPercent = useHealthStore((s) => s.loadPercent);
   const stress = useHealthStore((s) => s.stress);
   const mainStateScore = useHealthStore((s) => s.mainStateScore);
+
+  const displayState = DEMO_MAX_STATE ? 98 : mainStateScore;
+  const displaySleep = DEMO_MAX_STATE ? 98 : sleepPercent;
+  const displayLoad = DEMO_MAX_STATE ? 12 : loadPercent;
+  const demoGreen = DEMO_MAX_STATE ? "rgb(55, 190, 126)" : undefined;
   const steps = useHealthStore((s) => s.steps);
   const heartRate = useHealthStore((s) => s.heartRate);
   const testosterone = useHealthStore((s) => s.testosterone);
@@ -85,35 +93,37 @@ const ControlCenter = () => {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
-          onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
+          onClick={() => openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: displayState })}
+          onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: displayState })}
           className="relative mx-auto flex w-full max-w-[420px] cursor-pointer items-center justify-center overflow-visible"
         >
-          <HealthOrb score={mainStateScore} />
+          <HealthOrb score={displayState} />
         </div>
       </motion.div>
 
       <motion.div variants={item} className="mb-5 flex justify-center">
         <div className="grid w-full max-w-[360px] grid-cols-2 justify-items-center gap-x-2 gap-y-2">
           <SleepCard
-            percent={sleepPercent}
+            percent={displaySleep}
             size="large"
+            overrideColor={demoGreen}
             onClick={() =>
               openMetricSheet({
                 key: "sleep",
                 title: t("center.sleep"),
-                percent: sleepPercent,
+                percent: displaySleep,
               })
             }
           />
           <LoadCard
-            percent={loadPercent}
+            percent={displayLoad}
             size="large"
+            overrideColor={demoGreen}
             onClick={() =>
               openMetricSheet({
                 key: "load",
                 title: t("center.load"),
-                percent: loadPercent,
+                percent: displayLoad,
               })
             }
           />
