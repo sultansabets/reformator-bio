@@ -1,19 +1,14 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import { calculateLoadDetail, type LoadStatus } from "@/engine/loadEngine";
+import { calculateLoadDetail, type LoadEngineResult, type LoadStatus } from "@/engine/loadEngine";
 import { useHealthStore } from "@/store/healthStore";
-
-interface LoadDetailSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  loadPercent: number;
-}
+import { LoadCharts } from "@/components/control/LoadCharts";
 
 const STATUS_LABEL: Record<LoadStatus, string> = {
-  balanced: "В балансе",
-  overloaded: "Перегружен",
-  low_activity: "Мало активности",
+  balanced: "loadDetail.statusBalanced",
+  overloaded: "loadDetail.statusOverloaded",
+  low_activity: "loadDetail.statusLowActivity",
 };
 
 const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
@@ -22,9 +17,9 @@ const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
   low_activity: "#F59E0B",
 };
 
-const MAIN_RING_SIZE = 120;
+const MAIN_RING_SIZE = 140;
 const MAIN_RING_STROKE = 6;
-const MINI_RING_SIZE = 70;
+const MINI_RING_SIZE = 64;
 const MINI_RING_STROKE = 4;
 
 interface RingProps {
@@ -34,7 +29,7 @@ interface RingProps {
   color: string;
 }
 
-const LoadRing: React.FC<RingProps> = ({ size, strokeWidth, percent, color }) => {
+function LoadRing({ size, strokeWidth, percent, color }: RingProps) {
   const center = size / 2;
   const radius = center - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
@@ -42,25 +37,14 @@ const LoadRing: React.FC<RingProps> = ({ size, strokeWidth, percent, color }) =>
   const dashOffset = circumference - (clamped / 100) * circumference;
 
   return (
-    <div
-      className="relative"
-      style={{
-        width: size,
-        height: size,
-      }}
-    >
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="absolute inset-0"
-      >
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0">
         <circle
           cx={center}
           cy={center}
           r={radius}
           fill="none"
-          stroke="hsl(var(--border))"
+          stroke="rgba(255,255,255,0.12)"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -77,13 +61,17 @@ const LoadRing: React.FC<RingProps> = ({ size, strokeWidth, percent, color }) =>
         />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span className="text-xl font-semibold tabular-nums">
-          {Math.round(clamped)}%
-        </span>
+        <span className="text-2xl font-semibold tabular-nums">{Math.round(clamped)}%</span>
       </div>
     </div>
   );
-};
+}
+
+interface LoadDetailSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  loadPercent: number;
+}
 
 export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
   const { t } = useTranslation();
@@ -91,6 +79,7 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
   const steps = useHealthStore((s) => s.steps);
   const stressPercent = useHealthStore((s) => s.stress);
   const sleepDetail = useHealthStore((s) => s.sleepDetail);
+  const hrv = useHealthStore((s) => s.hrv);
 
   const { strengthMinutes, cardioMinutes } = useMemo(() => {
     let strengthSec = 0;
@@ -104,35 +93,43 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
         cardioSec += sec;
       }
     });
-    return {
-      strengthMinutes: strengthSec / 60,
-      cardioMinutes: cardioSec / 60,
-    };
+    return { strengthMinutes: strengthSec / 60, cardioMinutes: cardioSec / 60 };
   }, [workouts]);
 
   const detail = useMemo(() => {
-    const totalSleepMinutes = sleepDetail?.displayData.actualSleepMinutes ?? 0;
-    const awakenings = sleepDetail?.displayData.awakenings ?? 0;
-    const stress0to10 = Math.max(0, Math.min(10, (stressPercent || 0) / 10));
-
+    const totalSleepMinutes = sleepDetail?.displayData?.actualSleepMinutes ?? 7.5 * 60;
+    const stress0to100 = Math.max(0, Math.min(100, (stressPercent ?? 0) * 10));
     return calculateLoadDetail({
       strengthMinutes,
       cardioMinutes,
-      steps,
-      intensity: 1,
-      stress: stress0to10,
+      cardioZone: 2,
+      steps: steps ?? 0,
+      stress: stress0to100,
       totalSleepMinutes,
-      awakenings,
+      hrv: hrv ?? 45,
+      hrvNorm: 50,
     });
-  }, [strengthMinutes, cardioMinutes, steps, stressPercent, sleepDetail]);
+  }, [strengthMinutes, cardioMinutes, steps, stressPercent, sleepDetail, hrv]);
 
-  const { physicalScore, neuroScore, totalLoad, status } = detail;
+  const { totalLoad, bodyLoad, neuroLoad, strengthLoad, cardioLoad, stepsLoad, stressLoad, sleepDebtLoad, hrvLoad, status } = detail;
+
+  const recommendation = status === "overloaded"
+    ? "loadDetail.recOverloaded"
+    : status === "low_activity"
+      ? "loadDetail.recLowActivity"
+      : "loadDetail.recBalanced";
+
+  const bodyTotal = bodyLoad + neuroLoad || 1;
+  const bodyPct = (bodyLoad / bodyTotal) * 100;
+  const neuroPct = (neuroLoad / bodyTotal) * 100;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh] flex flex-col">
+      <DrawerContent
+        className="flex max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      >
         <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold text-foreground">
             {t("loadDetail.title")}
           </h2>
         </DrawerHeader>
@@ -141,93 +138,120 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
           className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div className="space-y-5">
-            <section className="rounded-2xl border border-border bg-card p-4">
-              <h3 className="mb-3 text-sm font-medium text-foreground">
-                Общая нагрузка
-              </h3>
-              <div className="flex flex-col items-center gap-3">
-                <div
-                  className="flex items-center justify-center"
-                  style={{
-                    filter: `drop-shadow(0 0 18px ${STATUS_COLOR_HEX[status]}40)`,
-                  }}
-                >
-                  <LoadRing
-                    size={MAIN_RING_SIZE}
-                    strokeWidth={MAIN_RING_STROKE}
-                    percent={totalLoad}
-                    color={STATUS_COLOR_HEX[status]}
-                  />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {STATUS_LABEL[status]}
-                </p>
-                <p className="text-xs text-muted-foreground text-center">
-                  Интегральная дневная нагрузка по тренировкам, шагам, стрессу и сну.
-                </p>
-              </div>
+          {/* 1. СТАТУС НАГРУЗКИ */}
+          <section className="px-4 py-6">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("loadDetail.statusTitle")}
+            </h3>
+            <div className="flex flex-col items-center gap-4">
+              <LoadRing
+                size={MAIN_RING_SIZE}
+                strokeWidth={MAIN_RING_STROKE}
+                percent={totalLoad}
+                color={STATUS_COLOR_HEX[status]}
+              />
+              <p className="text-sm font-medium text-foreground">
+                {t(STATUS_LABEL[status])}
+              </p>
+              <p className="text-center text-xs text-muted-foreground">
+                {t("loadDetail.statusDesc")}
+              </p>
+            </div>
+          </section>
 
-              <div className="mt-4 space-y-3 w-full">
-                <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <span>Физическая</span>
-                  <span>Нервная система</span>
-                </div>
-                <div className="h-[6px] w-full overflow-hidden rounded-full bg-muted">
-                  {physicalScore + neuroScore > 0 ? (
-                    <div className="flex h-full w-full">
-                      <div
-                        className="h-full"
-                        style={{
-                          width: `${(physicalScore / (physicalScore + neuroScore)) * 100}%`,
-                          backgroundColor: "#3B82F6",
-                        }}
-                      />
-                      <div
-                        className="h-full"
-                        style={{
-                          width: `${(neuroScore / (physicalScore + neuroScore)) * 100}%`,
-                          backgroundColor: "rgba(239,68,68,0.8)",
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-full w-1/2" style={{ backgroundColor: "#3B82F6" }} />
-                  )}
-                </div>
-              </div>
-            </section>
+          {/* 2. ОБЩИЙ ИНДЕКС — тело / нервная система */}
+          <section className="px-4 py-6">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("loadDetail.breakdownTitle")}
+            </h3>
+            <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted/50">
+              <div
+                className="h-full transition-all"
+                style={{ width: `${bodyPct}%`, backgroundColor: "#3B82F6" }}
+              />
+              <div
+                className="h-full transition-all"
+                style={{ width: `${neuroPct}%`, backgroundColor: "rgba(239,68,68,0.85)" }}
+              />
+            </div>
+            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+              <span>{t("loadDetail.body")} {bodyLoad}%</span>
+              <span>{t("loadDetail.neuro")} {neuroLoad}%</span>
+            </div>
+          </section>
 
-            <section className="rounded-2xl border border-border bg-card p-4">
-              <h3 className="mb-3 text-sm font-medium text-foreground">
-                Физическая и нейронная нагрузка
-              </h3>
-              <div className="flex items-center justify-between gap-6">
-                <div className="flex flex-col items-center gap-2">
-                  <LoadRing
-                    size={MINI_RING_SIZE}
-                    strokeWidth={MINI_RING_STROKE}
-                    percent={physicalScore}
-                    color="#3B82F6"
-                  />
-                  <p className="text-xs text-muted-foreground text-center max-w-[120px]">
-                    Физическая нагрузка
-                  </p>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <LoadRing
-                    size={MINI_RING_SIZE}
-                    strokeWidth={MINI_RING_STROKE}
-                    percent={neuroScore}
-                    color="rgba(239,68,68,0.9)"
-                  />
-                  <p className="text-xs text-muted-foreground text-center max-w-[120px]">
-                    Нервная система
-                  </p>
-                </div>
-              </div>
-            </section>
-          </div>
+          {/* 3. ФИЗИЧЕСКАЯ НАГРУЗКА */}
+          <section className="px-4 py-6">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("loadDetail.physicalTitle")}
+            </h3>
+            <div className="flex flex-col items-center gap-4">
+              <LoadRing size={MINI_RING_SIZE} strokeWidth={MINI_RING_STROKE} percent={bodyLoad} color="#3B82F6" />
+              <ul className="w-full space-y-2 text-sm text-foreground">
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">{t("loadDetail.strength")}</span>
+                  <span className="font-medium tabular-nums">{strengthLoad}%</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">{t("loadDetail.cardio")}</span>
+                  <span className="font-medium tabular-nums">{cardioLoad}%</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">{t("loadDetail.steps")}</span>
+                  <span className="font-medium tabular-nums">{stepsLoad}%</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* 4. НЕРВНАЯ СИСТЕМА */}
+          <section className="px-4 py-6">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("loadDetail.neuroTitle")}
+            </h3>
+            <div className="flex flex-col items-center gap-4">
+              <LoadRing size={MINI_RING_SIZE} strokeWidth={MINI_RING_STROKE} percent={neuroLoad} color="rgba(239,68,68,0.9)" />
+              <ul className="w-full space-y-2 text-sm text-foreground">
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">{t("loadDetail.stress")}</span>
+                  <span className="font-medium tabular-nums">{stressLoad}%</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">{t("loadDetail.sleepDebt")}</span>
+                  <span className="font-medium tabular-nums">{sleepDebtLoad}%</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-muted-foreground">{t("loadDetail.hrv")}</span>
+                  <span className="font-medium tabular-nums">{hrvLoad}%</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* 5. ТРЕНД ЗА 7 ДНЕЙ */}
+          <LoadCharts loadDetail={detail} />
+
+          {/* 6. РЕКОМЕНДАЦИИ */}
+          <section className="px-4 py-6">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("loadDetail.recommendationTitle")}
+            </h3>
+            <p className="text-sm text-foreground">
+              {t(recommendation)}
+            </p>
+          </section>
+
+          {/* 7. ОБЪЯСНЕНИЕ РАСЧЁТА */}
+          <section className="px-4 py-6">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("loadDetail.formulaTitle")}
+            </h3>
+            <div className="space-y-3 text-xs text-muted-foreground">
+              <p><strong className="text-foreground">BodyLoad</strong> = 0.5×Силовые + 0.3×Кардио + 0.2×Шаги</p>
+              <p><strong className="text-foreground">NeuroLoad</strong> = 0.5×Стресс + 0.3×Недосып + 0.2×HRV</p>
+              <p><strong className="text-foreground">TotalLoad</strong> = 0.6×BodyLoad + 0.4×NeuroLoad</p>
+            </div>
+          </section>
         </div>
       </DrawerContent>
     </Drawer>
