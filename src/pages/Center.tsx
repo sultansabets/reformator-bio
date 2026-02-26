@@ -510,7 +510,7 @@ export default function Center() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<FoodProduct | null>(null);
-  const [grams, setGrams] = useState(100);
+  const [grams, setGrams] = useState<string>("100");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
@@ -523,14 +523,20 @@ export default function Center() {
   const [logForm, setLogForm] = useState<{
     type: WorkoutType;
     date: string;
-    duration: number;
+    duration: string;
     feeling: number;
     notes: string;
-    exercises: WorkoutExercise[];
+    exercises: {
+      id: string;
+      name: string;
+      sets: string;
+      reps: string;
+      weight: string;
+    }[];
   }>({
     type: "strength",
     date: getTodayDateString(),
-    duration: 60,
+    duration: "60",
     feeling: 3,
     notes: "",
     exercises: [],
