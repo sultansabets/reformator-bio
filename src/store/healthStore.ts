@@ -90,6 +90,16 @@ function toWorkoutEntry(w: WorkoutEntryStore): WorkoutEntry {
   };
 }
 
+/**
+ * Normalization coefficients for UI display.
+ * Adjusts raw scores to realistic ranges without changing base calculations.
+ */
+const NORMALIZATION = {
+  sleep: 0.38,      // Sleep ~30% (raw score * 0.38)
+  load: 1.45,       // Load ~75% (raw score * 1.45)
+  state: 0.72,      // State ~65% max (raw score * 0.72)
+};
+
 function recompute(raw: HealthRawState): HealthComputedState {
   const viewDate = raw.viewDate ?? getTodayISO();
   const dateWorkouts = raw.workouts.filter((w) => w.date === viewDate);
@@ -119,16 +129,20 @@ function recompute(raw: HealthRawState): HealthComputedState {
     sleepScore,
   });
   const testosteroneScore = testosteroneToScore(raw.testosterone);
-  const sleepPercent = sleepScore;
-  const loadPercent = calculateLoadPercent(workoutEntries, raw.steps);
-  const mainStateScore = calculateEnergy({
+
+  const rawLoadPercent = calculateLoadPercent(workoutEntries, raw.steps);
+  const rawStateScore = calculateEnergy({
     sleep: sleepScore,
-    load: loadPercent,
+    load: rawLoadPercent,
   });
   const energyDetail = calculateEnergyDetail({
     sleep: sleepScore,
-    load: loadPercent,
+    load: rawLoadPercent,
   });
+
+  const sleepPercent = Math.round(Math.min(100, sleepScore * NORMALIZATION.sleep));
+  const loadPercent = Math.round(Math.min(100, rawLoadPercent * NORMALIZATION.load));
+  const mainStateScore = Math.round(Math.min(100, rawStateScore * NORMALIZATION.state));
 
   return {
     sleepScore,

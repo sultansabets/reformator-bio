@@ -113,7 +113,7 @@ export default function AI() {
               className="flex flex-col items-center pt-4 pb-5"
             >
               <div className="relative">
-                <ParticlesIcon size={72} colorRgb="219, 254, 2" className="pointer-events-none" />
+                <ParticlesIcon size={72} colorRgb="217, 255, 0" className="pointer-events-none" />
               </div>
               <h1 className="mt-3 text-lg font-semibold text-foreground">
                 Doctor AI
@@ -207,7 +207,7 @@ export default function AI() {
                   >
                     {m.role === "assistant" ? (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <ParticlesIcon size={20} colorRgb="219, 254, 2" className="pointer-events-none" />
+                        <ParticlesIcon size={20} colorRgb="217, 255, 0" className="pointer-events-none" />
                       </div>
                     ) : (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">

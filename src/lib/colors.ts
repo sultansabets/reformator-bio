@@ -1,18 +1,18 @@
 /**
  * Unified metric color system with three distinct states.
- * No gradients - clear signal-based colors only.
+ * Gray scale for low/medium, green for high performance.
  */
 
 export const METRIC_COLORS = {
-  green: "#DBFE02",
-  orange: "#FF582B",
-  red: "#770101",
+  dark: "#28282B",    // 0-35% - low state
+  light: "#C0C0C0",   // 35-70% - moderate state
+  green: "#D9FF00",   // 70-100% - excellent state
 } as const;
 
 export const METRIC_COLORS_RGB = {
-  green: { r: 219, g: 254, b: 2 },
-  orange: { r: 255, g: 88, b: 43 },
-  red: { r: 119, g: 1, b: 1 },
+  dark: { r: 40, g: 40, b: 43 },
+  light: { r: 192, g: 192, b: 192 },
+  green: { r: 217, g: 255, b: 0 },
 } as const;
 
 /**
@@ -24,9 +24,9 @@ export const METRIC_COLORS_RGB = {
 export function getMetricColor(score: number, inverted = false): string {
   const effectiveScore = inverted ? 100 - score : score;
   
-  if (effectiveScore >= 75) return METRIC_COLORS.green;
-  if (effectiveScore >= 40) return METRIC_COLORS.orange;
-  return METRIC_COLORS.red;
+  if (effectiveScore < 35) return METRIC_COLORS.dark;
+  if (effectiveScore < 70) return METRIC_COLORS.light;
+  return METRIC_COLORS.green;
 }
 
 /**
@@ -43,9 +43,9 @@ export function getMetricColorHex(score: number, inverted = false): string {
 export function getMetricColorRgb(score: number, inverted = false): { r: number; g: number; b: number } {
   const effectiveScore = inverted ? 100 - score : score;
   
-  if (effectiveScore >= 75) return METRIC_COLORS_RGB.green;
-  if (effectiveScore >= 40) return METRIC_COLORS_RGB.orange;
-  return METRIC_COLORS_RGB.red;
+  if (effectiveScore < 35) return METRIC_COLORS_RGB.dark;
+  if (effectiveScore < 70) return METRIC_COLORS_RGB.light;
+  return METRIC_COLORS_RGB.green;
 }
 
 /**

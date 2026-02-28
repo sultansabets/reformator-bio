@@ -147,7 +147,7 @@ export function SportHero({ totalWorkouts, totalXP, userName }: SportHeroProps) 
   
   const glowColors: Record<string, string> = {
     base: "transparent",
-    fit: "#DBFE02",
+    fit: "#D9FF00",
     athletic: "#007aff",
     powerful: "#af52de",
   };

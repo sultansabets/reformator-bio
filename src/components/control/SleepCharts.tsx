@@ -17,8 +17,8 @@ import type { SleepEngineResult } from "@/engine/sleepEngine";
 const NIGHTS_FOR_CHARTS = 5;
 const CHART_HEIGHT = 240;
 const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
-const BAR_FILL = "#DBFE02";
-const LINE_STROKE = "#DBFE02";
+const BAR_FILL = "#D9FF00";
+const LINE_STROKE = "#D9FF00";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
 const REF_LINE_STROKE = "rgba(255,255,255,0.35)";
 

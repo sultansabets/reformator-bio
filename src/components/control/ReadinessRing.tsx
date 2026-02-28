@@ -23,8 +23,8 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
 
   const getLabel = () => {
     if (statusLabel) return statusLabel;
-    if (score >= 75) return "Оптимально";
-    if (score >= 40) return "Умеренно";
+    if (score >= 70) return "Оптимально";
+    if (score >= 35) return "Умеренно";
     return "Восстановление";
   };
 

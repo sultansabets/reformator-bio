@@ -34,7 +34,7 @@ function createParticle(center: number, radius: number): Particle {
 export interface ParticlesIconProps {
   size?: number;
   active?: boolean;
-  /** Override color as "r, g, b" (e.g. "219, 254, 2" for green). When set, ignores active/theme. */
+  /** Override color as "r, g, b" (e.g. "217, 255, 0" for green). When set, ignores active/theme. */
   colorRgb?: string;
   className?: string;
 }

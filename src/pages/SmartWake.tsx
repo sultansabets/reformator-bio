@@ -341,7 +341,7 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
         <polyline
           points={points}
           fill="none"
-          stroke="#DBFE02"
+          stroke="#D9FF00"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -357,7 +357,7 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
               cx={x}
               cy={y}
               r="2"
-              fill="#DBFE02"
+              fill="#D9FF00"
               className="opacity-60"
             />
           );
