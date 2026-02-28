@@ -112,13 +112,6 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
       ? "loadDetail.recLowActivity"
       : "loadDetail.recBalanced";
 
-  // Взвешенный вклад в TotalLoad: 0.6×Body + 0.4×Neuro
-  const bodyContribution = 0.6 * bodyLoad;
-  const neuroContribution = 0.4 * neuroLoad;
-  const totalContribution = bodyContribution + neuroContribution || 1;
-  const bodyPct = (bodyContribution / totalContribution) * 100;
-  const neuroPct = (neuroContribution / totalContribution) * 100;
-
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent
@@ -150,34 +143,7 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
             </div>
           </section>
 
-          {/* 2. ОБЩИЙ ИНДЕКС — тело / нервная система */}
-          <section className="pb-6">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("loadDetail.breakdownTitle")}
-            </h3>
-            <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted/50">
-              <div
-                className="h-full transition-all"
-                style={{ width: `${bodyPct}%`, backgroundColor: "#3B82F6" }}
-              />
-              <div
-                className="h-full transition-all"
-                style={{ width: `${neuroPct}%`, backgroundColor: "rgba(239,68,68,0.85)" }}
-              />
-            </div>
-            <div className="mt-3 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#3B82F6" }} />
-                {t("loadDetail.body")}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "rgba(239,68,68,0.85)" }} />
-                {t("loadDetail.neuro")}
-              </span>
-            </div>
-          </section>
-
-          {/* 3. ФИЗИЧЕСКАЯ НАГРУЗКА */}
+          {/* 2. ФИЗИЧЕСКАЯ НАГРУЗКА */}
           <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.physicalTitle")}
@@ -201,7 +167,7 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
             </div>
           </section>
 
-          {/* 4. НЕРВНАЯ СИСТЕМА */}
+          {/* 3. НЕРВНАЯ СИСТЕМА */}
           <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.neuroTitle")}
@@ -225,10 +191,10 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
             </div>
           </section>
 
-          {/* 5. ТРЕНД ЗА 7 ДНЕЙ */}
+          {/* 4. ТРЕНД ЗА 7 ДНЕЙ */}
           <LoadCharts loadDetail={detail} />
 
-          {/* 6. РЕКОМЕНДАЦИИ */}
+          {/* 5. РЕКОМЕНДАЦИИ */}
           <section className="pb-6">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.recommendationTitle")}
