@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import StateOrb3D from "./StateOrb3D";
 
-const SHOW_ORB = false;
+const SHOW_ORB = true;
 const ENERGY_MODE_SEC = 30;
 const QUOTE_MODE_SEC = 10;
 
