@@ -65,7 +65,7 @@ const Insights = () => {
       </motion.h1>
 
       {/* Переключатель периода */}
-      <motion.div variants={item} className="mb-6 flex gap-1 rounded-xl bg-muted p-1">
+      <motion.div variants={item} className="mb-6 flex gap-1 rounded-lg bg-muted p-1">
         {periods.map((p) => (
           <button
             key={p}

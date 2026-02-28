@@ -159,7 +159,7 @@ export default function AI() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.15, duration: 0.3 }}
-              className="rounded-xl border border-border bg-card/50 p-4"
+              className="rounded-2xl border border-border bg-card/50 p-4"
             >
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">
                 {t("ai.tryAsking")}
@@ -243,7 +243,7 @@ export default function AI() {
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label={t("ai.ariaAttach")}
           >
             <Paperclip className="h-4 w-4" />
@@ -255,12 +255,12 @@ export default function AI() {
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={t("ai.placeholder")}
-            className="flex-1 h-10 rounded-xl border-border bg-card text-sm"
+            className="flex-1 h-10 rounded-lg border-border bg-card text-sm"
           />
           <Button 
             type="submit" 
             size="icon" 
-            className="h-10 w-10 shrink-0 rounded-xl" 
+            className="h-10 w-10 shrink-0 rounded-lg" 
             aria-label={t("ai.ariaSend")}
             disabled={!input.trim()}
           >

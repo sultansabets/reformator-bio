@@ -153,7 +153,7 @@ export function StoriesViewer({ stories, initialIndex, onClose }: StoriesViewerP
         <div className="p-4 shrink-0">
           <button
             type="button"
-            className="w-full bg-white text-black rounded-xl py-3 font-semibold transition-opacity hover:opacity-90"
+            className="w-full bg-white text-black rounded-lg py-3 font-semibold transition-opacity hover:opacity-90"
             onClick={() => window.open(current.youtubeUrl, "_blank")}
           >
             Смотреть полностью

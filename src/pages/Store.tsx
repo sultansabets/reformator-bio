@@ -120,7 +120,7 @@ const Store = () => {
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="mt-3 w-full rounded-md text-xs font-medium"
+                  className="mt-3 w-full rounded-lg text-xs font-medium"
                 >
                   <ShoppingBag className="mr-1.5 h-3.5 w-3.5" />
                   {t("store.addToCart")}

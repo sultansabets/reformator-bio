@@ -153,7 +153,7 @@ export function InfluenceFactors({
             }}
           >
             <div className="flex w-full items-center gap-3 p-3 text-left">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 transition-colors duration-300">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-colors duration-300">
                 <Icon className="h-5 w-5 text-muted-foreground" />
               </div>
 
@@ -217,7 +217,7 @@ export function InfluenceFactors({
         }}
       >
         <div className="flex w-full items-center gap-3 p-3 text-left">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 transition-colors duration-300">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-colors duration-300">
             <MarsIcon className="h-5 w-5 text-muted-foreground" />
           </div>
 

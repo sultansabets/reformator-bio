@@ -422,7 +422,7 @@ function CalendarPopup({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         hideClose
-        className="max-w-[340px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
+        className="max-w-[340px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
       >
         <div className="flex items-center justify-between mb-4">
           <button
@@ -855,7 +855,7 @@ export default function Center() {
       animate="show"
     >
       {/* Tab switcher */}
-      <motion.div variants={itemAnim} className="mb-5 flex gap-1 rounded-xl bg-muted p-1">
+      <motion.div variants={itemAnim} className="mb-5 flex gap-1 rounded-lg bg-muted p-1">
         {TAB_KEYS.map((tabKey) => (
           <button
             key={tabKey}
@@ -885,7 +885,7 @@ export default function Center() {
                       key={day.dateStr}
                       type="button"
                       onClick={() => setSelectedDate(day.dateStr)}
-                      className={`flex-1 flex flex-col items-center py-2 rounded-xl transition-all ${
+                      className={`flex-1 flex flex-col items-center py-2 rounded-lg transition-all ${
                         selectedDate === day.dateStr
                           ? "bg-primary text-primary-foreground"
                           : day.isToday
@@ -901,7 +901,7 @@ export default function Center() {
                 <button
                   type="button"
                   onClick={() => setCalendarOpen(true)}
-                  className="flex h-[52px] w-10 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-muted transition-colors"
+                  className="flex h-[52px] w-10 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted transition-colors"
                 >
                   <Calendar className="h-5 w-5" />
                 </button>
@@ -983,7 +983,7 @@ export default function Center() {
                       key={entry.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center justify-between rounded-xl bg-card border border-border px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl bg-card border border-border px-4 py-3"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
@@ -1045,14 +1045,14 @@ export default function Center() {
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="flex items-center gap-2 rounded-xl bg-background/50 p-3">
+                  <div className="flex items-center gap-2 rounded-2xl bg-background/50 p-3">
                     <Heart className="h-4 w-4 text-status-amber" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">Пульс</p>
                       <p className="text-sm font-semibold">{autoWorkout.hr} bpm</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-background/50 p-3">
+                  <div className="flex items-center gap-2 rounded-2xl bg-background/50 p-3">
                     <Flame className="h-4 w-4 text-status-green" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">Калории</p>
@@ -1097,7 +1097,7 @@ export default function Center() {
                     return <p className="text-sm text-muted-foreground">На этот день нет плана</p>;
                   }
                   return (
-                    <div className="rounded-xl bg-muted/30 px-3 py-2">
+                    <div className="rounded-lg bg-muted/30 px-3 py-2">
                       <p className="text-sm font-medium text-foreground">
                         Силовая — {plannedMuscles.map((m) => t(`center.${m}`)).join(", ")}
                       </p>
@@ -1118,7 +1118,7 @@ export default function Center() {
 
                   if (showSkipped) {
                     return (
-                      <div className="rounded-xl bg-muted/30 px-3 py-2">
+                      <div className="rounded-lg bg-muted/30 px-3 py-2">
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">Пропущено</span>
                       </div>
                     );
@@ -1133,7 +1133,7 @@ export default function Center() {
                           key={entry.id}
                           type="button"
                           onClick={() => openEditWorkoutEditor(entry)}
-                          className="w-full text-left rounded-xl bg-background/60 border border-border px-4 py-3 flex flex-col gap-1"
+                          className="w-full text-left rounded-2xl bg-background/60 border border-border px-4 py-3 flex flex-col gap-1"
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-foreground">
@@ -1198,7 +1198,7 @@ export default function Center() {
                         key={entry.id}
                         type="button"
                         onClick={() => openEditWorkoutEditor(entry)}
-                        className="w-full text-left rounded-xl bg-card border border-border px-4 py-3 flex flex-col gap-1"
+                        className="w-full text-left rounded-2xl bg-card border border-border px-4 py-3 flex flex-col gap-1"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-foreground">
@@ -1237,7 +1237,7 @@ export default function Center() {
 
       {/* Program editor */}
       <Dialog open={programEditorOpen} onOpenChange={(open) => !open && setProgramEditorOpen(false)}>
-        <DialogContent hideClose className="max-w-[400px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+        <DialogContent hideClose className="max-w-[400px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Программа недели</h2>
             <button
@@ -1261,7 +1261,7 @@ export default function Center() {
 
       {/* Workout log editor */}
       <Dialog open={logEditorOpen} onOpenChange={(open) => !open && setLogEditorOpen(false)}>
-        <DialogContent hideClose className="max-w-[380px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+        <DialogContent hideClose className="max-w-[380px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">
               {editingWorkout ? "Редактировать тренировку" : "Добавить тренировку"}
@@ -1284,7 +1284,7 @@ export default function Center() {
                     key={type}
                     type="button"
                     onClick={() => setLogForm((f) => ({ ...f, type: type as WorkoutType }))}
-                    className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                    className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                       logForm.type === type
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground hover:bg-muted/80"
@@ -1353,7 +1353,7 @@ export default function Center() {
                 value={logForm.notes}
                 onChange={(e) => setLogForm((f) => ({ ...f, notes: e.target.value }))}
                 rows={3}
-                className="w-full rounded-xl bg-muted/30 border border-border px-3 py-2 text-xs text-foreground resize-none"
+                className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-xs text-foreground resize-none"
                 placeholder="Как прошла тренировка?"
               />
             </div>
@@ -1388,7 +1388,7 @@ export default function Center() {
                   {logForm.exercises.map((ex) => (
                     <div
                       key={ex.id}
-                      className="rounded-xl bg-muted/20 border border-border px-3 py-2 space-y-1"
+                      className="rounded-2xl bg-muted/20 border border-border px-3 py-2 space-y-1"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <Input
@@ -1534,7 +1534,7 @@ export default function Center() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t("center.searchProduct")}
-                  className="h-12 rounded-xl border-border bg-muted/50 pl-10 text-base"
+                  className="h-12 rounded-lg border-border bg-muted/50 pl-10 text-base"
                 />
               </div>
             </div>
@@ -1558,7 +1558,7 @@ export default function Center() {
                         setSelectedProduct(product);
                         setGrams(100);
                       }}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-left transition-colors hover:bg-muted/50 active:bg-muted"
+                      className="flex w-full items-center justify-between rounded-2xl px-3 py-3.5 text-left transition-colors hover:bg-muted/50 active:bg-muted"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground">{product.name}</p>
@@ -1713,7 +1713,7 @@ export default function Center() {
                 style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
               >
                 <Button
-                  className="h-14 w-full rounded-[18px] text-base font-medium"
+                  className="h-14 w-full rounded-2xl text-base font-medium"
                   onClick={addProductEntry}
                   disabled={grams <= 0}
                 >

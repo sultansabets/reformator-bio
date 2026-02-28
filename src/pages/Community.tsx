@@ -142,7 +142,7 @@ function SupportTab() {
         <div className="flex gap-2">
           <button
             type="button"
-            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(255,255,255,0.08)] text-[#888] hover:bg-[#1a1a1a] transition-colors"
+            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg border border-[rgba(255,255,255,0.08)] text-[#888] hover:bg-[#1a1a1a] transition-colors"
             aria-label="Прикрепить скрин"
           >
             <ImagePlus className="h-5 w-5" />
@@ -153,12 +153,12 @@ function SupportTab() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Сообщение..."
-            className="flex-1 bg-[#111] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] placeholder:text-[#666] rounded-xl focus-visible:ring-[rgba(255,255,255,0.1)]"
+            className="flex-1 bg-[#111] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] placeholder:text-[#666] rounded-lg focus-visible:ring-[rgba(255,255,255,0.1)]"
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim()}
-            className="shrink-0 h-10 w-10 p-0 rounded-xl bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5] border border-[rgba(255,255,255,0.08)]"
+            className="shrink-0 h-10 w-10 p-0 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5] border border-[rgba(255,255,255,0.08)]"
           >
             <Send className="h-4 w-4" />
           </Button>
@@ -191,7 +191,7 @@ function GroupsTab() {
     <div className="px-4 py-4 space-y-4">
       <Button
         onClick={() => setShowCreate(true)}
-        className="w-full h-12 rounded-xl bg-[#111] border border-[rgba(255,255,255,0.08)] text-[#e5e5e5] hover:bg-[#1a1a1a] justify-center gap-2"
+        className="w-full h-12 rounded-lg bg-[#111] border border-[rgba(255,255,255,0.08)] text-[#e5e5e5] hover:bg-[#1a1a1a] justify-center gap-2"
       >
         <Plus className="h-5 w-5" />
         Создать группу
@@ -202,7 +202,7 @@ function GroupsTab() {
           key={g.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl p-4 transition-colors hover:bg-[#0d0d0d]"
+          className="rounded-2xl p-4 transition-colors hover:bg-[#0d0d0d]"
           style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}` }}
         >
           <div className="flex items-start justify-between gap-3">
@@ -250,13 +250,13 @@ function GroupsTab() {
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   placeholder="Название"
-                  className="bg-[#0d0d0d] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] rounded-xl"
+                  className="bg-[#0d0d0d] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] rounded-lg"
                 />
                 <Input
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
                   placeholder="Описание"
-                  className="bg-[#0d0d0d] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] rounded-xl"
+                  className="bg-[#0d0d0d] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] rounded-lg"
                 />
                 <div className="flex flex-wrap gap-2">
                   {GROUP_THEMES.map((t) => (
@@ -286,13 +286,13 @@ function GroupsTab() {
                 <Button
                   variant="outline"
                   onClick={() => setShowCreate(false)}
-                  className="flex-1 rounded-xl border-[rgba(255,255,255,0.08)] text-[#888]"
+                  className="flex-1 rounded-lg border-[rgba(255,255,255,0.08)] text-[#888]"
                 >
                   Отмена
                 </Button>
                 <Button
                   onClick={handleCreate}
-                  className="flex-1 rounded-xl bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5]"
+                  className="flex-1 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5]"
                 >
                   Создать
                 </Button>
@@ -324,7 +324,7 @@ function FeedTab() {
           key={p.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl p-4 transition-colors hover:bg-[#0d0d0d]"
+          className="rounded-2xl p-4 transition-colors hover:bg-[#0d0d0d]"
           style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}` }}
         >
           <div className="flex gap-3">
@@ -377,7 +377,7 @@ export default function Community() {
 
       <Tabs defaultValue="support" className="px-4">
         <TabsList
-          className="w-full bg-[#111] border rounded-xl p-1 mb-4"
+          className="w-full bg-[#111] border rounded-lg p-1 mb-4"
           style={{ borderColor: BORDER }}
         >
           <TabsTrigger

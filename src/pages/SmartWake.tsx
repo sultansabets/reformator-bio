@@ -450,7 +450,7 @@ function CalendarModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="mx-4 w-full max-w-[340px] rounded-[24px] border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden"
+        className="mx-4 w-full max-w-[340px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -720,7 +720,7 @@ export default function SmartWake() {
               <button
                 type="button"
                 onClick={() => setChartPeriod(7)}
-                className={`flex-1 rounded-md py-2 text-xs font-medium transition-colors ${
+                className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
                   chartPeriod === 7
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -731,7 +731,7 @@ export default function SmartWake() {
               <button
                 type="button"
                 onClick={() => setChartPeriod(30)}
-                className={`flex-1 rounded-md py-2 text-xs font-medium transition-colors ${
+                className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
                   chartPeriod === 30
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -796,7 +796,7 @@ export default function SmartWake() {
           style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
         >
           <Button
-            className="w-full h-14 rounded-[18px] text-base font-medium"
+            className="w-full h-14 rounded-2xl text-base font-medium"
             onClick={handleActivateSleepMode}
           >
             {t("smartWake.activateSleepMode")}

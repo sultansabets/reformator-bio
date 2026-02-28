@@ -41,7 +41,7 @@ function PlanCard({ name, price, description, features, planKey, currentPlan, on
     >
       <div className="mb-4 flex items-center gap-3">
         <div className={`
-          flex h-10 w-10 items-center justify-center rounded-xl
+          flex h-10 w-10 items-center justify-center rounded-lg
           ${isSelected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}
         `}>
           {icon}
@@ -135,7 +135,7 @@ export default function Subscription() {
       {plan === "free" && (
         <motion.div
           variants={item}
-          className="mb-6 rounded-xl border border-border bg-muted/30 px-4 py-3 text-center"
+          className="mb-6 rounded-2xl border border-border bg-muted/30 px-4 py-3 text-center"
         >
           <p className="text-sm text-muted-foreground">У вас базовый доступ</p>
         </motion.div>

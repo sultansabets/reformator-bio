@@ -18,7 +18,7 @@ export function SportXpBlock({ totalXP }: SportXpBlockProps) {
     <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl bg-muted/30 px-4 py-3"
+      className="rounded-2xl bg-muted/30 px-4 py-3"
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-foreground">LVL {currentLevel.level}</span>

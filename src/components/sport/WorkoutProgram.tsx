@@ -145,7 +145,7 @@ export function WorkoutProgram({ weekPlan, onPlanChange, todayWorkouts }: Workou
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-3 rounded-xl bg-muted/30 mb-4">
+            <div className="p-3 rounded-2xl bg-muted/30 mb-4">
               <p className="text-xs text-muted-foreground mb-2">
                 {DAYS.find(d => d.key === editingDay)?.short} — выберите группы мышц:
               </p>
@@ -206,7 +206,7 @@ export function WorkoutProgram({ weekPlan, onPlanChange, todayWorkouts }: Workou
 
       {/* Today's plan */}
       {!editMode && weekPlan[todayKey] && weekPlan[todayKey].length > 0 && (
-        <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/10">
+        <div className="mt-4 p-3 rounded-2xl bg-primary/5 border border-primary/10">
           <p className="text-[10px] text-primary uppercase tracking-wider mb-1">Сегодня</p>
           <p className="text-sm font-medium text-foreground">
             {weekPlan[todayKey].map(m => t(`center.${m}`)).join(", ")}

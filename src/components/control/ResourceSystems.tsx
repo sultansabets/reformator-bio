@@ -87,7 +87,7 @@ export function ResourceSystems({
               onClick={() => setExpandedId(isExpanded ? null : s.id)}
             >
               <div
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl [backdrop-filter:blur(2px)]"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg [backdrop-filter:blur(2px)]"
                 style={{ backgroundColor: s.iconBg }}
               >
                 <Icon className="h-4 w-4" style={{ color: s.iconColor }} />

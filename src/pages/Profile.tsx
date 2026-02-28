@@ -440,7 +440,7 @@ function MedicationsTab({ userId }: { userId: string }) {
               key={dateStr}
               type="button"
               onClick={() => setSelectedDate(dateStr)}
-              className={`flex h-[88px] w-16 shrink-0 flex-col items-center justify-center rounded-xl border-2 transition-all ${
+              className={`flex h-[88px] w-16 shrink-0 flex-col items-center justify-center rounded-2xl border-2 transition-all ${
                 active
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border bg-card text-muted-foreground"
@@ -476,7 +476,7 @@ function MedicationsTab({ userId }: { userId: string }) {
               return (
                 <div
                   key={intakeKey}
-                  className={`rounded-xl px-4 py-3 transition-colors ${
+                  className={`rounded-2xl px-4 py-3 transition-colors ${
                     isCompleted ? "bg-muted/40" : "bg-primary/5"
                   }`}
                 >
@@ -620,14 +620,14 @@ function AddMedicationModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("profile.placeholderMedication")}
-                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base"
+                className="mt-1.5 h-12 rounded-lg border-border bg-card text-base"
               />
             </div>
 
             <div>
               <Label className="text-xs text-muted-foreground">{t("profile.medicationForm")} *</Label>
               <Select value={form} onValueChange={(v) => setForm(v as MedicationForm)}>
-                <SelectTrigger className="mt-1.5 h-12 rounded-xl border-border bg-card text-base">
+                <SelectTrigger className="mt-1.5 h-12 rounded-lg border-border bg-card text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[100000]">
@@ -643,7 +643,7 @@ function AddMedicationModal({
                   value={formOther}
                   onChange={(e) => setFormOther(e.target.value)}
                   placeholder={t("profile.medicationFormOtherPlaceholder")}
-                  className="mt-2 h-12 rounded-xl border-border bg-card text-base"
+                  className="mt-2 h-12 rounded-lg border-border bg-card text-base"
                 />
               )}
             </div>
@@ -657,10 +657,10 @@ function AddMedicationModal({
                   step={0.1}
                   value={dosage}
                   onChange={(e) => setDosage(Number(e.target.value) || 1)}
-                  className="h-12 rounded-xl border-border bg-card text-base"
+                  className="h-12 rounded-lg border-border bg-card text-base"
                 />
                 <Select value={dosageUnit} onValueChange={(v) => setDosageUnit(v as DosageUnit)}>
-                  <SelectTrigger className="h-12 w-24 rounded-xl border-border bg-card text-base">
+                  <SelectTrigger className="h-12 w-24 rounded-lg border-border bg-card text-base">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="z-[100000]">
@@ -677,7 +677,7 @@ function AddMedicationModal({
             <div>
               <Label className="text-xs text-muted-foreground">{t("profile.medicationFreq")}</Label>
               <Select value={frequency} onValueChange={(v) => setFrequency(v as MedicationFrequency)}>
-                <SelectTrigger className="mt-1.5 h-12 rounded-xl border-border bg-card text-base">
+                <SelectTrigger className="mt-1.5 h-12 rounded-lg border-border bg-card text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[100000]">
@@ -696,7 +696,7 @@ function AddMedicationModal({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base text-left"
+                className="mt-1.5 h-12 rounded-lg border-border bg-card text-base text-left"
               />
             </div>
 
@@ -706,7 +706,7 @@ function AddMedicationModal({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base text-left"
+                className="mt-1.5 h-12 rounded-lg border-border bg-card text-base text-left"
               />
             </div>
 
@@ -716,7 +716,7 @@ function AddMedicationModal({
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder=""
-                className="mt-1.5 h-12 rounded-xl border-border bg-card text-base"
+                className="mt-1.5 h-12 rounded-lg border-border bg-card text-base"
               />
             </div>
           </div>
@@ -731,7 +731,7 @@ function AddMedicationModal({
             style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
           >
             <Button 
-              className="w-full h-14 rounded-[18px] text-base font-medium" 
+              className="w-full h-14 rounded-2xl text-base font-medium" 
               onClick={handleSave}
               disabled={!canSave}
             >
@@ -1261,7 +1261,7 @@ const Profile = () => {
               style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
             >
               <Button
-                className="h-14 w-full rounded-[18px] text-base font-medium"
+                className="h-14 w-full rounded-2xl text-base font-medium"
                 onClick={() => setEditOpen(false)}
               >
                 {t("common.save")}

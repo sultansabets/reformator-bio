@@ -234,7 +234,7 @@ export function WorkoutCalendar({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 p-3 rounded-xl bg-muted/30">
+            <div className="mt-4 p-3 rounded-2xl bg-muted/30">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium text-foreground">
                   {new Date(selectedDate).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}

@@ -258,7 +258,7 @@ const AppLayout = () => {
                       key={o.code}
                       type="button"
                       onClick={() => handleLanguageChange(o.code)}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                         i18n.language === o.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
                       }`}
                     >
