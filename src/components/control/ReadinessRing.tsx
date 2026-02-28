@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getMetricColor } from "@/lib/colors";
 
 interface ReadinessRingProps {
   score: number;
@@ -18,17 +19,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
   const dashOffset =
     circumference - (progressValue / 100) * circumference;
 
-  const getStrokeColorClass = () => {
-    if (score >= 70) return "stroke-status-green";
-    if (score >= 40) return "stroke-status-amber";
-    return "stroke-status-red";
-  };
-
-  const getLabelColorClass = () => {
-    if (score >= 70) return "text-status-green";
-    if (score >= 40) return "text-status-amber";
-    return "text-status-red";
-  };
+  const color = getMetricColor(score);
 
   const getLabel = () => {
     if (statusLabel) return statusLabel;
@@ -60,7 +51,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           cy={center}
           r={radius}
           fill="none"
-          className={getStrokeColorClass()}
+          stroke={color}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -84,10 +75,8 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           Состояние
         </span>
         <span
-          className={cn(
-            "mt-1 text-base font-semibold uppercase tracking-wide",
-            getLabelColorClass()
-          )}
+          className="mt-1 text-base font-semibold uppercase tracking-wide"
+          style={{ color }}
         >
           {getLabel()}
         </span>

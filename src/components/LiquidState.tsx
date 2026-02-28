@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getMetricColorHex } from "@/lib/colors";
 
 const VISUAL_SIZE = 320;
 const ATOM_COUNT = 42;
@@ -31,13 +32,6 @@ function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(m[0], 16), parseInt(m[1], 16), parseInt(m[2], 16)];
 }
 
-function getColorFromScore(score: number): string {
-  const s = Math.min(100, Math.max(0, score));
-  if (s >= 76) return "#34c759";
-  if (s >= 61) return "#facc15";
-  if (s >= 41) return "#ff9f0a";
-  return "#ff3b30";
-}
 
 function smoothNoise(angle: number, time: number, seed: number): number {
   const t = time * 0.0001;
@@ -265,7 +259,7 @@ export default function LiquidState({ score }: LiquidStateProps) {
   const reducedMotionRef = useRef(false);
   const noiseSeedsRef = useRef<number[]>([]);
 
-  const color = useMemo(() => getColorFromScore(score), [score]);
+  const color = useMemo(() => getMetricColorHex(score), [score]);
   colorRef.current = color;
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 

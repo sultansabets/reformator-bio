@@ -22,10 +22,9 @@ export interface LoadCardProps {
   percent: number;
   onClick?: () => void;
   size?: "default" | "large";
-  overrideColor?: string;
 }
 
-export function LoadCard({ percent, onClick, size, overrideColor }: LoadCardProps) {
+export function LoadCard({ percent, onClick, size }: LoadCardProps) {
   const { t } = useTranslation();
   const iconSize = size === "large" ? "h-10 w-10" : "h-7 w-7";
   return (
@@ -35,7 +34,7 @@ export function LoadCard({ percent, onClick, size, overrideColor }: LoadCardProp
       label={t("center.load")}
       onClick={onClick}
       size={size}
-      overrideColor={overrideColor}
+      inverted
     />
   );
 }

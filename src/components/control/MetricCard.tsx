@@ -1,14 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-
-/** 0–40 red, 41–60 orange, 61–75 yellow, 76–100 green */
-export function getColorFromPercent(percent: number): string {
-  if (percent <= 40) return "rgb(220, 38, 38)";
-  if (percent <= 60) return "rgb(249, 115, 22)";
-  if (percent <= 75) return "rgb(234, 179, 8)";
-  return "rgb(55, 190, 126)";
-}
+import { getMetricColor } from "@/lib/colors";
 
 export interface MetricCardProps {
   percent: number;
@@ -18,8 +11,8 @@ export interface MetricCardProps {
   className?: string;
   /** Larger circle for main page 2-card layout */
   size?: "default" | "large";
-  /** Override color (e.g. for demo mode) */
-  overrideColor?: string;
+  /** If true, treat metric as inverted (0 = good, 100 = bad) */
+  inverted?: boolean;
 }
 
 const CIRCLE_SIZE = 76;
@@ -34,10 +27,10 @@ export function MetricCard({
   onClick,
   className,
   size = "default",
-  overrideColor,
+  inverted = false,
 }: MetricCardProps) {
   const clamped = Math.min(100, Math.max(0, Math.round(percent)));
-  const color = overrideColor ?? getColorFromPercent(clamped);
+  const color = getMetricColor(clamped, inverted);
 
   const circleSize = size === "large" ? CIRCLE_SIZE_LARGE : CIRCLE_SIZE;
   const strokeWidth = size === "large" ? STROKE_WIDTH_LARGE : STROKE_WIDTH;

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SleepMode from "@/components/SleepMode";
+import { getMetricColorHex } from "@/lib/colors";
 
 const STORAGE_KEY = "smartWake_alarm";
 const SLEEP_CYCLE_MINUTES = 90;
@@ -100,9 +101,7 @@ function formatBedtime(hours: number): string {
 }
 
 function getSleepQualityColor(quality: number): string {
-  if (quality >= 75) return "#37BE7E";
-  if (quality >= 55) return "#F59E0B";
-  return "#EF4444";
+  return getMetricColorHex(quality);
 }
 
 function MoonIcon({ size = 100 }: { size?: number }) {

@@ -4,17 +4,12 @@ import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { calculateLoadDetail, type LoadEngineResult, type LoadStatus } from "@/engine/loadEngine";
 import { useHealthStore } from "@/store/healthStore";
 import { LoadCharts } from "@/components/control/LoadCharts";
+import { getMetricColor } from "@/lib/colors";
 
 const STATUS_LABEL: Record<LoadStatus, string> = {
   balanced: "loadDetail.statusBalanced",
   overloaded: "loadDetail.statusOverloaded",
   low_activity: "loadDetail.statusLowActivity",
-};
-
-const STATUS_COLOR_HEX: Record<LoadStatus, string> = {
-  balanced: "#37BE7E",
-  overloaded: "#EF4444",
-  low_activity: "#F59E0B",
 };
 
 const RING_SIZE = 88;
@@ -67,11 +62,9 @@ interface LoadDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   loadPercent: number;
-  demoMode?: boolean;
-  displayLoad?: number;
 }
 
-export function LoadDetailSheet({ open, onOpenChange, loadPercent, demoMode, displayLoad = 12 }: LoadDetailSheetProps) {
+export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailSheetProps) {
   const { t } = useTranslation();
   const workouts = useHealthStore((s) => s.workouts);
   const steps = useHealthStore((s) => s.steps);
@@ -111,13 +104,11 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent, demoMode, dis
 
   const { totalLoad, bodyLoad, neuroLoad, strengthLoad, cardioLoad, stepsLoad, stressLoad, sleepDebtLoad, hrvLoad, status } = detail;
 
-  const showTotalLoad = demoMode ? displayLoad : totalLoad;
-  const showStatus = demoMode ? "balanced" : status;
-  const showColor = demoMode ? STATUS_COLOR_HEX.balanced : STATUS_COLOR_HEX[status];
+  const loadColor = getMetricColor(totalLoad, true);
 
-  const recommendation = showStatus === "overloaded"
+  const recommendation = status === "overloaded"
     ? "loadDetail.recOverloaded"
-    : showStatus === "low_activity"
+    : status === "low_activity"
       ? "loadDetail.recLowActivity"
       : "loadDetail.recBalanced";
 
@@ -149,9 +140,9 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent, demoMode, dis
               {t("loadDetail.statusTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing percent={showTotalLoad} color={showColor} />
+              <LoadRing percent={totalLoad} color={loadColor} />
               <p className="text-sm font-medium text-foreground">
-                {t(STATUS_LABEL[showStatus])}
+                {t(STATUS_LABEL[status])}
               </p>
               <p className="text-center text-xs text-muted-foreground">
                 {t("loadDetail.statusDesc")}
@@ -192,7 +183,7 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent, demoMode, dis
               {t("loadDetail.physicalTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing percent={bodyLoad} color="#3B82F6" />
+              <LoadRing percent={bodyLoad} color={getMetricColor(bodyLoad, true)} />
               <ul className="w-full space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">{t("loadDetail.strength")}</span>
@@ -216,7 +207,7 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent, demoMode, dis
               {t("loadDetail.neuroTitle")}
             </h3>
             <div className="flex flex-col items-center gap-4">
-              <LoadRing percent={neuroLoad} color="rgba(239,68,68,0.9)" />
+              <LoadRing percent={neuroLoad} color={getMetricColor(neuroLoad, true)} />
               <ul className="w-full space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">{t("loadDetail.stress")}</span>

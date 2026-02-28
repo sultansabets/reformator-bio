@@ -1,15 +1,15 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getMetricColorHex } from "@/lib/colors";
 
 const SIZE = 250;
 const PARTICLE_COUNT = 200;
 
-/** Score-based theme: 0-40 red, 41-70 orange, 71-100 green */
-const getThemeFromScore = (score: number) => {
+const getLabel = (score: number) => {
   const s = Math.min(100, Math.max(0, score));
-  if (s >= 71) return { hex: "#37BE7E", label: "ВЫСОКОЕ" };
-  if (s >= 41) return { hex: "#F59E0B", label: "УМЕРЕННОЕ" };
-  return { hex: "#EF4444", label: "НИЗКОЕ" };
+  if (s >= 70) return "ВЫСОКОЕ";
+  if (s >= 40) return "УМЕРЕННОЕ";
+  return "НИЗКОЕ";
 };
 
 interface Particle {
@@ -54,8 +54,9 @@ export default function HealthCore({ score }: HealthCoreProps) {
   const themeHexRef = useRef<string>("");
   const { theme } = useTheme();
 
-  const themeData = useMemo(() => getThemeFromScore(score), [score]);
-  themeHexRef.current = themeData.hex;
+  const themeHex = useMemo(() => getMetricColorHex(score), [score]);
+  const themeLabel = useMemo(() => getLabel(score), [score]);
+  themeHexRef.current = themeHex;
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 
   const isDark = theme === "dark";
@@ -149,7 +150,7 @@ export default function HealthCore({ score }: HealthCoreProps) {
     };
   }, []);
 
-  const glowColor = themeData.hex;
+  const glowColor = themeHex;
   const glowOpacity = isDark ? 0.2 : 0.25;
   const coreBg = isDark ? "rgba(15, 15, 18, 0.95)" : "rgba(250, 250, 250, 0.98)";
 
@@ -186,9 +187,9 @@ export default function HealthCore({ score }: HealthCoreProps) {
         </span>
         <span
           className="mt-1 text-sm font-semibold uppercase tracking-wide"
-          style={{ color: themeData.hex }}
+          style={{ color: themeHex }}
         >
-          {themeData.label}
+          {themeLabel}
         </span>
       </div>
     </div>

@@ -12,9 +12,6 @@ import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 import { DateNavigator } from "@/components/control/DateNavigator";
 import { useDateStore } from "@/store/dateStore";
 
-/** Временный флаг: при true показываются идеальные значения для демонстрации UI (98% состояние, 98% сон, 12% нагрузка, всё зелёное) */
-const DEMO_MAX_STATE = true;
-
 function formatDateShort(iso: string | undefined): string {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
@@ -38,11 +35,6 @@ const ControlCenter = () => {
   const loadPercent = useHealthStore((s) => s.loadPercent);
   const stress = useHealthStore((s) => s.stress);
   const mainStateScore = useHealthStore((s) => s.mainStateScore);
-
-  const displayState = DEMO_MAX_STATE ? 98 : mainStateScore;
-  const displaySleep = DEMO_MAX_STATE ? 98 : sleepPercent;
-  const displayLoad = DEMO_MAX_STATE ? 12 : loadPercent;
-  const demoGreenHex = DEMO_MAX_STATE ? "#34c759" : undefined;
   const steps = useHealthStore((s) => s.steps);
   const heartRate = useHealthStore((s) => s.heartRate);
   const testosterone = useHealthStore((s) => s.testosterone);
@@ -84,11 +76,6 @@ const ControlCenter = () => {
       initial="hidden"
       animate="show"
     >
-      {DEMO_MAX_STATE && (
-        <div className="mb-2 text-center text-xs font-medium" style={{ color: "red" }}>
-          DEMO MODE ACTIVE
-        </div>
-      )}
       <motion.div variants={item} className="mb-4 flex flex-col items-center text-center">
         <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
@@ -98,37 +85,35 @@ const ControlCenter = () => {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: displayState })}
-          onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: displayState })}
+          onClick={() => openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
+          onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
           className="relative mx-auto flex w-full max-w-[420px] cursor-pointer items-center justify-center overflow-visible"
         >
-          <HealthOrb score={displayState} forceColor={demoGreenHex} />
+          <HealthOrb score={mainStateScore} />
         </div>
       </motion.div>
 
       <motion.div variants={item} className="mb-5 flex justify-center">
         <div className="grid w-full max-w-[360px] grid-cols-2 justify-items-center gap-x-2 gap-y-2">
           <SleepCard
-            percent={displaySleep}
+            percent={sleepPercent}
             size="large"
-            overrideColor={demoGreenHex}
             onClick={() =>
               openMetricSheet({
                 key: "sleep",
                 title: t("center.sleep"),
-                percent: displaySleep,
+                percent: sleepPercent,
               })
             }
           />
           <LoadCard
-            percent={displayLoad}
+            percent={loadPercent}
             size="large"
-            overrideColor={demoGreenHex}
             onClick={() =>
               openMetricSheet({
                 key: "load",
                 title: t("center.load"),
-                percent: displayLoad,
+                percent: loadPercent,
               })
             }
           />
@@ -155,10 +140,6 @@ const ControlCenter = () => {
         open={metricSheetOpen}
         onOpenChange={setMetricSheetOpen}
         detail={selectedMetric}
-        demoMode={DEMO_MAX_STATE}
-        displayState={displayState}
-        displaySleep={displaySleep}
-        displayLoad={displayLoad}
       />
     </motion.div>
   );

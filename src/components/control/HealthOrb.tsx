@@ -23,18 +23,12 @@ const QUOTES = [
   "Все, что мы не меняем, мы выбираем.",
 ];
 
+import { getMetricColorHex } from "@/lib/colors";
+
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
   if (!m) return [255, 59, 48];
   return [parseInt(m[0], 16), parseInt(m[1], 16), parseInt(m[2], 16)];
-}
-
-function getColorFromScore(score: number): string {
-  const s = Math.min(100, Math.max(0, score));
-  if (s >= 76) return "#34c759";
-  if (s >= 61) return "#facc15";
-  if (s >= 41) return "#ff9f0a";
-  return "#ff3b30";
 }
 
 /** Returns -1..1; mix of waves for bulge + inward flow. phaseOffset makes bulge flow with rotation */
@@ -185,11 +179,9 @@ function drawSmoothBlob(
 
 interface HealthOrbProps {
   score: number;
-  /** Override color (e.g. for demo mode). When set, orb, contour, and particles use this color. */
-  forceColor?: string;
 }
 
-export default function HealthOrb({ score, forceColor }: HealthOrbProps) {
+export default function HealthOrb({ score }: HealthOrbProps) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<"energy" | "quote">("energy");
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -206,7 +198,7 @@ export default function HealthOrb({ score, forceColor }: HealthOrbProps) {
   const modeRef = useRef<"energy" | "quote">("energy");
   const modeChangeTimeRef = useRef<number>(0);
 
-  const color = useMemo(() => forceColor ?? getColorFromScore(score), [score, forceColor]);
+  const color = useMemo(() => getMetricColorHex(score), [score]);
   colorRef.current = color;
   const displayScore = Math.round(Math.min(100, Math.max(0, score)));
 

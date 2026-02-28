@@ -18,8 +18,6 @@ interface SleepDetailSheetProps {
   sleepDetail: SleepEngineResult | null;
   /** Number of nights of sleep data available for trends. If &lt; 5, shows "not enough data" and muted graphs. */
   nightsCount?: number;
-  demoMode?: boolean;
-  displayScore?: number;
 }
 
 export function SleepDetailSheet({
@@ -27,15 +25,12 @@ export function SleepDetailSheet({
   onOpenChange,
   sleepDetail,
   nightsCount = 7,
-  demoMode,
-  displayScore = 98,
 }: SleepDetailSheetProps) {
   const { t } = useTranslation();
 
   if (!sleepDetail) return null;
 
   const { sleepScore, weakestBlockKey } = sleepDetail;
-  const showScore = demoMode ? displayScore : sleepScore;
   const aiSummaryKey = WEAKEST_SUMMARY[weakestBlockKey] ?? WEAKEST_SUMMARY.duration;
 
   return (
@@ -45,7 +40,7 @@ export function SleepDetailSheet({
       >
         <DrawerHeader className="shrink-0 border-b border-border px-4 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold text-foreground">
-            {t("center.sleep")} — {showScore}%
+            {t("center.sleep")} — {sleepScore}%
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("sleepDetail.subtitle")}</p>
         </DrawerHeader>
