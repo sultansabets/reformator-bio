@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import { calculateLoadDetail, type LoadEngineResult, type LoadStatus } from "@/engine/loadEngine";
+import { calculateLoadDetail, type LoadStatus } from "@/engine/loadEngine";
 import { useHealthStore } from "@/store/healthStore";
 import { LoadCharts } from "@/components/control/LoadCharts";
 import { getMetricColor } from "@/lib/colors";
@@ -12,8 +13,8 @@ const STATUS_LABEL: Record<LoadStatus, string> = {
   low_activity: "loadDetail.statusLowActivity",
 };
 
-const RING_SIZE = 88;
-const RING_STROKE = 4;
+const RING_SIZE = 100;
+const RING_STROKE = 6;
 
 interface RingProps {
   percent: number;
@@ -29,16 +30,16 @@ function LoadRing({ percent, color }: RingProps) {
 
   return (
     <div className="relative" style={{ width: RING_SIZE, height: RING_SIZE }}>
-      <svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} className="absolute inset-0">
+      <svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}>
         <circle
           cx={center}
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.12)"
+          stroke="rgba(255,255,255,0.1)"
           strokeWidth={RING_STROKE}
         />
-        <circle
+        <motion.circle
           cx={center}
           cy={center}
           r={radius}
@@ -47,13 +48,54 @@ function LoadRing({ percent, color }: RingProps) {
           strokeWidth={RING_STROKE}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: dashOffset }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           transform={`rotate(-90 ${center} ${center})`}
         />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-semibold tabular-nums">{Math.round(clamped)}%</span>
+        <span className="text-2xl font-bold tabular-nums">{Math.round(clamped)}%</span>
       </div>
+    </div>
+  );
+}
+
+interface MetricRowProps {
+  label: string;
+  value: string;
+  subValue?: string;
+}
+
+function MetricRow({ label, value, subValue }: MetricRowProps) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <div className="text-right">
+        <span className="text-sm font-medium tabular-nums">{value}</span>
+        {subValue && (
+          <span className="ml-1 text-xs text-muted-foreground">{subValue}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface LoadBarProps {
+  percent: number;
+  color: string;
+}
+
+function LoadBar({ percent, color }: LoadBarProps) {
+  return (
+    <div className="h-3 w-full overflow-hidden rounded-lg bg-white/10">
+      <motion.div
+        className="h-full rounded-lg"
+        style={{ backgroundColor: color }}
+        initial={{ width: 0 }}
+        animate={{ width: `${Math.min(100, percent)}%` }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      />
     </div>
   );
 }
@@ -64,7 +106,7 @@ interface LoadDetailSheetProps {
   loadPercent: number;
 }
 
-export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailSheetProps) {
+export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
   const { t } = useTranslation();
   const workouts = useHealthStore((s) => s.workouts);
   const steps = useHealthStore((s) => s.steps);
@@ -105,6 +147,8 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
   const { totalLoad, bodyLoad, neuroLoad, strengthLoad, cardioLoad, stepsLoad, stressLoad, sleepDebtLoad, hrvLoad, status } = detail;
 
   const loadColor = getMetricColor(totalLoad, true);
+  const bodyLoadColor = getMetricColor(bodyLoad, true);
+  const neuroLoadColor = getMetricColor(neuroLoad, true);
 
   const recommendation = status === "overloaded"
     ? "loadDetail.recOverloaded"
@@ -119,92 +163,103 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
       >
         <DrawerHeader className="shrink-0 border-b border-border px-6 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold text-foreground">
-            {t("loadDetail.title")}
+            {t("loadDetail.title")} — {totalLoad}%
           </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t(STATUS_LABEL[status])}
+          </p>
         </DrawerHeader>
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 pb-8 pt-4"
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-10"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          {/* 1. СТАТУС НАГРУЗКИ */}
-          <section className="pt-0 pb-6">
-            <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("loadDetail.statusTitle")}
-            </h3>
-            <div className="flex flex-col items-center gap-4 text-center">
-              <LoadRing percent={totalLoad} color={loadColor} />
-              <p className="text-sm font-medium text-foreground">
-                {t(STATUS_LABEL[status])}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("loadDetail.statusDesc")}
-              </p>
-            </div>
-          </section>
+          <div className="space-y-8">
+            {/* 1. Общая нагрузка */}
+            <section>
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("loadDetail.statusTitle")}
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-end justify-between">
+                  <span className="text-3xl font-bold tabular-nums">{totalLoad}%</span>
+                  <span 
+                    className="text-sm font-medium"
+                    style={{ color: loadColor }}
+                  >
+                    {t(STATUS_LABEL[status])}
+                  </span>
+                </div>
+                <LoadBar percent={totalLoad} color={loadColor} />
+                <p className="text-xs text-muted-foreground">
+                  {t("loadDetail.statusDesc")}
+                </p>
+              </div>
+            </section>
 
-          {/* 2. ФИЗИЧЕСКАЯ НАГРУЗКА */}
-          <section className="pb-6">
-            <h3 className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("loadDetail.physicalTitle")}
-            </h3>
-            <div className="flex flex-col items-center gap-4">
-              <LoadRing percent={bodyLoad} color={getMetricColor(bodyLoad, true)} />
-              <ul className="w-full max-w-xs mx-auto space-y-2 text-sm text-foreground">
-                <li className="flex justify-between">
-                  <span className="text-muted-foreground">{t("loadDetail.strength")}</span>
-                  <span className="font-medium tabular-nums">{strengthLoad}%</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-muted-foreground">{t("loadDetail.cardio")}</span>
-                  <span className="font-medium tabular-nums">{cardioLoad}%</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-muted-foreground">{t("loadDetail.steps")}</span>
-                  <span className="font-medium tabular-nums">{stepsLoad}%</span>
-                </li>
-              </ul>
-            </div>
-          </section>
+            {/* 2. Физическая нагрузка */}
+            <section>
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("loadDetail.physicalTitle")}
+              </h3>
+              <div className="flex items-start gap-6">
+                <LoadRing percent={bodyLoad} color={bodyLoadColor} />
+                <div className="flex-1 space-y-1 pt-2">
+                  <MetricRow 
+                    label={t("loadDetail.strength")} 
+                    value={`${strengthLoad}%`} 
+                  />
+                  <MetricRow 
+                    label={t("loadDetail.cardio")} 
+                    value={`${cardioLoad}%`} 
+                  />
+                  <MetricRow 
+                    label={t("loadDetail.steps")} 
+                    value={`${stepsLoad}%`} 
+                  />
+                </div>
+              </div>
+            </section>
 
-          {/* 3. НЕРВНАЯ СИСТЕМА */}
-          <section className="pb-6">
-            <h3 className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("loadDetail.neuroTitle")}
-            </h3>
-            <div className="flex flex-col items-center gap-4">
-              <LoadRing percent={neuroLoad} color={getMetricColor(neuroLoad, true)} />
-              <ul className="w-full max-w-xs mx-auto space-y-2 text-sm text-foreground">
-                <li className="flex justify-between">
-                  <span className="text-muted-foreground">{t("loadDetail.stress")}</span>
-                  <span className="font-medium tabular-nums">{stressLoad}%</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-muted-foreground">{t("loadDetail.sleepDebt")}</span>
-                  <span className="font-medium tabular-nums">{sleepDebtLoad}%</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-muted-foreground">{t("loadDetail.hrv")}</span>
-                  <span className="font-medium tabular-nums">{hrvLoad}%</span>
-                </li>
-              </ul>
-            </div>
-          </section>
+            {/* 3. Нервная система */}
+            <section>
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("loadDetail.neuroTitle")}
+              </h3>
+              <div className="flex items-start gap-6">
+                <LoadRing percent={neuroLoad} color={neuroLoadColor} />
+                <div className="flex-1 space-y-1 pt-2">
+                  <MetricRow 
+                    label={t("loadDetail.stress")} 
+                    value={`${stressLoad}%`} 
+                  />
+                  <MetricRow 
+                    label={t("loadDetail.sleepDebt")} 
+                    value={`${sleepDebtLoad}%`} 
+                  />
+                  <MetricRow 
+                    label={t("loadDetail.hrv")} 
+                    value={`${hrvLoad}%`} 
+                  />
+                </div>
+              </div>
+            </section>
 
-          {/* 4. ТРЕНД ЗА 7 ДНЕЙ */}
-          <div className="mx-auto">
+            {/* 4. Тренд за 7 дней */}
             <LoadCharts loadDetail={detail} />
-          </div>
 
-          {/* 5. РЕКОМЕНДАЦИИ */}
-          <section className="pb-6 text-center">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("loadDetail.recommendationTitle")}
-            </h3>
-            <p className="text-sm text-foreground max-w-sm mx-auto">
-              {t(recommendation)}
-            </p>
-          </section>
+            {/* 5. Рекомендации */}
+            <section>
+              <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("loadDetail.recommendationTitle")}
+              </h3>
+              <div className="rounded-2xl bg-white/5 p-4">
+                <p className="text-sm text-foreground leading-relaxed">
+                  {t(recommendation)}
+                </p>
+              </div>
+            </section>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
