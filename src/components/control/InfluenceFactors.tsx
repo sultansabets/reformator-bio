@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Gauge, Heart, Footprints, ChevronDown, ChevronUp } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Gauge, Heart, Footprints, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface InfluenceFactor {
@@ -58,6 +57,23 @@ function StressPersonLightningIcon({ className }: { className?: string }) {
       <path d="M8 22h8" />
       <path d="M9 16.5c0-1.66 1.34-3 3-3s3 1.34 3 3v4H9v-4z" />
     </svg>
+  );
+}
+
+interface ExpandableContentProps {
+  expanded: boolean;
+  children: React.ReactNode;
+}
+
+function ExpandableContent({ expanded, children }: ExpandableContentProps) {
+  return (
+    <div
+      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        expanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+      }`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -123,7 +139,7 @@ export function InfluenceFactors({
             key={f.id}
             role="button"
             tabIndex={0}
-            className={`overflow-hidden transition-all duration-200 cursor-pointer ${
+            className={`overflow-hidden transition-all duration-300 ease-in-out cursor-pointer ${
               isExpanded
                 ? "bg-transparent border-transparent shadow-none"
                 : "bg-card border border-border shadow-sm hover:shadow-md active:scale-[0.995]"
@@ -137,7 +153,7 @@ export function InfluenceFactors({
             }}
           >
             <div className="flex w-full items-center gap-3 p-3 text-left">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 transition-colors duration-300">
                 <Icon className="h-5 w-5 text-muted-foreground" />
               </div>
 
@@ -158,37 +174,28 @@ export function InfluenceFactors({
                 )}
               </div>
 
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-              )}
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-in-out ${
+                  isExpanded ? "rotate-180" : "rotate-0"
+                }`}
+              />
             </div>
-            <AnimatePresence initial={false}>
-              {isExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.28, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-3 pb-3 pt-2">
-                    <p className="mb-2 text-xs font-medium text-muted-foreground">
-                      {t("factors.basedOn")}
-                    </p>
-                    <ul className="space-y-1.5 text-sm text-muted-foreground">
-                      {f.sources.map((source) => (
-                        <li key={source} className="flex items-center gap-2">
-                          <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
-                          {source}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+            <ExpandableContent expanded={isExpanded}>
+              <div className="px-3 pb-3 pt-1">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  {t("factors.basedOn")}
+                </p>
+                <ul className="space-y-1.5 text-sm text-muted-foreground">
+                  {f.sources.map((source) => (
+                    <li key={source} className="flex items-center gap-2">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
+                      {source}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ExpandableContent>
           </Card>
         );
       })}
@@ -196,7 +203,7 @@ export function InfluenceFactors({
       <Card
         role="button"
         tabIndex={0}
-        className={`overflow-hidden transition-all duration-200 cursor-pointer ${
+        className={`overflow-hidden transition-all duration-300 ease-in-out cursor-pointer ${
           isTestosteroneExpanded
             ? "bg-transparent border-transparent shadow-none"
             : "bg-card border border-border shadow-sm hover:shadow-md active:scale-[0.995]"
@@ -210,7 +217,7 @@ export function InfluenceFactors({
         }}
       >
         <div className="flex w-full items-center gap-3 p-3 text-left">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 transition-colors duration-300">
             <MarsIcon className="h-5 w-5 text-muted-foreground" />
           </div>
 
@@ -239,39 +246,30 @@ export function InfluenceFactors({
             )}
           </div>
 
-          {isTestosteroneExpanded ? (
-            <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-in-out ${
+              isTestosteroneExpanded ? "rotate-180" : "rotate-0"
+            }`}
+          />
         </div>
-        <AnimatePresence initial={false}>
-          {isTestosteroneExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="px-3 pb-3 pt-2">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  {t("factors.basedOn")}
-                </p>
-                <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
-                    {t("factors.labAnalysis")}
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
-                    {t("factors.hormoneBalance")}
-                  </li>
-                </ul>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+        <ExpandableContent expanded={isTestosteroneExpanded}>
+          <div className="px-3 pb-3 pt-1">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">
+              {t("factors.basedOn")}
+            </p>
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
+                {t("factors.labAnalysis")}
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1 w-1 shrink-0 rounded-full bg-muted-foreground" />
+                {t("factors.hormoneBalance")}
+              </li>
+            </ul>
+          </div>
+        </ExpandableContent>
       </Card>
     </div>
   );
