@@ -7,7 +7,7 @@ const PARTICLE_COUNT = 200;
 
 const getLabel = (score: number) => {
   const s = Math.min(100, Math.max(0, score));
-  if (s >= 70) return "ВЫСОКОЕ";
+  if (s >= 75) return "ВЫСОКОЕ";
   if (s >= 40) return "УМЕРЕННОЕ";
   return "НИЗКОЕ";
 };

@@ -23,7 +23,7 @@ const QUOTES = [
   "Все, что мы не меняем, мы выбираем.",
 ];
 
-import { getMetricColorHex } from "@/lib/colors";
+import { getMetricColorHex, METRIC_COLORS } from "@/lib/colors";
 
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.slice(1).match(/.{2}/g);
@@ -189,7 +189,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const atomsRef = useRef<Atom[] | null>(null);
   const rafRef = useRef<number | null>(null);
-  const colorRef = useRef<string>("#34c759");
+  const colorRef = useRef<string>(METRIC_COLORS.green);
   const mountStartRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number>(0);
   const rotationRef = useRef(0);

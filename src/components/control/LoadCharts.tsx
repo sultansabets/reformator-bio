@@ -16,7 +16,7 @@ import type { LoadEngineResult } from "@/engine/loadEngine";
 const CHART_HEIGHT = 240;
 const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
 const BODY_STRENGTH = "#3B82F6";
-const BODY_CARDIO = "#37BE7E";
+const BODY_CARDIO = "#D6FF00";
 const BODY_STEPS = "#22D3EE";
 const NEURO_STRESS = "#A78BFA";
 const NEURO_HRV = "#F59E0B";
