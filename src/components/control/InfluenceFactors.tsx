@@ -125,23 +125,17 @@ export function InfluenceFactors({
         const isExpanded = expandedId === f.id;
         const Icon = f.icon;
         const accentColor = isExpanded ? EXPANDED_ACCENT_COLOR : undefined;
-        const cardBg = accentColor ? { backgroundColor: `${accentColor}14` } : undefined; // ~8% opacity
-
-        const cardStyle = accentColor
-          ? {
-              backgroundColor: `${accentColor}14`,
-              boxShadow: `0 0 12px ${accentColor}30`,
-              borderColor: `${accentColor}40`,
-            }
-          : undefined;
 
         return (
           <Card
             key={f.id}
             role="button"
             tabIndex={0}
-            className="overflow-hidden border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
-            style={cardStyle}
+            className={`overflow-hidden transition-all duration-200 cursor-pointer ${
+              isExpanded
+                ? "bg-transparent border-transparent shadow-none"
+                : "bg-card border border-border shadow-sm hover:shadow-md active:scale-[0.995]"
+            }`}
             onClick={() => setExpandedId(isExpanded ? null : f.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -232,20 +226,15 @@ export function InfluenceFactors({
       })}
 
       {(() => {
-        const testosteroneCardStyle = testosteroneColor
-          ? {
-              backgroundColor: `${testosteroneColor}14`,
-              boxShadow: `0 0 12px ${testosteroneColor}30`,
-              borderColor: `${testosteroneColor}40`,
-            }
-          : undefined;
-
         return (
           <Card
             role="button"
             tabIndex={0}
-            className="overflow-hidden border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
-            style={testosteroneCardStyle}
+            className={`overflow-hidden transition-all duration-200 cursor-pointer ${
+              isTestosteroneExpanded
+                ? "bg-transparent border-transparent shadow-none"
+                : "bg-card border border-border shadow-sm hover:shadow-md active:scale-[0.995]"
+            }`}
             onClick={() => setExpandedId(isTestosteroneExpanded ? null : "testosterone")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
