@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<LoadStatus, string> = {
 };
 
 const RING_SIZE = 100;
-const RING_STROKE = 6;
+const RING_STROKE = 3;
 
 interface RingProps {
   percent: number;

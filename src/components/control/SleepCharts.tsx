@@ -28,7 +28,7 @@ function formatTime(minutes: number): string {
 }
 
 const RING_SIZE = 100;
-const RING_STROKE = 6;
+const RING_STROKE = 3;
 
 interface QualityRingProps {
   percent: number;
