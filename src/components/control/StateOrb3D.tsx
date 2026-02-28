@@ -8,10 +8,6 @@ const PARTICLE_COUNT = 4000;
 const SPHERE_RADIUS = 2.0;
 const LERP_SPEED = 3.0;
 
-function hexToThreeColor(hex: string): THREE.Color {
-  return new THREE.Color(hex);
-}
-
 interface ParticleSphereProps {
   color: string;
 }
