@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { getMetricColorHex } from "@/lib/colors";
 
 const PARTICLE_COUNT = 4000;
-const SPHERE_RADIUS = 2.0;
+const SPHERE_RADIUS = 1.55;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
@@ -83,7 +83,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
         ref={materialRef}
-        size={0.035}
+        size={0.038}
         color={color}
         transparent
         opacity={0.9}
