@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import StateOrb3D from "./StateOrb3D";
 
+const SHOW_ORB = false;
 const ENERGY_MODE_SEC = 30;
 const QUOTE_MODE_SEC = 10;
 
@@ -43,7 +44,7 @@ export default function HealthOrb({ score }: HealthOrbProps) {
     <div className="relative flex h-[300px] w-[340px] items-center justify-center overflow-visible">
       <div className="relative w-[320px] h-[320px]">
         {/* 3D Orb */}
-        <StateOrb3D score={displayScore} />
+        {SHOW_ORB && <StateOrb3D score={displayScore} />}
 
         {/* Text overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
