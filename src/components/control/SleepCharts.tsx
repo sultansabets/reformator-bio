@@ -241,9 +241,9 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
         <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("sleepDetail.qualityTitle")}
         </h3>
-        <div className="flex items-start gap-6">
+        <div className="flex items-center gap-6">
           <QualityRing percent={sleepDetail.sleepScore} color={qualityColor} />
-          <div className="flex-1 space-y-1 pt-2">
+          <div className="flex-1 space-y-1">
             <MetricRow 
               label={t("sleepDetail.efficiency")} 
               value={`${Math.round(100 - (displayData.totalWakeMinutes / Math.max(1, displayData.actualMinutes + displayData.totalWakeMinutes)) * 100)}%`} 

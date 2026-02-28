@@ -202,9 +202,9 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("loadDetail.physicalTitle")}
               </h3>
-              <div className="flex items-start gap-6">
+              <div className="flex items-center gap-6">
                 <LoadRing percent={bodyLoad} color={bodyLoadColor} />
-                <div className="flex-1 space-y-1 pt-2">
+                <div className="flex-1 space-y-1">
                   <MetricRow 
                     label={t("loadDetail.strength")} 
                     value={`${strengthLoad}%`} 
@@ -226,9 +226,9 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("loadDetail.neuroTitle")}
               </h3>
-              <div className="flex items-start gap-6">
+              <div className="flex items-center gap-6">
                 <LoadRing percent={neuroLoad} color={neuroLoadColor} />
-                <div className="flex-1 space-y-1 pt-2">
+                <div className="flex-1 space-y-1">
                   <MetricRow 
                     label={t("loadDetail.stress")} 
                     value={`${stressLoad}%`} 
