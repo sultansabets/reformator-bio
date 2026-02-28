@@ -117,14 +117,14 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
       <DrawerContent
         className="flex h-[70vh] max-h-[70vh] flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       >
-        <DrawerHeader className="shrink-0 border-b border-border px-5 pb-4 pt-0 text-left">
+        <DrawerHeader className="shrink-0 border-b border-border px-6 pb-4 pt-0 text-left">
           <h2 className="text-xl font-semibold text-foreground">
             {t("loadDetail.title")}
           </h2>
         </DrawerHeader>
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-4"
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 pb-8 pt-4"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {/* 1. СТАТУС НАГРУЗКИ */}
@@ -132,12 +132,12 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
             <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.statusTitle")}
             </h3>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-start gap-4">
               <LoadRing percent={totalLoad} color={loadColor} />
               <p className="text-sm font-medium text-foreground">
                 {t(STATUS_LABEL[status])}
               </p>
-              <p className="text-center text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {t("loadDetail.statusDesc")}
               </p>
             </div>
@@ -148,7 +148,7 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.physicalTitle")}
             </h3>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-start gap-4">
               <LoadRing percent={bodyLoad} color={getMetricColor(bodyLoad, true)} />
               <ul className="w-full space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
@@ -172,7 +172,7 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.neuroTitle")}
             </h3>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-start gap-4">
               <LoadRing percent={neuroLoad} color={getMetricColor(neuroLoad, true)} />
               <ul className="w-full space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
