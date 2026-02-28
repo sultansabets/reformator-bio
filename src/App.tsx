@@ -23,6 +23,7 @@ import Profile from "@/pages/Profile";
 import MedicalSectionDetails from "@/pages/MedicalSectionDetails";
 import Community from "@/pages/Community";
 import SmartWake from "@/pages/SmartWake";
+import Subscription from "@/pages/Subscription";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/medical/:id" element={<MedicalSectionDetails />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/subscription" element={<Subscription />} />
             </Route>
             {/* Standalone pages without AppLayout */}
             <Route path="/smart-wake" element={<ProtectedRoute><SmartWake /></ProtectedRoute>} />

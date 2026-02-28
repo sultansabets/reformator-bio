@@ -14,7 +14,7 @@ import {
 import type { LoadEngineResult } from "@/engine/loadEngine";
 
 const CHART_HEIGHT = 240;
-const CHART_MARGIN = { top: 24, right: 24, left: 24, bottom: 32 };
+const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
 const BODY_STRENGTH = "#3B82F6";
 const BODY_CARDIO = "#37BE7E";
 const BODY_STEPS = "#22D3EE";
@@ -60,15 +60,15 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
   }, [loadDetail]);
 
   const commonXAxisProps = {
-    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dy: 10 },
-    height: 40,
+    tick: { fontSize: 10, fill: "rgba(255,255,255,0.5)" },
+    height: 32,
     axisLine: false,
     tickLine: false,
   };
 
   const commonYAxisProps = {
-    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dx: -8 },
-    width: 40,
+    tick: { fontSize: 10, fill: "rgba(255,255,255,0.5)" },
+    width: 44,
     axisLine: false,
     tickLine: false,
   };
@@ -82,20 +82,20 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
     children: React.ReactNode;
     legend?: React.ReactNode;
   }) => (
-    <section className="pb-6">
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="pb-4">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
-      <div className="w-full pt-2">{children}</div>
-      {legend && <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">{legend}</div>}
+      <div className="w-full">{children}</div>
+      {legend && <div className="mt-2 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">{legend}</div>}
     </section>
   );
 
   if (!loadDetail || chartData.length === 0) return null;
 
   return (
-    <section className="pb-6">
-      <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="mt-4 pb-4">
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {t("loadDetail.trend7d")}
       </h2>
 

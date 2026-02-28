@@ -92,7 +92,8 @@
     "ariaNotifications": "Хабарландырулар",
     "ariaSettings": "Баптаулар",
     "noNotifications": "Әзірге хабарландыру жоқ",
-    "notificationsOff": "Хабарландырулар өшірілген"
+    "notificationsOff": "Хабарландырулар өшірілген",
+    "subscription": "Тариф және жазылым"
   },
   "metrics": {
     "title": "Метрикалар",

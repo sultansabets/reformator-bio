@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2, AlarmClock, ArrowLeft, User } from "lucide-react";
+import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2, AlarmClock, ArrowLeft, User, Sparkles } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureDailyReset } from "@/lib/dailyReset";
@@ -318,6 +318,20 @@ const AppLayout = () => {
               </Collapsible>
             </div>
             <div className="mt-4 space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsOpen(false);
+                  navigate("/subscription");
+                }}
+                className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <span>{t("settings.subscription")}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"

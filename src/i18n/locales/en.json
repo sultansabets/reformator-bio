@@ -101,7 +101,8 @@
     "ariaNotifications": "Notifications",
     "ariaSettings": "Settings",
     "noNotifications": "No notifications yet",
-    "notificationsOff": "Notifications disabled"
+    "notificationsOff": "Notifications disabled",
+    "subscription": "Plan & Subscription"
   },
   "metrics": {
     "title": "Metrics",

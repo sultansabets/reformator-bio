@@ -108,7 +108,8 @@
     "ariaNotifications": "Уведомы",
     "ariaSettings": "Настройки",
     "noNotifications": "Пока тихо",
-    "notificationsOff": "Уведомы выключены"
+    "notificationsOff": "Уведомы выключены",
+    "subscription": "Тарифчик и подписка"
   },
   "metrics": {
     "title": "Метрики",

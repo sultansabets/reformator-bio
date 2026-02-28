@@ -7,6 +7,8 @@ import { Send, User, Paperclip, RotateCcw } from "lucide-react";
 import { ParticlesIcon } from "@/components/ParticlesIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSubscriptionStore } from "@/store/subscriptionStore";
+import { SubscriptionGateModal } from "@/components/SubscriptionGate";
 
 const INPUT_BAR_HEIGHT = 56;
 const MENU_BAR_HEIGHT = 80;
@@ -26,6 +28,8 @@ export default function AI() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isProOrHigher = useSubscriptionStore((s) => s.isProOrHigher);
+  const [gateOpen, setGateOpen] = useState(false);
 
   useEffect(() => {
     scrollSource?.registerScrollRef(scrollRef.current ?? null);
@@ -54,6 +58,12 @@ export default function AI() {
   const send = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+
+    if (!isProOrHigher()) {
+      setGateOpen(true);
+      return;
+    }
+
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
     setInput("");
 
@@ -69,7 +79,7 @@ export default function AI() {
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     }, 600);
-  }, [t, setKeyboardOpen]);
+  }, [t, setKeyboardOpen, isProOrHigher]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,6 +268,8 @@ export default function AI() {
           </Button>
         </form>
       </div>
+
+      <SubscriptionGateModal open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );
 }

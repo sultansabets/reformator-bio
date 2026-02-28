@@ -1027,26 +1027,6 @@ const Profile = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Тарифы — отдельная секция внизу */}
-      <motion.div variants={item} className="mt-8">
-        <section>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("profile.tariffs")}
-          </h2>
-          <Card className="border border-border">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-foreground">{t("profile.premium")}</div>
-                  <div className="text-xs text-muted-foreground">{t("profile.pricePerMonth")}</div>
-                </div>
-                <Button size="sm">{t("profile.connect")}</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      </motion.div>
-
       {/* Detail modal */}
       <Dialog open={modal !== null} onOpenChange={(open) => !open && setModal(null)}>
         <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">

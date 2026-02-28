@@ -16,7 +16,7 @@ import type { SleepEngineResult } from "@/engine/sleepEngine";
 
 const NIGHTS_FOR_CHARTS = 5;
 const CHART_HEIGHT = 240;
-const CHART_MARGIN = { top: 24, right: 24, left: 24, bottom: 32 };
+const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
 const BAR_FILL = "#37BE7E";
 const LINE_STROKE = "#37BE7E";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
@@ -140,15 +140,15 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
   if (!sleepDetail) return null;
 
   const commonXAxisProps = {
-    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dy: 10 },
-    height: 40,
+    tick: { fontSize: 10, fill: "rgba(255,255,255,0.5)" },
+    height: 32,
     axisLine: false,
     tickLine: false,
   };
 
   const commonYAxisProps = {
-    tick: { fontSize: 11, fill: "rgba(255,255,255,0.5)", dx: -8 },
-    width: 40,
+    tick: { fontSize: 10, fill: "rgba(255,255,255,0.5)" },
+    width: 44,
     axisLine: false,
     tickLine: false,
   };
@@ -162,8 +162,8 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
     children: React.ReactNode;
     isEmpty?: boolean;
   }) => (
-    <section className="py-6 first:pt-0">
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="py-4 first:pt-0">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
       {isEmpty ? (
@@ -171,7 +171,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
           {t("sleepDetail.notEnoughData")}
         </p>
       ) : (
-        <div className="w-full pt-2" style={{ opacity: hasEnoughNights ? 1 : 0.5 }}>
+        <div className="w-full" style={{ opacity: hasEnoughNights ? 1 : 0.5 }}>
           {children}
         </div>
       )}
@@ -181,8 +181,8 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
   if (chartData.length === 0) return null;
 
   return (
-    <section className="mt-6 pb-6">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="mt-4 pb-4">
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {t("sleepDetail.chartsBlock")}
       </h2>
 
