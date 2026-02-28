@@ -172,7 +172,7 @@ function HistoryTab() {
                   : item.statusKey === "statusPlanned"
                   ? "text-primary"
                   : item.statusKey === "statusNoShow"
-                  ? "text-status-red"
+                  ? "text-destructive"
                   : "text-status-amber"
               }`}
             >

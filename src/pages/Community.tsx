@@ -350,7 +350,7 @@ function FeedTab() {
                   className="flex items-center gap-1 text-[#888] hover:text-[#e5e5e5] transition-colors"
                 >
                   <Heart
-                    className={`h-4 w-4 ${liked.has(p.id) ? "fill-[#FF5A5A] text-[#FF5A5A]" : ""}`}
+                    className={`h-4 w-4 ${liked.has(p.id) ? "fill-[#D9FF00] text-[#D9FF00]" : ""}`}
                   />
                   <span className="text-xs">{p.likes + (liked.has(p.id) ? 1 : 0)}</span>
                 </button>

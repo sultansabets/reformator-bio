@@ -155,12 +155,12 @@ function MoonIcon({ size = 100 }: { size?: number }) {
         moonCenterX - radius * 0.25, moonCenterY - radius * 0.25, 0,
         moonCenterX, moonCenterY, radius
       );
-      moonGradient.addColorStop(0, "#fefce8");
-      moonGradient.addColorStop(0.4, "#fef08a");
-      moonGradient.addColorStop(1, "#facc15");
+      moonGradient.addColorStop(0, "#ffffff");
+      moonGradient.addColorStop(0.4, "#e5e5e5");
+      moonGradient.addColorStop(1, "#c0c0c0");
       ctx.fillStyle = moonGradient;
       ctx.shadowBlur = 20 * glowIntensity;
-      ctx.shadowColor = "rgba(250, 204, 21, 0.4)";
+      ctx.shadowColor = "rgba(192, 192, 192, 0.4)";
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -532,10 +532,10 @@ function CalendarModal({
             <span className="h-2 w-2 rounded-full bg-status-green" /> Хороший
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-orange-500" /> Средний
+            <span className="h-2 w-2 rounded-full bg-status-amber" /> Средний
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-red-500" /> Плохой
+            <span className="h-2 w-2 rounded-full bg-status-red" /> Низкий
           </span>
         </div>
       </motion.div>
@@ -694,9 +694,9 @@ export default function SmartWake() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="mt-4 mx-auto max-w-[280px] rounded-lg bg-orange-500/10 px-4 py-2 text-center"
+              className="mt-4 mx-auto max-w-[280px] rounded-lg bg-status-amber/10 px-4 py-2 text-center"
             >
-              <p className="text-xs text-orange-400">
+              <p className="text-xs text-muted-foreground">
                 Рекомендуется увеличить продолжительность сна
               </p>
             </motion.div>

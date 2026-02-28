@@ -15,12 +15,12 @@ import type { LoadEngineResult } from "@/engine/loadEngine";
 
 const CHART_HEIGHT = 240;
 const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
-const BODY_STRENGTH = "#3B82F6";
+const BODY_STRENGTH = "#C0C0C0";
 const BODY_CARDIO = "#D9FF00";
-const BODY_STEPS = "#22D3EE";
-const NEURO_STRESS = "#A78BFA";
-const NEURO_HRV = "#F59E0B";
-const NEURO_SLEEP = "#EF4444";
+const BODY_STEPS = "#C0C0C0";
+const NEURO_STRESS = "#C0C0C0";
+const NEURO_HRV = "#D9FF00";
+const NEURO_SLEEP = "#28282B";
 const GRID_STROKE = "rgba(255,255,255,0.08)";
 const DAY_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 

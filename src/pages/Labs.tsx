@@ -31,7 +31,7 @@ function getLabStatusWithLowBorder(
 const statusTypeClass = {
   success: "text-status-green",
   warning: "text-status-amber",
-  destructive: "text-destructive",
+  destructive: "text-status-red",
 };
 
 interface MockAnalysis {

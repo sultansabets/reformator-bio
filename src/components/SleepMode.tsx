@@ -115,12 +115,12 @@ function MoonWithParticles() {
         moonCenterX - radius * 0.25, moonCenterY - radius * 0.25, 0,
         moonCenterX, moonCenterY, radius
       );
-      moonGradient.addColorStop(0, "#fefce8");
-      moonGradient.addColorStop(0.35, "#fef08a");
-      moonGradient.addColorStop(1, "#facc15");
+      moonGradient.addColorStop(0, "#ffffff");
+      moonGradient.addColorStop(0.35, "#e5e5e5");
+      moonGradient.addColorStop(1, "#c0c0c0");
       ctx.fillStyle = moonGradient;
       ctx.shadowBlur = 30 * glowIntensity;
-      ctx.shadowColor = "rgba(250, 204, 21, 0.5)";
+      ctx.shadowColor = "rgba(192, 192, 192, 0.5)";
       ctx.fill();
       ctx.shadowBlur = 0;
 

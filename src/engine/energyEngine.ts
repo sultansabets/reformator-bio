@@ -20,45 +20,32 @@ export interface EnergyEngineResult {
   recommendationKey: string;
 }
 
-/** Вычисляет вклад и рекомендацию на основе формулы Energy из healthEngine (без адаптации). */
+/**
+ * Вычисляет детали состояния.
+ * Формула: (recoveryFactor * 0.6 + stressFactor * 0.4) * 100
+ * - recoveryFactor = sleep / 100
+ * - stressFactor = 1 - load / 100
+ */
 export function calculateEnergyDetail(data: { sleep: number; load: number }): EnergyEngineResult {
   const sleep = clamp(data.sleep);
   const load = clamp(data.load);
 
-  const recoveryCapacity = sleep;
-  let energy = recoveryCapacity - load * 0.6;
-  if (load > recoveryCapacity) {
-    const overload = load - recoveryCapacity;
-    energy -= overload * 0.5;
-  }
-  const energyScore = Math.round(clamp(energy));
-
-  const neutral = 50;
-  const sleepContrib = Math.round((sleep - neutral) * 0.5);
-  const loadContrib = load > 0 ? -Math.round(load * 0.6) : 0;
+  const recoveryFactor = sleep / 100;
+  const stressFactor = 1 - load / 100;
+  const energyScore = Math.round((recoveryFactor * 0.6 + stressFactor * 0.4) * 100);
 
   const contributions: EnergyContribution[] = [
-    { key: "sleep", delta: sleepContrib, labelKey: "energyDetail.sleep" },
-    { key: "load", delta: loadContrib, labelKey: "energyDetail.load" },
+    { key: "sleep", delta: Math.round((sleep - 50) * 0.6), labelKey: "energyDetail.sleep" },
+    { key: "load", delta: Math.round((50 - load) * 0.4), labelKey: "energyDetail.load" },
   ];
 
-  const scores = [
-    { key: "sleep" as const, value: sleep },
-    { key: "load" as const, value: 100 - load },
-  ];
-  const weakest = scores.reduce((min, s) => (s.value < min.value ? s : min));
-
-  let recommendationKey: string;
-  if (weakest.key === "load") {
-    recommendationKey = "energyDetail.recLoad";
-  } else {
-    recommendationKey = "energyDetail.recSleep";
-  }
+  const weakestSystem: EnergySystemKey = sleep < (100 - load) ? "sleep" : "load";
+  const recommendationKey = weakestSystem === "load" ? "energyDetail.recLoad" : "energyDetail.recSleep";
 
   return {
     energyScore,
     contributions,
-    weakestSystem: weakest.key,
+    weakestSystem,
     recommendationKey,
   };
 }

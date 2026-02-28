@@ -38,8 +38,8 @@ export function ResourceSystems({
       label: t("systems.hormonal"),
       percent: hormonalPercent ?? 72,
       sources: [t("systems.testosterone"), t("systems.estradiol"), t("systems.shbg"), t("systems.prolactin")],
-      iconColor: "#FF9F0A",
-      iconBg: "rgba(255,159,10,0.15)",
+      iconColor: "#D9FF00",
+      iconBg: "rgba(217,255,0,0.15)",
     },
     {
       id: "nervous",
@@ -65,8 +65,8 @@ export function ResourceSystems({
       label: t("systems.metabolic"),
       percent: metabolicPercent ?? 70,
       sources: [t("systems.glucose"), t("systems.insulin"), t("systems.fatPct"), t("systems.waist")],
-      iconColor: "#EF4444",
-      iconBg: "rgba(239,68,68,0.15)",
+      iconColor: "#D9FF00",
+      iconBg: "rgba(217,255,0,0.15)",
     },
   ];
 

@@ -7,7 +7,18 @@ export const METRIC_COLORS = {
   dark: "#28282B",    // 0-35% - low state
   light: "#C0C0C0",   // 35-70% - moderate state
   green: "#D9FF00",   // 70-100% - excellent state
+  success: "#D9FF00", // alias for green
 } as const;
+
+/**
+ * System red for critical UI elements only:
+ * - Errors
+ * - Delete actions
+ * - Logout
+ * - Missed items
+ * - Destructive warnings
+ */
+export const SYSTEM_RED = "#770101";
 
 export const METRIC_COLORS_RGB = {
   dark: { r: 40, g: 40, b: 43 },

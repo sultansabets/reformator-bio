@@ -4,17 +4,11 @@ import { Gauge, Heart, Footprints, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
-/** Fixed colors for expanded state — calm medical palette */
-const FACTOR_COLORS = {
-  pressure: "#4DA3FF",
-  pulse: "#FF5A5A",
-  steps: "#4ED0FF",
-  stress: "#FF6A00",
-  testosterone: "#FFB020",
-} as const;
+/** All expanded cards glow with the same green accent */
+const EXPANDED_ACCENT_COLOR = "#D9FF00";
 
 interface InfluenceFactor {
-  id: keyof typeof FACTOR_COLORS;
+  id: string;
   icon: React.ElementType;
   label: string;
   mainValue: string;
@@ -123,23 +117,31 @@ export function InfluenceFactors({
   ];
 
   const isTestosteroneExpanded = expandedId === "testosterone";
-  const testosteroneColor = isTestosteroneExpanded ? FACTOR_COLORS.testosterone : undefined;
+  const testosteroneColor = isTestosteroneExpanded ? EXPANDED_ACCENT_COLOR : undefined;
 
   return (
     <div className="space-y-2">
       {factors.map((f) => {
         const isExpanded = expandedId === f.id;
         const Icon = f.icon;
-        const accentColor = isExpanded ? FACTOR_COLORS[f.id] : undefined;
+        const accentColor = isExpanded ? EXPANDED_ACCENT_COLOR : undefined;
         const cardBg = accentColor ? { backgroundColor: `${accentColor}14` } : undefined; // ~8% opacity
+
+        const cardStyle = accentColor
+          ? {
+              backgroundColor: `${accentColor}14`,
+              boxShadow: `0 0 12px ${accentColor}30`,
+              borderColor: `${accentColor}40`,
+            }
+          : undefined;
 
         return (
           <Card
             key={f.id}
             role="button"
             tabIndex={0}
-            className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
-            style={cardBg}
+            className="overflow-hidden border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
+            style={cardStyle}
             onClick={() => setExpandedId(isExpanded ? null : f.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -149,9 +151,12 @@ export function InfluenceFactors({
             }}
           >
             <div className="flex w-full items-center gap-3 p-3 text-left">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-200 ${accentColor ? "" : "bg-muted/50"}`}
+                style={accentColor ? { backgroundColor: `${accentColor}20` } : undefined}
+              >
                 <Icon
-                  className="h-5 w-5 text-muted-foreground transition-colors duration-200"
+                  className={`h-5 w-5 transition-colors duration-200 ${accentColor ? "" : "text-muted-foreground"}`}
                   style={accentColor ? { color: accentColor } : undefined}
                 />
               </div>
@@ -163,10 +168,16 @@ export function InfluenceFactors({
                 >
                   {f.label}
                 </p>
-                <p className="flex items-baseline gap-1.5 text-lg font-bold tabular-nums text-foreground">
+                <p
+                  className={`flex items-baseline gap-1.5 text-lg font-bold tabular-nums transition-colors duration-200 ${accentColor ? "" : "text-foreground"}`}
+                  style={accentColor ? { color: accentColor } : undefined}
+                >
                   {f.mainValue}
                   {f.unit && (
-                    <span className="text-xs font-normal text-muted-foreground">
+                    <span
+                      className={`text-xs font-normal transition-colors duration-200 ${accentColor ? "" : "text-muted-foreground"}`}
+                      style={accentColor ? { color: `${accentColor}99` } : undefined}
+                    >
                       {f.unit}
                     </span>
                   )}
@@ -177,7 +188,10 @@ export function InfluenceFactors({
               </div>
 
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <ChevronUp
+                  className="h-4 w-4 shrink-0 transition-colors duration-200"
+                  style={accentColor ? { color: accentColor } : undefined}
+                />
               ) : (
                 <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
               )}
@@ -217,98 +231,122 @@ export function InfluenceFactors({
         );
       })}
 
-      <Card
-        role="button"
-        tabIndex={0}
-        className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
-        style={testosteroneColor ? { backgroundColor: `${testosteroneColor}14` } : undefined}
-        onClick={() => setExpandedId(isTestosteroneExpanded ? null : "testosterone")}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setExpandedId(isTestosteroneExpanded ? null : "testosterone");
-          }
-        }}
-      >
-        <div className="flex w-full items-center gap-3 p-3 text-left">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50">
-            <MarsIcon
-              className="h-5 w-5 text-muted-foreground transition-colors duration-200"
-              style={testosteroneColor ? { color: testosteroneColor } : undefined}
-            />
-          </div>
+      {(() => {
+        const testosteroneCardStyle = testosteroneColor
+          ? {
+              backgroundColor: `${testosteroneColor}14`,
+              boxShadow: `0 0 12px ${testosteroneColor}30`,
+              borderColor: `${testosteroneColor}40`,
+            }
+          : undefined;
 
-          <div className="min-w-0 flex-1">
-            <p
-              className={`text-xs transition-colors duration-200 ${testosteroneColor ? "" : "text-muted-foreground"}`}
-              style={testosteroneColor ? { color: testosteroneColor } : undefined}
-            >
-              {t("factors.testosterone")}
-            </p>
-            {hasTestosterone ? (
-              <>
-                <p className="flex items-baseline gap-1.5 text-lg font-bold tabular-nums text-foreground">
-                  {testosteroneValue}
-                  <span className="text-xs font-normal text-muted-foreground">
-                    нмоль/л
-                  </span>
+        return (
+          <Card
+            role="button"
+            tabIndex={0}
+            className="overflow-hidden border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
+            style={testosteroneCardStyle}
+            onClick={() => setExpandedId(isTestosteroneExpanded ? null : "testosterone")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setExpandedId(isTestosteroneExpanded ? null : "testosterone");
+              }
+            }}
+          >
+            <div className="flex w-full items-center gap-3 p-3 text-left">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-200 ${testosteroneColor ? "" : "bg-muted/50"}`}
+                style={testosteroneColor ? { backgroundColor: `${testosteroneColor}20` } : undefined}
+              >
+                <MarsIcon
+                  className={`h-5 w-5 transition-colors duration-200 ${testosteroneColor ? "" : "text-muted-foreground"}`}
+                  style={testosteroneColor ? { color: testosteroneColor } : undefined}
+                />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p
+                  className={`text-xs transition-colors duration-200 ${testosteroneColor ? "" : "text-muted-foreground"}`}
+                  style={testosteroneColor ? { color: testosteroneColor } : undefined}
+                >
+                  {t("factors.testosterone")}
                 </p>
-                {testosteroneDate && (
-                  <p className="text-[10px] text-muted-foreground">
-                    {t("factors.asOf")} {testosteroneDate}
+                {hasTestosterone ? (
+                  <>
+                    <p
+                      className={`flex items-baseline gap-1.5 text-lg font-bold tabular-nums transition-colors duration-200 ${testosteroneColor ? "" : "text-foreground"}`}
+                      style={testosteroneColor ? { color: testosteroneColor } : undefined}
+                    >
+                      {testosteroneValue}
+                      <span
+                        className={`text-xs font-normal transition-colors duration-200 ${testosteroneColor ? "" : "text-muted-foreground"}`}
+                        style={testosteroneColor ? { color: `${testosteroneColor}99` } : undefined}
+                      >
+                        нмоль/л
+                      </span>
+                    </p>
+                    {testosteroneDate && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {t("factors.asOf")} {testosteroneDate}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-lg font-bold text-muted-foreground">
+                    {t("factors.noData")}
                   </p>
                 )}
-              </>
-            ) : (
-              <p className="text-lg font-bold text-muted-foreground">
-                {t("factors.noData")}
-              </p>
-            )}
-          </div>
-
-          {isTestosteroneExpanded ? (
-            <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
-        </div>
-        <AnimatePresence initial={false}>
-          {isTestosteroneExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div
-                className="border-t border-border bg-muted/25 px-3 pb-3 pt-2"
-                style={testosteroneColor ? { borderLeft: `3px solid ${testosteroneColor}` } : undefined}
-              >
-                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  {t("factors.basedOn")}
-                </p>
-                <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span
-                      className="h-1 w-1 shrink-0 rounded-full"
-                      style={{ backgroundColor: testosteroneColor || "hsl(var(--muted-foreground))" }}
-                    />
-                    {t("factors.labAnalysis")}
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span
-                      className="h-1 w-1 shrink-0 rounded-full"
-                      style={{ backgroundColor: testosteroneColor || "hsl(var(--muted-foreground))" }}
-                    />
-                    {t("factors.hormoneBalance")}
-                  </li>
-                </ul>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
+
+              {isTestosteroneExpanded ? (
+                <ChevronUp
+                  className="h-4 w-4 shrink-0 transition-colors duration-200"
+                  style={testosteroneColor ? { color: testosteroneColor } : undefined}
+                />
+              ) : (
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
+            </div>
+            <AnimatePresence initial={false}>
+              {isTestosteroneExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.28, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    className="border-t border-border bg-muted/25 px-3 pb-3 pt-2"
+                    style={testosteroneColor ? { borderLeft: `3px solid ${testosteroneColor}` } : undefined}
+                  >
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      {t("factors.basedOn")}
+                    </p>
+                    <ul className="space-y-1.5 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <span
+                          className="h-1 w-1 shrink-0 rounded-full"
+                          style={{ backgroundColor: testosteroneColor || "hsl(var(--muted-foreground))" }}
+                        />
+                        {t("factors.labAnalysis")}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span
+                          className="h-1 w-1 shrink-0 rounded-full"
+                          style={{ backgroundColor: testosteroneColor || "hsl(var(--muted-foreground))" }}
+                        />
+                        {t("factors.hormoneBalance")}
+                      </li>
+                    </ul>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

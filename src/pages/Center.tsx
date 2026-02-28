@@ -277,18 +277,16 @@ function convertHistoryToWorkoutDays(history: WorkoutHistoryEntry[]): WorkoutDay
   return Object.values(dayMap);
 }
 
-/** Single palette: color depends only on progress. 0–40% muted, 40–80% brand, 80–100% enhanced, >100% soft amber. */
+/**
+ * Macro circle color based on progress:
+ * - 0% (nothing added): dark gray #28282B
+ * - > 0%: green #D9FF00
+ */
 function getMacroColor(progress: number): string {
-  if (progress > 100) {
-    return "hsl(38, 45%, 52%)"; // soft amber glow, no bright red
+  if (progress > 0) {
+    return "#D9FF00"; // green - active
   }
-  if (progress >= 80) {
-    return "hsl(240, 18%, 32%)"; // enhanced brand
-  }
-  if (progress >= 40) {
-    return "hsl(240, 12%, 38%)"; // main brand
-  }
-  return "hsl(240, 6%, 48%)"; // muted accent, low saturation
+  return "#28282B"; // dark gray - inactive
 }
 
 function MacroCircle({
@@ -306,6 +304,8 @@ function MacroCircle({
   const progress = goal > 0 ? (consumed / goal) * 100 : 0;
   const ringColor = getMacroColor(progress);
   const dashProgress = Math.min(100, progress);
+  const isActive = progress > 0;
+  const glowOpacity = isActive && progress < 100 ? 0.4 : 0.15;
 
   const CIRCLE_SIZE = 70;
   const STROKE_WIDTH = 3;
@@ -315,7 +315,14 @@ function MacroCircle({
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+      <div
+        className="relative transition-all duration-300"
+        style={{
+          width: CIRCLE_SIZE,
+          height: CIRCLE_SIZE,
+          filter: isActive ? `drop-shadow(0 0 8px rgba(217, 255, 0, ${glowOpacity}))` : "none",
+        }}
+      >
         <svg
           width={CIRCLE_SIZE}
           height={CIRCLE_SIZE}
@@ -326,9 +333,9 @@ function MacroCircle({
             cy={CIRCLE_SIZE / 2}
             r={radius}
             fill="none"
-            stroke="hsl(240 6% 28%)"
+            stroke="#28282B"
             strokeWidth={STROKE_WIDTH}
-            opacity={0.4}
+            opacity={0.6}
           />
           <motion.circle
             cx={CIRCLE_SIZE / 2}
@@ -921,7 +928,7 @@ export default function Center() {
                     <span>+{activityBonus}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Flame className="h-3.5 w-3.5 text-orange-500" />
+                    <Flame className="h-3.5 w-3.5 text-status-green" />
                     <span>+{workoutBonus}</span>
                   </div>
                 </div>
@@ -1039,14 +1046,14 @@ export default function Center() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="flex items-center gap-2 rounded-xl bg-background/50 p-3">
-                    <Heart className="h-4 w-4 text-destructive" />
+                    <Heart className="h-4 w-4 text-status-amber" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">Пульс</p>
                       <p className="text-sm font-semibold">{autoWorkout.hr} bpm</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 rounded-xl bg-background/50 p-3">
-                    <Flame className="h-4 w-4 text-orange-500" />
+                    <Flame className="h-4 w-4 text-status-green" />
                     <div>
                       <p className="text-[10px] text-muted-foreground">Калории</p>
                       <p className="text-sm font-semibold">~{autoWorkout.calories}</p>
@@ -1112,7 +1119,7 @@ export default function Center() {
                   if (showSkipped) {
                     return (
                       <div className="rounded-xl bg-muted/30 px-3 py-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">Пропущено</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">Пропущено</span>
                       </div>
                     );
                   }
@@ -1482,7 +1489,7 @@ export default function Center() {
               {editingWorkout && (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="destructive"
                   className="flex-1 text-xs"
                   onClick={handleDeleteWorkout}
                 >

@@ -133,8 +133,8 @@ export function WorkoutCalendar({
 
   const statusColors: Record<DayStatus, string> = {
     completed: "bg-status-green",
-    partial: "bg-orange-500",
-    missed: "bg-red-500/60",
+    partial: "bg-status-amber",
+    missed: "bg-destructive",
     planned: "bg-primary/30",
     none: "",
   };
@@ -217,10 +217,10 @@ export function WorkoutCalendar({
           <span className="w-2 h-2 rounded-full bg-status-green" /> Выполнено
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-orange-500" /> Частично
+          <span className="w-2 h-2 rounded-full bg-status-amber" /> Частично
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-red-500/60" /> Пропуск
+          <span className="w-2 h-2 rounded-full bg-destructive" /> Пропуск
         </span>
       </div>
 

@@ -97,7 +97,7 @@ export function DevicesPopover() {
             <div className="space-y-1">
               {devices.map((device) => {
                 const Icon = device.icon;
-                const batteryColor = device.battery < 20 ? "text-red-500" : "text-foreground";
+                const batteryColor = device.battery < 20 ? "text-muted-foreground" : "text-foreground";
                 const statusText = device.connected
                   ? t("settings.connected")
                   : t("settings.notConnected");

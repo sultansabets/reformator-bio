@@ -114,8 +114,12 @@ export function testosteroneToScore(nmolL: number | undefined): number {
 }
 
 /**
- * Energy = состояние для физической/умственной нагрузки сегодня.
- * Based on: Sleep (replenishment) и Load (pressure on body).
+ * State = готовность к физической/умственной нагрузке сегодня.
+ * Зависит от: Sleep (восстановление) и Load (давление на организм).
+ *
+ * Принцип:
+ * - Чем выше сон → тем выше состояние
+ * - Чем выше нагрузка → тем ниже состояние
  */
 export function calculateEnergy(data: {
   sleep: number;
@@ -124,15 +128,12 @@ export function calculateEnergy(data: {
   const sleep = Number.isFinite(data.sleep) ? data.sleep : 50;
   const load = Number.isFinite(data.load) ? data.load : 0;
 
-  const recoveryCapacity = sleep;
-  let energy = recoveryCapacity - load * 0.6;
+  const recoveryFactor = sleep / 100;
+  const stressFactor = 1 - load / 100;
 
-  if (load > recoveryCapacity) {
-    const overload = load - recoveryCapacity;
-    energy -= overload * 0.5;
-  }
+  const stateScore = (recoveryFactor * 0.6 + stressFactor * 0.4) * 100;
 
-  return clamp(Math.round(energy), 0, 100);
+  return clamp(Math.round(stateScore), 0, 100);
 }
 
 /** Sleep percentage for UI (same as SleepScore, or simplified) */
