@@ -59,7 +59,7 @@ export function EnergyDetailSheet({ open, onOpenChange, energyDetail }: EnergyDe
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-xl font-semibold" style={{ color: "#D9FF00" }}>
+              <h2 className="text-xl font-semibold" style={{ color: "#37BE7E" }}>
                 Состояние — {energyScore}%
               </h2>
               <button

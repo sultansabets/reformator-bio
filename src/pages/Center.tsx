@@ -280,11 +280,11 @@ function convertHistoryToWorkoutDays(history: WorkoutHistoryEntry[]): WorkoutDay
 /**
  * Macro circle color based on progress:
  * - 0% (nothing added): dark gray #28282B
- * - > 0%: green #D9FF00
+ * - > 0%: green #37BE7E
  */
 function getMacroColor(progress: number): string {
   if (progress > 0) {
-    return "#D9FF00"; // green - active
+    return "#37BE7E"; // green - active
   }
   return "#28282B"; // dark gray - inactive
 }
@@ -320,7 +320,7 @@ function MacroCircle({
         style={{
           width: CIRCLE_SIZE,
           height: CIRCLE_SIZE,
-          filter: isActive ? `drop-shadow(0 0 8px rgba(217, 255, 0, ${glowOpacity}))` : "none",
+          filter: isActive ? `drop-shadow(0 0 8px rgba(55, 190, 126, ${glowOpacity}))` : "none",
         }}
       >
         <svg

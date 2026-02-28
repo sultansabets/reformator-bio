@@ -191,6 +191,7 @@
     "durationTitle": "Sleep Duration",
     "qualityTitle": "Sleep Quality",
     "phasesTitle": "Sleep Phases",
+    "structureTitle": "Sleep Structure",
     "recoveryTitle": "Recovery",
     "efficiency": "Efficiency",
     "latency": "Time to fall asleep",

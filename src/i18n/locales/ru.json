@@ -197,6 +197,7 @@
     "durationTitle": "Длительность сна",
     "qualityTitle": "Качество сна",
     "phasesTitle": "Фазы сна",
+    "structureTitle": "Структура сна за ночь",
     "recoveryTitle": "Восстановление",
     "efficiency": "Эффективность",
     "latency": "Время засыпания",

@@ -6,8 +6,8 @@
 export const METRIC_COLORS = {
   dark: "#28282B",    // 0-35% - low state
   light: "#C0C0C0",   // 35-70% - moderate state
-  green: "#D9FF00",   // 70-100% - excellent state
-  success: "#D9FF00", // alias for green
+  green: "#37BE7E",   // 70-100% - excellent state
+  success: "#37BE7E", // alias for green
 } as const;
 
 /**
@@ -23,7 +23,7 @@ export const SYSTEM_RED = "#770101";
 export const METRIC_COLORS_RGB = {
   dark: { r: 40, g: 40, b: 43 },
   light: { r: 192, g: 192, b: 192 },
-  green: { r: 217, g: 255, b: 0 },
+  green: { r: 55, g: 190, b: 126 },
 } as const;
 
 /**

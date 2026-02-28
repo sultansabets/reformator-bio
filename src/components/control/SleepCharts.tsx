@@ -123,6 +123,130 @@ function SleepPhasesTimeline({ deepPercent, remPercent, lightPercent, awakePerce
   );
 }
 
+interface SleepStructureChartProps {
+  deepPercent: number;
+  remPercent: number;
+  lightPercent: number;
+  awakePercent: number;
+  totalMinutes: number;
+}
+
+function SleepStructureChart({ deepPercent, remPercent, lightPercent, awakePercent, totalMinutes }: SleepStructureChartProps) {
+  const { t } = useTranslation();
+
+  const sleepCycles = useMemo(() => {
+    const cycles: { type: "deep" | "light" | "rem" | "awake"; duration: number }[] = [];
+    const numCycles = Math.max(3, Math.min(6, Math.round(totalMinutes / 90)));
+    
+    const deepTotal = (deepPercent / 100) * totalMinutes;
+    const remTotal = (remPercent / 100) * totalMinutes;
+    const lightTotal = (lightPercent / 100) * totalMinutes;
+    const awakeTotal = (awakePercent / 100) * totalMinutes;
+    
+    let deepRemaining = deepTotal;
+    let remRemaining = remTotal;
+    let lightRemaining = lightTotal;
+    let awakeRemaining = awakeTotal;
+    
+    for (let i = 0; i < numCycles; i++) {
+      const isFirstHalf = i < numCycles / 2;
+      const cycleWeight = 1 / numCycles;
+      
+      const lightDur = Math.round(lightRemaining * cycleWeight * (isFirstHalf ? 0.8 : 1.2));
+      if (lightDur > 0) {
+        cycles.push({ type: "light", duration: lightDur });
+        lightRemaining -= lightDur;
+      }
+      
+      const deepDur = Math.round(deepRemaining * cycleWeight * (isFirstHalf ? 1.5 : 0.5));
+      if (deepDur > 0) {
+        cycles.push({ type: "deep", duration: deepDur });
+        deepRemaining -= deepDur;
+      }
+      
+      const lightDur2 = Math.round(lightRemaining * cycleWeight * 0.5);
+      if (lightDur2 > 0) {
+        cycles.push({ type: "light", duration: lightDur2 });
+        lightRemaining -= lightDur2;
+      }
+      
+      const remDur = Math.round(remRemaining * cycleWeight * (isFirstHalf ? 0.6 : 1.4));
+      if (remDur > 0) {
+        cycles.push({ type: "rem", duration: remDur });
+        remRemaining -= remDur;
+      }
+      
+      if (awakeRemaining > 5 && i < numCycles - 1 && Math.random() > 0.5) {
+        const awakeDur = Math.min(5, Math.round(awakeRemaining * 0.3));
+        if (awakeDur > 0) {
+          cycles.push({ type: "awake", duration: awakeDur });
+          awakeRemaining -= awakeDur;
+        }
+      }
+    }
+    
+    if (lightRemaining > 0) cycles.push({ type: "light", duration: Math.round(lightRemaining) });
+    if (deepRemaining > 0) cycles.push({ type: "deep", duration: Math.round(deepRemaining) });
+    if (remRemaining > 0) cycles.push({ type: "rem", duration: Math.round(remRemaining) });
+    if (awakeRemaining > 0) cycles.push({ type: "awake", duration: Math.round(awakeRemaining) });
+    
+    return cycles.filter(c => c.duration > 0);
+  }, [deepPercent, remPercent, lightPercent, awakePercent, totalMinutes]);
+
+  if (sleepCycles.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t("sleepDetail.noData")}
+      </p>
+    );
+  }
+
+  const legend = [
+    { key: "deep", color: PHASE_COLORS.deep, label: t("sleepDetail.phaseDeep") },
+    { key: "light", color: PHASE_COLORS.light, label: t("sleepDetail.phaseLight") },
+    { key: "rem", color: PHASE_COLORS.rem, label: t("sleepDetail.phaseRem") },
+    { key: "awake", color: PHASE_COLORS.awake, label: t("sleepDetail.phaseAwake") },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="h-6 w-full overflow-hidden rounded-lg flex">
+        {sleepCycles.map((cycle, index) => (
+          <motion.div
+            key={`${cycle.type}-${index}`}
+            className="h-full"
+            style={{ 
+              backgroundColor: PHASE_COLORS[cycle.type],
+              flex: cycle.duration,
+            }}
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ duration: 0.4, delay: index * 0.03, ease: "easeOut" }}
+          />
+        ))}
+      </div>
+      
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>22:00</span>
+        <span>02:00</span>
+        <span>06:00</span>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        {legend.map((item) => (
+          <div key={item.key} className="flex items-center gap-2">
+            <div 
+              className="h-2.5 w-2.5 rounded-sm shrink-0" 
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-xs text-muted-foreground">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface DurationBarProps {
   actualMinutes: number;
   targetMinutes: number;
@@ -131,7 +255,7 @@ interface DurationBarProps {
 function DurationBar({ actualMinutes, targetMinutes }: DurationBarProps) {
   const percent = Math.min(100, (actualMinutes / targetMinutes) * 100);
   const isDeficit = actualMinutes < targetMinutes;
-  const color = isDeficit ? "#F59E0B" : "#22C55E";
+  const color = isDeficit ? "#F59E0B" : "#37BE7E";
 
   return (
     <div className="space-y-3">
@@ -218,7 +342,7 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
   if (!sleepDetail || !displayData) return null;
 
   const qualityColor = sleepDetail.sleepScore >= 80 
-    ? "#22C55E" 
+    ? "#37BE7E" 
     : sleepDetail.sleepScore >= 60 
       ? "#F59E0B" 
       : "#EF4444";
@@ -273,7 +397,21 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
         />
       </section>
 
-      {/* 4. Recovery Metrics */}
+      {/* 4. Sleep Structure Chart */}
+      <section>
+        <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("sleepDetail.structureTitle")}
+        </h3>
+        <SleepStructureChart
+          deepPercent={displayData.deepPercent}
+          remPercent={displayData.remPercent}
+          lightPercent={displayData.lightPercent}
+          awakePercent={displayData.awakePercent}
+          totalMinutes={displayData.actualMinutes}
+        />
+      </section>
+
+      {/* 5. Recovery Metrics */}
       <section>
         <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("sleepDetail.recoveryTitle")}
