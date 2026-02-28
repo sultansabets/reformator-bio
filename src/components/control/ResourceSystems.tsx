@@ -56,7 +56,7 @@ export function ResourceSystems({
       label: t("systems.physical"),
       percent: physicalPercent ?? 58,
       sources: [t("systems.workouts"), t("systems.recovery"), t("systems.muscleMass"), t("systems.protein")],
-      iconColor: "#D6FF00",
+      iconColor: "#DBFE02",
       iconBg: "rgba(55,190,126,0.15)",
     },
     {

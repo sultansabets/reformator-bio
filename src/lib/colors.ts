@@ -4,15 +4,15 @@
  */
 
 export const METRIC_COLORS = {
-  green: "#D6FF00",   // Pantone Sun Glare - excellent state
-  orange: "#FF5A2E",  // Pantone Exuberant Orange - moderate state
-  red: "#FF3B30",     // Brand red - poor state / overload
+  green: "#DBFE02",
+  orange: "#FF582B",
+  red: "#770101",
 } as const;
 
 export const METRIC_COLORS_RGB = {
-  green: { r: 214, g: 255, b: 0 },
-  orange: { r: 255, g: 90, b: 46 },
-  red: { r: 255, g: 59, b: 48 },
+  green: { r: 219, g: 254, b: 2 },
+  orange: { r: 255, g: 88, b: 43 },
+  red: { r: 119, g: 1, b: 1 },
 } as const;
 
 /**

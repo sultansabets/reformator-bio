@@ -36,9 +36,9 @@
 
     --radius: 0.5rem;
 
-    --status-green: 70 100% 50%;
-    --status-amber: 13 100% 59%;
-    --status-red: 4 100% 59%;
+    --status-green: 68 99% 50%;
+    --status-amber: 13 100% 58%;
+    --status-red: 0 98% 24%;
 
     --store-bg: 0 0% 0%;
 
@@ -84,9 +84,9 @@
 
     --radius: 0.75rem;
 
-    --status-green: 70 100% 50%;
-    --status-amber: 13 100% 59%;
-    --status-red: 4 100% 59%;
+    --status-green: 68 99% 50%;
+    --status-amber: 13 100% 58%;
+    --status-red: 0 98% 24%;
 
     --store-bg: 0 0% 98%;
 
