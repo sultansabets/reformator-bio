@@ -43,3 +43,19 @@ export function validateBirthDate(value: string): string | null {
   if (age < 16) return i18n.t("errors.minAge");
   return null;
 }
+
+/**
+ * Format date as DD.MM.YYYY for medical card "Актуально на" display.
+ * Accepts ISO string (YYYY-MM-DD), timestamp, or Date object.
+ */
+export function formatMedicalDate(date: string | number | Date): string {
+  if (!date) return "";
+  const d = typeof date === "string"
+    ? new Date(date.includes("T") ? date : date + "T12:00:00")
+    : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}.${month}.${year}`;
+}

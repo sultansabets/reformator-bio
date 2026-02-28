@@ -1,7 +1,19 @@
-export const medicalSections = [
+export interface MedicalSection {
+  id: string;
+  title: string;
+  lastUpdated?: string;
+  content: (
+    | { type: "pdf"; url: string }
+    | { type: "image"; url: string }
+    | { type: "text"; text: string }
+  )[];
+}
+
+export const medicalSections: MedicalSection[] = [
   {
     id: "analyses",
     title: "Результаты анализов",
+    lastUpdated: "2026-02-20",
     content: [
       {
         type: "pdf",
@@ -13,6 +25,7 @@ export const medicalSections = [
   {
     id: "uzi",
     title: "УЗИ",
+    lastUpdated: "2026-02-23",
     content: [
       {
         type: "image",
@@ -71,6 +84,7 @@ export const medicalSections = [
   {
     id: "main-doctor",
     title: "Главный врач",
+    lastUpdated: "2026-02-22",
     content: [
       {
         type: "text",
@@ -86,6 +100,7 @@ export const medicalSections = [
   {
     id: "sport-doctor",
     title: "Спортивный врач",
+    lastUpdated: "2026-02-21",
     content: [
       {
         type: "image",
@@ -104,6 +119,7 @@ export const medicalSections = [
   {
     id: "rehab",
     title: "Реабилитолог",
+    lastUpdated: "2026-02-19",
     content: [
       {
         type: "text",
@@ -118,6 +134,7 @@ export const medicalSections = [
   {
     id: "psychotherapist",
     title: "Психотерапевт",
+    lastUpdated: "2026-02-18",
     content: [
       {
         type: "text",

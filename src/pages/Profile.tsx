@@ -38,9 +38,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatDateRu, validateBirthDate } from "@/lib/dateFormat";
+import { formatDateRu, validateBirthDate, formatMedicalDate } from "@/lib/dateFormat";
 import { type NutritionGoal } from "@/lib/health";
-import { medicalSections } from "@/data/medicalMock";
+import { medicalSections, type MedicalSection } from "@/data/medicalMock";
 
 function calculateAge(dob: string): number {
   const d = new Date(dob);
@@ -114,35 +114,39 @@ const MOCK_SUBSCRIPTIONS = [
 ];
 
 function MedicalTab() {
-  const { t } = useTranslation();
-  const [medicalCard, setMedicalCard] = useState<any | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setMedicalCard({
-      sections: medicalSections,
-    });
-  }, []);
-
   return (
-    <div className="space-y-4">
-      <Card className="border border-border">
-        <CardContent className="divide-y divide-border p-0">
-          {(medicalCard?.sections || []).map((section: any) => (
-            <button
-              key={section.id}
-              type="button"
-              onClick={() => navigate(`/medical/${encodeURIComponent(section.id)}`)}
-              className="flex w-full items-center justify-between px-4 py-3 text-left"
-            >
-              <span className="text-sm font-medium text-foreground">
+    <div className="space-y-2">
+      {medicalSections.map((section: MedicalSection) => (
+        <Card
+          key={section.id}
+          role="button"
+          tabIndex={0}
+          className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
+          onClick={() => navigate(`/medical/${encodeURIComponent(section.id)}`)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              navigate(`/medical/${encodeURIComponent(section.id)}`);
+            }
+          }}
+        >
+          <div className="flex w-full items-center justify-between p-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
                 {section.title}
-              </span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
-        </CardContent>
-      </Card>
+              </p>
+              {section.lastUpdated && (
+                <p className="mt-1 text-xs text-muted-foreground opacity-80">
+                  Актуально на {formatMedicalDate(section.lastUpdated)}
+                </p>
+              )}
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
