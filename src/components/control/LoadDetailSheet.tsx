@@ -129,10 +129,10 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
         >
           {/* 1. СТАТУС НАГРУЗКИ */}
           <section className="pt-0 pb-6">
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.statusTitle")}
             </h3>
-            <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col items-center gap-4 text-center">
               <LoadRing percent={totalLoad} color={loadColor} />
               <p className="text-sm font-medium text-foreground">
                 {t(STATUS_LABEL[status])}
@@ -145,12 +145,12 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
 
           {/* 2. ФИЗИЧЕСКАЯ НАГРУЗКА */}
           <section className="pb-6">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.physicalTitle")}
             </h3>
-            <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col items-center gap-4">
               <LoadRing percent={bodyLoad} color={getMetricColor(bodyLoad, true)} />
-              <ul className="w-full space-y-2 text-sm text-foreground">
+              <ul className="w-full max-w-xs mx-auto space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">{t("loadDetail.strength")}</span>
                   <span className="font-medium tabular-nums">{strengthLoad}%</span>
@@ -169,12 +169,12 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
 
           {/* 3. НЕРВНАЯ СИСТЕМА */}
           <section className="pb-6">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.neuroTitle")}
             </h3>
-            <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col items-center gap-4">
               <LoadRing percent={neuroLoad} color={getMetricColor(neuroLoad, true)} />
-              <ul className="w-full space-y-2 text-sm text-foreground">
+              <ul className="w-full max-w-xs mx-auto space-y-2 text-sm text-foreground">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">{t("loadDetail.stress")}</span>
                   <span className="font-medium tabular-nums">{stressLoad}%</span>
@@ -192,14 +192,16 @@ export function LoadDetailSheet({ open, onOpenChange, loadPercent }: LoadDetailS
           </section>
 
           {/* 4. ТРЕНД ЗА 7 ДНЕЙ */}
-          <LoadCharts loadDetail={detail} />
+          <div className="mx-auto">
+            <LoadCharts loadDetail={detail} />
+          </div>
 
           {/* 5. РЕКОМЕНДАЦИИ */}
-          <section className="pb-6">
+          <section className="pb-6 text-center">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("loadDetail.recommendationTitle")}
             </h3>
-            <p className="text-sm text-foreground">
+            <p className="text-sm text-foreground max-w-sm mx-auto">
               {t(recommendation)}
             </p>
           </section>

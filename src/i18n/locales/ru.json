@@ -191,7 +191,22 @@
     "actualSleepBlock": "Время сна",
     "sleepLatencyBlock": "Заснул после",
     "heartRateBlock": "Пульс во сне",
-    "notEnoughData": "Недостаточно данных для построения трендов. Требуется минимум 5 ночей."
+    "notEnoughData": "Недостаточно данных для построения трендов. Требуется минимум 5 ночей.",
+    "today": "Сегодня",
+    "noData": "Нет данных за выбранную дату",
+    "durationTitle": "Длительность сна",
+    "qualityTitle": "Качество сна",
+    "phasesTitle": "Фазы сна",
+    "recoveryTitle": "Восстановление",
+    "efficiency": "Эффективность",
+    "latency": "Время засыпания",
+    "awakenings": "Пробуждения",
+    "phaseAwake": "Бодрствование",
+    "avgHeartRate": "Средний пульс",
+    "bpm": "уд/мин",
+    "hrvLabel": "Вариабельность пульса",
+    "sleepDebtLabel": "Дефицит сна",
+    "notEnoughDataForTrends": "Для отображения трендов требуется минимум 5 ночей."
   },
   "energyDetail": {
     "title": "Состояние",

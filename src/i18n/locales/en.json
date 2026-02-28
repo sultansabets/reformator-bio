@@ -185,7 +185,22 @@
     "actualSleepBlock": "Actual sleep",
     "sleepLatencyBlock": "Fell asleep after",
     "heartRateBlock": "Heart rate during sleep",
-    "notEnoughData": "Not enough data to build trends. Minimum 5 nights required."
+    "notEnoughData": "Not enough data to build trends. Minimum 5 nights required.",
+    "today": "Today",
+    "noData": "No data for selected date",
+    "durationTitle": "Sleep Duration",
+    "qualityTitle": "Sleep Quality",
+    "phasesTitle": "Sleep Phases",
+    "recoveryTitle": "Recovery",
+    "efficiency": "Efficiency",
+    "latency": "Time to fall asleep",
+    "awakenings": "Awakenings",
+    "phaseAwake": "Awake",
+    "avgHeartRate": "Avg heart rate",
+    "bpm": "bpm",
+    "hrvLabel": "Heart rate variability",
+    "sleepDebtLabel": "Sleep debt",
+    "notEnoughDataForTrends": "Minimum 5 nights required to display trends."
   },
   "energyDetail": {
     "title": "State",

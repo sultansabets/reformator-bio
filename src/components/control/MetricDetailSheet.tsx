@@ -5,6 +5,7 @@ import { SleepDetailSheet } from "./SleepDetailSheet";
 import { EnergyDetailSheet } from "./EnergyDetailSheet";
 import { LoadDetailSheet } from "./LoadDetailSheet";
 import { useHealthStore } from "@/store/healthStore";
+import { useDateStore } from "@/store/dateStore";
 
 export type MetricKey = "energy" | "hormones" | "strength" | "sleep" | "load";
 
@@ -56,6 +57,7 @@ export function MetricDetailSheet({
   const { t } = useTranslation();
   const sleepDetail = useHealthStore((s) => s.sleepDetail);
   const energyDetail = useHealthStore((s) => s.energyDetail);
+  const selectedDate = useDateStore((s) => s.selectedDate);
   const info = detail ? METRIC_KEYS[detail.key] : null;
 
   if (detail?.key === "sleep") {
@@ -64,6 +66,7 @@ export function MetricDetailSheet({
         open={open}
         onOpenChange={onOpenChange}
         sleepDetail={sleepDetail}
+        selectedDate={selectedDate}
       />
     );
   }
