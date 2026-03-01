@@ -15,12 +15,17 @@ interface ParticleSphereProps {
 
 const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSphereProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const materialRef = useRef<THREE.PointsMaterial>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
   
   const targetColor = useRef(new THREE.Color(color));
   const currentColor = useRef(new THREE.Color(color));
   const time = useRef(0);
   const basePositions = useRef<Float32Array | null>(null);
+
+  const uniforms = useMemo(() => ({
+    uColor: { value: new THREE.Color(color) },
+    uInnerRadius: { value: INNER_RADIUS }
+  }), []);
 
   const geometry = useMemo(() => {
     const positions = new Float32Array(PARTICLE_COUNT * 3);
@@ -68,23 +73,9 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
           const i3 = i * 3;
           const noise = Math.sin(time.current * 2 + i * 0.01) * 0.015;
           
-          const bx = base[i3];
-          const by = base[i3 + 1];
-          const bz = base[i3 + 2];
-          
-          const originalRadius = Math.sqrt(bx * bx + by * by + bz * bz);
-          
-          let newRadius = originalRadius * (1 + noise);
-          
-          if (newRadius < INNER_RADIUS) {
-            newRadius = INNER_RADIUS;
-          }
-          
-          const scale = newRadius / originalRadius;
-          
-          positions[i3] = bx * scale;
-          positions[i3 + 1] = by * scale;
-          positions[i3 + 2] = bz * scale;
+          positions[i3] = base[i3] * (1 + noise);
+          positions[i3 + 1] = base[i3 + 1] * (1 + noise);
+          positions[i3 + 2] = base[i3 + 2] * (1 + noise);
         }
         geometry.attributes.position.needsUpdate = true;
       }
@@ -92,22 +83,40 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
 
     if (materialRef.current) {
       currentColor.current.lerp(targetColor.current, delta * LERP_SPEED);
-      materialRef.current.color.copy(currentColor.current);
+      materialRef.current.uniforms.uColor.value.copy(currentColor.current);
     }
   });
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
+      <shaderMaterial
         ref={materialRef}
-        size={0.038}
-        color={color}
         transparent
-        opacity={0.85}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
         depthWrite={false}
         depthTest={true}
+        blending={THREE.AdditiveBlending}
+        uniforms={uniforms}
+        vertexShader={`
+          varying vec3 vPosition;
+          void main() {
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = 3.0;
+          }
+        `}
+        fragmentShader={`
+          uniform vec3 uColor;
+          uniform float uInnerRadius;
+          varying vec3 vPosition;
+
+          void main() {
+            float r = length(vPosition);
+            
+            if (r < uInnerRadius) discard;
+            
+            gl_FragColor = vec4(uColor, 0.85);
+          }
+        `}
       />
     </points>
   );
