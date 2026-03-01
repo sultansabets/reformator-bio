@@ -31,14 +31,12 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const phi = Math.acos(2 * Math.random() - 1);
-      const theta = Math.random() * Math.PI * 2;
-      
+      const angle = Math.random() * Math.PI * 2;
       const r = INNER_RADIUS + Math.random() * (OUTER_RADIUS - INNER_RADIUS);
       
-      const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = r * Math.sin(phi) * Math.sin(theta);
-      const z = r * Math.cos(phi);
+      const x = r * Math.cos(angle);
+      const y = r * Math.sin(angle);
+      const z = 0;
       
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
@@ -60,7 +58,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
     time.current += delta;
     
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.1;
+      pointsRef.current.rotation.z += delta * 0.1;
       
       const pulse = 1 + Math.sin(time.current * 1.5) * 0.02;
       pointsRef.current.scale.setScalar(pulse);
@@ -75,7 +73,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
           
           positions[i3] = base[i3] * (1 + noise);
           positions[i3 + 1] = base[i3 + 1] * (1 + noise);
-          positions[i3 + 2] = base[i3 + 2] * (1 + noise);
+          positions[i3 + 2] = 0;
         }
         geometry.attributes.position.needsUpdate = true;
       }
@@ -101,7 +99,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
           void main() {
             vPosition = position;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = 2.5;
+            gl_PointSize = 3.5;
           }
         `}
         fragmentShader={`
