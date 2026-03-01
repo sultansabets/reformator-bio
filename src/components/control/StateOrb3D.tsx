@@ -68,9 +68,23 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
           const i3 = i * 3;
           const noise = Math.sin(time.current * 2 + i * 0.01) * 0.015;
           
-          positions[i3] = base[i3] * (1 + noise);
-          positions[i3 + 1] = base[i3 + 1] * (1 + noise);
-          positions[i3 + 2] = base[i3 + 2] * (1 + noise);
+          const bx = base[i3];
+          const by = base[i3 + 1];
+          const bz = base[i3 + 2];
+          
+          const originalRadius = Math.sqrt(bx * bx + by * by + bz * bz);
+          
+          let newRadius = originalRadius * (1 + noise);
+          
+          if (newRadius < INNER_RADIUS) {
+            newRadius = INNER_RADIUS;
+          }
+          
+          const scale = newRadius / originalRadius;
+          
+          positions[i3] = bx * scale;
+          positions[i3 + 1] = by * scale;
+          positions[i3 + 2] = bz * scale;
         }
         geometry.attributes.position.needsUpdate = true;
       }
