@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import { getMetricColorHex } from "@/lib/colors";
 
-const PARTICLE_COUNT = 4000;
+const PARTICLE_COUNT = 2600;
 const OUTER_RADIUS = 1.55;
 const INNER_RADIUS = OUTER_RADIUS * 0.5;
 const LERP_SPEED = 3.0;
@@ -91,14 +91,14 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
         transparent
         depthWrite={false}
         depthTest={true}
-        blending={THREE.AdditiveBlending}
+        blending={THREE.NormalBlending}
         uniforms={uniforms}
         vertexShader={`
           varying vec3 vPosition;
           void main() {
             vPosition = position;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = 3.5;
+            gl_PointSize = 4.5;
           }
         `}
         fragmentShader={`
@@ -107,20 +107,20 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
 
           void main() {
             vec2 coord = gl_PointCoord - vec2(0.5);
-            float pointDist = length(coord);
+            float d = length(coord);
             
-            if (pointDist > 0.5) discard;
+            if (d > 0.5) discard;
             
             float r = length(vPosition);
-            
             float outerRadius = 1.55;
-            float textRadius = outerRadius * 0.35;
             
-            float centerFade = smoothstep(0.0, textRadius, r);
+            float centerZone = outerRadius * 0.45;
             
-            float pointAlpha = 1.0 - smoothstep(0.0, 0.5, pointDist);
+            float centerFade = smoothstep(0.0, centerZone, r);
             
-            float alpha = pointAlpha * centerFade * 0.9;
+            float pointAlpha = 1.0 - smoothstep(0.0, 0.5, d);
+            
+            float alpha = pointAlpha * centerFade * 0.8;
             
             gl_FragColor = vec4(uColor, alpha);
           }
