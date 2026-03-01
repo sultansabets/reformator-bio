@@ -101,7 +101,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
           void main() {
             vPosition = position;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = 3.0;
+            gl_PointSize = 2.5;
           }
         `}
         fragmentShader={`
@@ -114,7 +114,14 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
             
             if (r < uInnerRadius) discard;
             
-            gl_FragColor = vec4(uColor, 0.85);
+            vec2 coord = gl_PointCoord - vec2(0.5);
+            float dist = length(coord);
+            
+            if (dist > 0.5) discard;
+            
+            float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+            
+            gl_FragColor = vec4(uColor, alpha * 0.9);
           }
         `}
       />
