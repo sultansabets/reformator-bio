@@ -4,9 +4,8 @@ import * as THREE from "three";
 
 import { getMetricColorHex } from "@/lib/colors";
 
-const PARTICLE_COUNT = 3000;
+const PARTICLE_COUNT = 3200;
 const OUTER_RADIUS = 1.55;
-const INNER_RADIUS = OUTER_RADIUS * 0.5;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
@@ -31,7 +30,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
     
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const r = INNER_RADIUS + Math.random() * (OUTER_RADIUS - INNER_RADIUS);
+      const r = OUTER_RADIUS * Math.sqrt(Math.random());
       
       const x = r * Math.cos(angle);
       const y = r * Math.sin(angle);
@@ -116,11 +115,9 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
             float r = length(vPosition);
             float outerRadius = 1.55;
             
-            float centerSoft = smoothstep(0.0, outerRadius * 0.6, r);
-            
             float edgeBoost = smoothstep(outerRadius * 0.6, outerRadius, r);
             
-            float alpha = pointMask * (0.35 + centerSoft * 0.4 + edgeBoost * 0.5);
+            float alpha = pointMask * (0.6 + edgeBoost * 0.6);
             
             gl_FragColor = vec4(uColor, alpha);
           }
