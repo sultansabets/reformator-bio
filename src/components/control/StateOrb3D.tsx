@@ -107,19 +107,20 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
 
           void main() {
             vec2 coord = gl_PointCoord - vec2(0.5);
-            float dist = length(coord);
+            float pointDist = length(coord);
             
-            if (dist > 0.5) discard;
+            if (pointDist > 0.5) discard;
             
             float r = length(vPosition);
             
             float outerRadius = 1.55;
-            float fadeStart = outerRadius * 0.35;
-            float fadeEnd = outerRadius * 0.55;
+            float textRadius = outerRadius * 0.35;
             
-            float centerFade = smoothstep(fadeStart, fadeEnd, r);
+            float centerFade = smoothstep(0.0, textRadius, r);
             
-            float alpha = (1.0 - smoothstep(0.0, 0.5, dist)) * centerFade * 0.9;
+            float pointAlpha = 1.0 - smoothstep(0.0, 0.5, pointDist);
+            
+            float alpha = pointAlpha * centerFade * 0.9;
             
             gl_FragColor = vec4(uColor, alpha);
           }
