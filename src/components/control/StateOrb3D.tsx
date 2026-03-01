@@ -6,7 +6,7 @@ import { getMetricColorHex } from "@/lib/colors";
 
 const PARTICLE_COUNT = 4000;
 const OUTER_RADIUS = 1.55;
-const INNER_RADIUS = OUTER_RADIUS * 0.45;
+const INNER_RADIUS = OUTER_RADIUS * 0.5;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
