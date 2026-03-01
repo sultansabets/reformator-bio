@@ -23,8 +23,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
   const basePositions = useRef<Float32Array | null>(null);
 
   const uniforms = useMemo(() => ({
-    uColor: { value: new THREE.Color(color) },
-    uInnerRadius: { value: INNER_RADIUS }
+    uColor: { value: new THREE.Color(color) }
   }), []);
 
   const geometry = useMemo(() => {
@@ -104,22 +103,25 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
         `}
         fragmentShader={`
           uniform vec3 uColor;
-          uniform float uInnerRadius;
           varying vec3 vPosition;
 
           void main() {
-            float r = length(vPosition);
-            
-            if (r < uInnerRadius) discard;
-            
             vec2 coord = gl_PointCoord - vec2(0.5);
             float dist = length(coord);
             
             if (dist > 0.5) discard;
             
-            float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+            float r = length(vPosition);
             
-            gl_FragColor = vec4(uColor, alpha * 0.9);
+            float outerRadius = 1.55;
+            float fadeStart = outerRadius * 0.35;
+            float fadeEnd = outerRadius * 0.55;
+            
+            float centerFade = smoothstep(fadeStart, fadeEnd, r);
+            
+            float alpha = (1.0 - smoothstep(0.0, 0.5, dist)) * centerFade * 0.9;
+            
+            gl_FragColor = vec4(uColor, alpha);
           }
         `}
       />
