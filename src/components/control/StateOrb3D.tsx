@@ -5,7 +5,8 @@ import * as THREE from "three";
 import { getMetricColorHex } from "@/lib/colors";
 
 const PARTICLE_COUNT = 4000;
-const SPHERE_RADIUS = 1.55;
+const SPHERE_RADIUS = 1.42;
+const INNER_RADIUS = SPHERE_RADIUS * 0.55;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
@@ -28,9 +29,11 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
       const phi = Math.acos(2 * Math.random() - 1);
       const theta = Math.random() * Math.PI * 2;
       
-      const x = SPHERE_RADIUS * Math.sin(phi) * Math.cos(theta);
-      const y = SPHERE_RADIUS * Math.sin(phi) * Math.sin(theta);
-      const z = SPHERE_RADIUS * Math.cos(phi);
+      const r = INNER_RADIUS + Math.random() * (SPHERE_RADIUS * 0.94 - INNER_RADIUS);
+      
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
       
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
@@ -86,10 +89,11 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
         size={0.038}
         color={color}
         transparent
-        opacity={0.9}
+        opacity={0.85}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
         depthWrite={false}
+        depthTest={true}
       />
     </points>
   );
