@@ -5,8 +5,8 @@ import * as THREE from "three";
 import { getMetricColorHex } from "@/lib/colors";
 
 const PARTICLE_COUNT = 4000;
-const SPHERE_RADIUS = 1.42;
-const INNER_RADIUS = SPHERE_RADIUS * 0.55;
+const OUTER_RADIUS = 1.55;
+const INNER_RADIUS = OUTER_RADIUS * 0.45;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
@@ -29,7 +29,7 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
       const phi = Math.acos(2 * Math.random() - 1);
       const theta = Math.random() * Math.PI * 2;
       
-      const r = INNER_RADIUS + Math.random() * (SPHERE_RADIUS * 0.94 - INNER_RADIUS);
+      const r = INNER_RADIUS + Math.random() * (OUTER_RADIUS - INNER_RADIUS);
       
       const x = r * Math.sin(phi) * Math.cos(theta);
       const y = r * Math.sin(phi) * Math.sin(theta);
@@ -99,38 +99,6 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
   );
 });
 
-const GlowHalo = memo(function GlowHalo({ color }: { color: string }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const targetColor = useRef(new THREE.Color(color));
-  const currentColor = useRef(new THREE.Color(color));
-
-  useEffect(() => {
-    targetColor.current.set(color);
-  }, [color]);
-
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.z += delta * 0.03;
-      const mat = meshRef.current.material as THREE.MeshBasicMaterial;
-      currentColor.current.lerp(targetColor.current, delta * LERP_SPEED);
-      mat.color.copy(currentColor.current);
-    }
-  });
-
-  return (
-    <mesh ref={meshRef}>
-      <torusGeometry args={[SPHERE_RADIUS + 0.1, 0.02, 16, 100]} />
-      <meshBasicMaterial
-        color={color}
-        transparent
-        opacity={0.3}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-});
-
 interface StateOrb3DProps {
   score: number;
 }
@@ -147,7 +115,6 @@ function StateOrb3D({ score }: StateOrb3DProps) {
         dpr={[1, 2]}
       >
         <ParticleSphere color={color} />
-        <GlowHalo color={color} />
       </Canvas>
     </div>
   );
