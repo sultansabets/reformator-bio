@@ -21,10 +21,11 @@ function getTodayISO(): string {
 
 /**
  * Fetches metrics summary. Date optional — backend returns today if omitted.
+ * Uses token for auth; userId not required (backend identifies user from token).
  */
 export function useMetricsSummaryQuery(
   date: string | undefined,
-  userId: string | undefined
+  isAuthenticated: boolean
 ) {
   const setFromApiMetrics = useHealthStore((s) => s.setFromApiMetrics);
   const hasToken = !!getAccessToken();
@@ -32,7 +33,7 @@ export function useMetricsSummaryQuery(
   const query = useQuery({
     queryKey: [METRICS_QUERY_KEY, "summary", date ?? "today"],
     queryFn: () => getMetricsSummary(date),
-    enabled: !!userId && hasToken,
+    enabled: isAuthenticated && hasToken,
     staleTime: 60 * 1000,
     retry: 1,
   });
@@ -49,18 +50,19 @@ export function useMetricsSummaryQuery(
 
 /**
  * Fetches metrics range using startDate and endDate.
+ * Uses token for auth; userId not required.
  */
 export function useMetricsRangeQuery(
   startDate: string | undefined,
   endDate: string | undefined,
-  userId: string | undefined
+  isAuthenticated: boolean
 ) {
   const hasToken = !!getAccessToken();
 
   return useQuery({
     queryKey: [METRICS_QUERY_KEY, "range", startDate, endDate],
     queryFn: () => getMetricsRange(startDate!, endDate!),
-    enabled: !!startDate && !!endDate && !!userId && hasToken,
+    enabled: !!startDate && !!endDate && isAuthenticated && hasToken,
     staleTime: 60 * 1000,
     retry: 1,
   });

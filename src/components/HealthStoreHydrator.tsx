@@ -21,7 +21,7 @@ export function HealthStoreHydrator() {
   const { user } = useAuth();
   const hydrate = useHealthStore((s) => s.hydrate);
   const today = getTodayISO();
-  const metricsQuery = useMetricsSummaryQuery(today, user?.id);
+  const metricsQuery = useMetricsSummaryQuery(today, !!getAccessToken());
   const hasToken = !!getAccessToken();
 
   useEffect(() => {

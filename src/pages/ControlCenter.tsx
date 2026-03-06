@@ -34,7 +34,7 @@ const ControlCenter = () => {
   const hydrateForDate = useHealthStore((s) => s.hydrateForDate);
   const hydrate = useHealthStore((s) => s.hydrate);
 
-  const metricsQuery = useMetricsSummaryQuery(selectedDate, user?.id);
+  const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
   const hasToken = !!getAccessToken();
 
   useEffect(() => {

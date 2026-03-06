@@ -1,8 +1,9 @@
 /**
  * Auth API endpoints.
+ * Backend returns only accessToken and refreshToken — no user object.
  */
 
-import { apiFetch, setAccessToken } from "./apiClient";
+import { apiFetch, setAccessToken, setRefreshToken } from "./apiClient";
 
 export interface LoginRequest {
   phone?: string;
@@ -12,23 +13,12 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  user: {
-    id: string;
-    phone?: string;
-    email?: string;
-    nickname?: string;
-    firstName?: string;
-    lastName?: string;
-    weight?: number;
-    height?: number;
-    dob?: string;
-    activityLevel?: string;
-  };
+  refreshToken: string;
 }
 
 /**
  * POST /auth/login
- * Saves accessToken to localStorage on success.
+ * Stores accessToken and refreshToken in localStorage on success.
  */
 export async function login(
   loginId: string,
@@ -47,6 +37,9 @@ export async function login(
 
   if (res.accessToken) {
     setAccessToken(res.accessToken);
+  }
+  if (res.refreshToken) {
+    setRefreshToken(res.refreshToken);
   }
 
   return res;

@@ -11,7 +11,7 @@ import {
   type AppUser,
 } from "@/lib/userStorage";
 import { login as apiLogin } from "@/api/authApi";
-import { clearAccessToken, getAccessToken } from "@/api/apiClient";
+import { clearAccessToken, clearRefreshToken, getAccessToken } from "@/api/apiClient";
 import { getStoredApiUser, setStoredApiUser, type ApiUser } from "@/api/authStorage";
 
 const LEGACY_USER_KEY = "reformator_bio_user";
@@ -173,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     migrateLegacyUserIfNeeded();
     return getCurrentUser();
   });
-  const isAuthenticated = !!user?.id;
+  const isAuthenticated = !!getAccessToken() || !!user?.id;
 
   useEffect(() => {
     setUser(getCurrentUser());
@@ -232,9 +232,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await apiLogin(loginId.trim(), password);
       if (res.accessToken) {
-        setStoredApiUser(res.user);
-        setCurrentUserId(res.user.id);
-        setUser(apiUserToUserWithFullName(res.user));
+        setStoredApiUser(null);
+        setCurrentUserId(null);
+        setUser(null);
         return { success: true };
       }
       return { success: false, error: "Неверный ответ сервера." };
@@ -248,6 +248,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     clearAccessToken();
+    clearRefreshToken();
     setStoredApiUser(null);
     setCurrentUserId(null);
     setUser(null);
