@@ -59,7 +59,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           transform={`rotate(-90 ${center} ${center})`}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
@@ -67,7 +67,7 @@ const ReadinessRing = ({ score, statusLabel }: ReadinessRingProps) => {
           className="text-5xl font-bold tracking-tight text-foreground"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          transition={{ delay: 0.15, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         >
           {displayScore}
         </motion.span>

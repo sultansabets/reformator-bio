@@ -65,7 +65,7 @@ function QualityRing({ percent, color }: QualityRingProps) {
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           transform={`rotate(-90 ${center} ${center})`}
         />
       </svg>
@@ -103,7 +103,7 @@ function SleepPhasesTimeline({ deepPercent, remPercent, lightPercent, awakePerce
             style={{ backgroundColor: phase.color }}
             initial={{ width: 0 }}
             animate={{ width: `${phase.percent}%` }}
-            transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
+            transition={{ duration: 0.32, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
           />
         ))}
       </div>
@@ -222,7 +222,7 @@ function SleepStructureChart({ deepPercent, remPercent, lightPercent, awakePerce
             }}
             initial={{ opacity: 0, scaleX: 0 }}
             animate={{ opacity: 1, scaleX: 1 }}
-            transition={{ duration: 0.4, delay: index * 0.03, ease: "easeOut" }}
+            transition={{ duration: 0.32, delay: index * 0.03, ease: [0.22, 1, 0.36, 1] }}
           />
         ))}
       </div>
@@ -279,7 +279,7 @@ function DurationBar({ actualMinutes, targetMinutes }: DurationBarProps) {
           style={{ backgroundColor: color }}
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         />
       </div>
     </div>

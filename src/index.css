@@ -120,6 +120,22 @@
 }
 
 @layer base {
+  /* Motion tokens */
+  :root {
+    --motion-fast: 120ms;
+    --motion-normal: 200ms;
+    --motion-slow: 320ms;
+    --motion-ease-primary: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-ease-secondary: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    @apply transition-colors;
+    transition-duration: var(--motion-normal);
+    -webkit-tap-highlight-color: transparent;
+  }
+
   * {
     @apply border-border;
   }
@@ -132,13 +148,9 @@
     outline: none;
   }
 
-  html {
-    @apply transition-colors duration-300;
-    -webkit-tap-highlight-color: transparent;
-  }
-
   body {
-    @apply bg-background text-foreground antialiased transition-colors duration-300;
+    @apply bg-background text-foreground antialiased transition-colors;
+    transition-duration: var(--motion-normal);
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
@@ -147,6 +159,18 @@
 
   [data-vaul-drawer-wrapper] {
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .motion-hover-press {
+    transition: transform var(--motion-fast) var(--motion-ease-primary);
+  }
+  .motion-hover-press:hover {
+    transform: scale(1.02);
+  }
+  .motion-hover-press:active {
+    transform: scale(0.97);
   }
 }
 

@@ -37,7 +37,7 @@ export function FloatingAddWidget({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col-reverse gap-3 overflow-hidden"
           >
             {options.map((opt) => (
@@ -47,7 +47,7 @@ export function FloatingAddWidget({
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
                 onClick={() => handleSelect(opt.id)}
                 className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border bg-card text-foreground shadow-lg transition-colors hover:bg-muted hover:border-primary"
                 aria-label={opt.label}
@@ -63,7 +63,7 @@ export function FloatingAddWidget({
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
-        className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 active:scale-95"
+        className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-primary text-primary-foreground shadow-lg transition-all hover:scale-[1.02] active:scale-[0.97] transition-transform duration-fast ease-primary"
         aria-label={ariaLabel}
         aria-expanded={expanded}
       >

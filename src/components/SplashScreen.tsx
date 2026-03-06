@@ -26,7 +26,7 @@ export default function SplashScreen() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-background transition-colors duration-300 transition-opacity duration-500"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background transition-colors duration-normal transition-opacity duration-slow"
       style={{ opacity }}
       aria-hidden="true"
     >
@@ -35,7 +35,7 @@ export default function SplashScreen() {
           <img
             src={theme === "dark" ? logoDark : logoLight}
             alt="Reformator Bio Logo"
-            className="h-20 w-auto object-contain transition-opacity duration-500 md:h-24"
+            className="h-20 w-auto object-contain transition-opacity duration-slow md:h-24"
           />
           <div
             className="pointer-events-none absolute inset-0 w-full animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent dark:via-white/10"

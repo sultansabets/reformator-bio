@@ -1,28 +1,36 @@
-import { Home, ShoppingBag, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ParticlesIcon } from "@/components/ParticlesIcon";
-import { CenterIcon } from "@/components/CenterIcon";
+import {
+  HomeOutlineIcon,
+  HomeFilledIcon,
+  StatsOutlineIcon,
+  StatsFilledIcon,
+  LabsOutlineIcon,
+  LabsFilledIcon,
+  ProfileOutlineIcon,
+  ProfileFilledIcon,
+} from "@/components/icons/nav";
 
-const LEFT_TABS = [
-  { path: "/control", icon: Home, key: "tabs.home" },
-  { path: "/center", customIcon: CenterIcon, key: "tabs.center" },
+const TABS = [
+  { path: "/control", OutlineIcon: HomeOutlineIcon, FilledIcon: HomeFilledIcon, key: "tabs.home" },
+  { path: "/insights", OutlineIcon: StatsOutlineIcon, FilledIcon: StatsFilledIcon, key: "tabs.stats" },
+  { path: "/data", OutlineIcon: LabsOutlineIcon, FilledIcon: LabsFilledIcon, key: "tabs.labs" },
+  { path: "/profile", OutlineIcon: ProfileOutlineIcon, FilledIcon: ProfileFilledIcon, key: "tabs.profile", useAvatar: true },
 ];
+
 const AI_PATH = "/ai";
-const RIGHT_TABS = [
-  { path: "/shop", icon: ShoppingBag, key: "tabs.store" },
-  { path: "/profile", icon: User, key: "tabs.profile", useAvatar: true },
-];
 
 const BottomNav = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const handleAIClick = () => {
     if ("vibrate" in navigator && typeof navigator.vibrate === "function") {
       navigator.vibrate(10);
@@ -33,16 +41,16 @@ const BottomNav = () => {
   const renderTab = (
     tab: {
       path: string;
-      icon?: typeof Home;
-      customIcon?: React.ComponentType<{ active?: boolean; className?: string }>;
+      OutlineIcon: React.ComponentType<{ className?: string }>;
+      FilledIcon: React.ComponentType<{ className?: string }>;
       key: string;
       useAvatar?: boolean;
     },
     isActive: boolean
   ) => {
     const showAvatar = tab.useAvatar && user?.avatar;
-    const Icon = tab.icon;
-    const CustomIcon = tab.customIcon;
+    const Icon = isActive ? tab.FilledIcon : tab.OutlineIcon;
+
     return (
       <button
         key={tab.path}
@@ -57,14 +65,18 @@ const BottomNav = () => {
           <Avatar className="h-7 w-7 border-2 border-transparent ring-0">
             <AvatarImage src={user?.avatar} alt="" />
             <AvatarFallback className="bg-primary text-[10px] font-medium text-primary-foreground">
-              {user?.fullName?.slice(0, 1)?.toUpperCase() || "?"}
+              {user?.fullName?.slice(0, 1)?.toUpperCase() ?? "?"}
             </AvatarFallback>
           </Avatar>
-        ) : CustomIcon ? (
-          <CustomIcon active={isActive} className="h-6 w-6" />
-        ) : Icon ? (
-          <Icon className="h-6 w-6" strokeWidth={isActive ? 2.2 : 1.8} />
-        ) : null}
+        ) : (
+          <motion.div
+            animate={{ scale: isActive ? 1.05 : 1 }}
+            transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center justify-center"
+          >
+            <Icon className="h-6 w-6 text-current" />
+          </motion.div>
+        )}
       </button>
     );
   };
@@ -72,7 +84,7 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 shrink-0 border-t border-border dark:border-0 dark:border-transparent bg-background">
       <div className="flex items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom)]">
-        {LEFT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
+        {TABS.slice(0, 2).map((tab) => renderTab(tab, location.pathname === tab.path))}
 
         <button
           onClick={handleAIClick}
@@ -85,7 +97,7 @@ const BottomNav = () => {
           <ParticlesIcon size={40} active={location.pathname === AI_PATH} className="pointer-events-none" />
         </button>
 
-        {RIGHT_TABS.map((tab) => renderTab(tab, location.pathname === tab.path))}
+        {TABS.slice(2).map((tab) => renderTab(tab, location.pathname === tab.path))}
       </div>
     </nav>
   );

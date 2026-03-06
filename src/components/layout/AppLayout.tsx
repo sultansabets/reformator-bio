@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AnimatedOutlet } from "@/components/AnimatedOutlet";
 import { Bell, Settings, Moon, Globe, HelpCircle, FileText, Info, LogOut, Watch, ChevronRight, ChevronDown, Users2, AlarmClock, ArrowLeft, User, Sparkles } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,14 +106,14 @@ const AppLayout = () => {
 
   return (
     <div
-      className={`mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden transition-colors duration-300 ${
+      className={`mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden transition-colors duration-normal ${
         isAI ? "bg-ui-black" : "bg-background"
       }`}
       style={isAI ? { backgroundColor: colors.black } : undefined}
     >
       <div
         ref={scrollRef}
-        className={`flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] ${
+        className={`flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain scroll-smooth [-webkit-overflow-scrolling:touch] ${
           isAI ? "pt-14" : ""
         }`}
       >
@@ -407,12 +408,12 @@ const AppLayout = () => {
       </Dialog>
         <HealthStoreHydrator />
         <main
-          className={`flex-1 transition-colors duration-300 ${
+          className={`flex-1 transition-colors duration-normal ${
             isAI ? "bg-ui-black" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
           }`}
           style={isAI ? { backgroundColor: colors.black } : undefined}
         >
-          <Outlet />
+          <AnimatedOutlet />
         </main>
       </div>
       <BottomNav />

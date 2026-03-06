@@ -45,8 +45,8 @@ export function MetricCard({
       className={cn(
         "flex w-full flex-col items-center justify-center px-2 py-3",
         size === "large" ? "min-h-[180px]" : "min-h-[130px]",
-        "transition-transform duration-200",
-        "active:scale-[0.96] hover:opacity-80",
+        "transition-transform duration-fast ease-primary",
+        "hover:scale-[1.02] active:scale-[0.97] hover:opacity-90",
         className,
       )}
     >
@@ -78,12 +78,12 @@ export function MetricCard({
             transform={`rotate(-90 ${circleSize / 2} ${circleSize / 2})`}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashOffset }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <span
-            className="transition-colors duration-300"
+            className="transition-colors duration-normal"
             style={{ color }}
           >
             {icon}

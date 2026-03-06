@@ -37,7 +37,7 @@ function StressIcon({ className, isHighStress }: { className?: string; isHighStr
       fill="none" 
       className={className}
       animate={isHighStress ? { opacity: [1, 0.6, 1] } : undefined}
-      transition={isHighStress ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" } : undefined}
+      transition={isHighStress ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" } : undefined}
     >
       {/* Head - circle outline */}
       <circle 
@@ -99,7 +99,7 @@ export function StressCard({ percent: percentProp, onClick, className }: StressC
       onClick={onClick}
       className={cn(
         "flex w-full flex-col items-center justify-center px-2 py-3",
-        "min-h-[130px] transition-transform duration-200",
+        "min-h-[130px] transition-transform duration-fast ease-primary",
         "active:scale-[0.96] hover:opacity-80",
         className,
       )}
@@ -131,14 +131,14 @@ export function StressCard({ percent: percentProp, onClick, className }: StressC
             transform={`rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})`}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashOffset }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
           />
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center">
           <span
-            className="transition-colors duration-300"
+            className="transition-colors duration-normal"
             style={{ color }}
           >
             <StressIcon className="h-7 w-7" isHighStress={percent > 70} />

@@ -123,7 +123,7 @@ function MedicalTab() {
           key={section.id}
           role="button"
           tabIndex={0}
-          className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995] cursor-pointer"
+          className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.97] transition-transform duration-fast cursor-pointer"
           onClick={() => navigate(`/medical/${encodeURIComponent(section.id)}`)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -750,7 +750,7 @@ const container = {
 };
 const item = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } },
 };
 
 type ModalType = "email" | "dob" | "activity" | "lab" | "setting" | null;

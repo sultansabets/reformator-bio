@@ -50,7 +50,7 @@ function LoadRing({ percent, color }: RingProps) {
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           transform={`rotate(-90 ${center} ${center})`}
         />
       </svg>
@@ -94,7 +94,7 @@ function LoadBar({ percent, color }: LoadBarProps) {
         style={{ backgroundColor: color }}
         initial={{ width: 0 }}
         animate={{ width: `${Math.min(100, percent)}%` }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
       />
     </div>
   );

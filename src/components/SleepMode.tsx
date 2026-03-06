@@ -188,7 +188,7 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-0 z-[9999] flex flex-col"
       style={{ 
         background: "linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%)" 
@@ -200,7 +200,7 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
+          transition={{ delay: 0.08, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         >
           <MoonWithParticles />
         </motion.div>
@@ -208,7 +208,7 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
+          transition={{ delay: 0.2, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           className="mt-6 text-center"
         >
           <CurrentTime />
@@ -217,7 +217,7 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={{ delay: 0.28, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           className="mt-8 text-center"
         >
           <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em] mb-2">
@@ -235,13 +235,13 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.7, duration: 0.5 }}
+        transition={{ delay: 0.36, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         className="relative w-full px-5"
         style={{ paddingBottom: "calc(48px + env(safe-area-inset-bottom))" }}
       >
         <Button
           variant="ghost"
-          className="w-full h-14 text-gray-600 hover:text-white hover:bg-white/5 transition-colors duration-300 text-base"
+          className="w-full h-14 text-gray-600 hover:text-white hover:bg-white/5 transition-colors duration-normal text-base"
           onClick={onCancel}
         >
           {t("sleepMode.cancel")}

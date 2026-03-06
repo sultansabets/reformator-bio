@@ -323,7 +323,7 @@ function MacroCircle({
   return (
     <div className="flex flex-col items-center">
       <div
-        className="relative transition-all duration-300"
+        className="relative transition-transform duration-normal ease-primary"
         style={{
           width: CIRCLE_SIZE,
           height: CIRCLE_SIZE,
@@ -356,7 +356,7 @@ function MacroCircle({
             transform={`rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})`}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: dashOffset }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -851,8 +851,8 @@ export default function Center() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
-  const itemAnim = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } };
+  const container = { hidden: {}, show: { transition: { staggerChildren: 0.04 } } };
+  const itemAnim = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } } };
 
   return (
     <motion.div
@@ -923,7 +923,7 @@ export default function Center() {
                   key={dailyRemaining}
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                 >
                   {dailyRemaining}
                 </motion.p>

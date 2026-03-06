@@ -86,7 +86,7 @@ export function ResourceSystems({
         return (
           <Card
             key={s.id}
-            className="overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md active:scale-[0.995]"
+            className="overflow-hidden border border-border bg-card shadow-sm transition-all duration-fast ease-primary hover:shadow-md hover:scale-[1.02] active:scale-[0.97]"
           >
             <button
               type="button"
@@ -117,7 +117,7 @@ export function ResourceSystems({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.28, ease: "easeInOut" }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
                   <div className="border-t border-border bg-muted/25 px-3 pb-3 pt-2">

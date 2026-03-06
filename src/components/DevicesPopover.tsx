@@ -89,7 +89,7 @@ export function DevicesPopover() {
             initial={{ opacity: 0, y: -8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="absolute left-0 top-full z-50 mt-2 w-64 origin-top-left rounded-2xl border border-border bg-card/95 p-2 shadow-xl backdrop-blur-xl"
           >
             <p className="mb-2 px-2 pt-1 text-xs font-medium text-muted-foreground">

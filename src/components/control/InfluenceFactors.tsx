@@ -68,7 +68,7 @@ interface ExpandableContentProps {
 function ExpandableContent({ expanded, children }: ExpandableContentProps) {
   return (
     <div
-      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+      className={`overflow-hidden transition-all duration-normal ease-in-out ${
         expanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
       }`}
     >
@@ -139,7 +139,7 @@ export function InfluenceFactors({
             key={f.id}
             role="button"
             tabIndex={0}
-            className={`overflow-hidden transition-all duration-300 ease-in-out cursor-pointer ${
+            className={`overflow-hidden transition-all duration-normal ease-in-out cursor-pointer ${
               isExpanded
                 ? "bg-transparent border-transparent shadow-none"
                 : "bg-card border border-border shadow-sm hover:shadow-md active:scale-[0.995]"
@@ -153,7 +153,7 @@ export function InfluenceFactors({
             }}
           >
             <div className="flex w-full items-center gap-3 p-3 text-left">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-colors duration-300">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-colors duration-normal">
                 <Icon className="h-5 w-5 text-muted-foreground" />
               </div>
 
@@ -175,7 +175,7 @@ export function InfluenceFactors({
               </div>
 
               <ChevronDown
-                className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-in-out ${
+                className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-normal ease-in-out ${
                   isExpanded ? "rotate-180" : "rotate-0"
                 }`}
               />
@@ -203,7 +203,7 @@ export function InfluenceFactors({
       <Card
         role="button"
         tabIndex={0}
-        className={`overflow-hidden transition-all duration-300 ease-in-out cursor-pointer ${
+        className={`overflow-hidden transition-all duration-normal ease-in-out cursor-pointer ${
           isTestosteroneExpanded
             ? "bg-transparent border-transparent shadow-none"
             : "bg-card border border-border shadow-sm hover:shadow-md active:scale-[0.995]"
@@ -217,7 +217,7 @@ export function InfluenceFactors({
         }}
       >
         <div className="flex w-full items-center gap-3 p-3 text-left">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-colors duration-300">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-colors duration-normal">
             <MarsIcon className="h-5 w-5 text-muted-foreground" />
           </div>
 
@@ -247,7 +247,7 @@ export function InfluenceFactors({
           </div>
 
           <ChevronDown
-            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ease-in-out ${
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-normal ease-in-out ${
               isTestosteroneExpanded ? "rotate-180" : "rotate-0"
             }`}
           />

@@ -65,7 +65,7 @@ function MuscleRing({
         strokeDasharray={circumference}
         initial={{ strokeDashoffset: circumference }}
         animate={{ strokeDashoffset: offset }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         transform={`rotate(-90 ${cx} ${cy})`}
       />
       {/* Label */}
@@ -272,7 +272,7 @@ export function MuscleMap({ progress, onMuscleClick }: MuscleMapProps) {
           initial={{ opacity: 0, rotateY: 90 }}
           animate={{ opacity: 1, rotateY: 0 }}
           exit={{ opacity: 0, rotateY: -90 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="flex justify-center"
         >
           {view === "front" ? (

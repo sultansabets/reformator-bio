@@ -41,7 +41,7 @@ export function LiquidFillCard({
       {/* Fill container */}
       <div className="absolute inset-0 overflow-hidden">
         <div
-          className="absolute inset-x-0 bottom-0 w-full transition-[height] duration-700 ease-in-out"
+          className="absolute inset-x-0 bottom-0 w-full transition-[height] duration-slow ease-in-out"
           style={{ height: fillHeight }}
         >
           {/* Gradient fill */}
