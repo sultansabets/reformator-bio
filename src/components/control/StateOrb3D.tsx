@@ -6,7 +6,7 @@ import { createNoise3D } from "simplex-noise";
 import { orbParticleColors } from "@/theme/colors";
 import { useTheme } from "@/contexts/ThemeContext";
 
-const PARTICLE_COUNT = 9000;
+const PARTICLE_COUNT = 10000;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
@@ -97,9 +97,9 @@ const ParticleSphere = memo(function ParticleSphere({
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
         ref={materialRef}
-        size={0.035}
+        size={0.015}
         transparent
-        opacity={1}
+        opacity={0.9}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         color={color}

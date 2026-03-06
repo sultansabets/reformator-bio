@@ -10,8 +10,8 @@ import {
   HomeFilledIcon,
   CenterOutlineIcon,
   CenterFilledIcon,
-  AnalysesOutlineIcon,
-  AnalysesFilledIcon,
+  ShopOutlineIcon,
+  ShopFilledIcon,
   ProfileOutlineIcon,
   ProfileFilledIcon,
 } from "@/components/icons/nav";
@@ -19,7 +19,7 @@ import {
 const TABS = [
   { path: "/control", OutlineIcon: HomeOutlineIcon, FilledIcon: HomeFilledIcon, key: "tabs.home" },
   { path: "/center", OutlineIcon: CenterOutlineIcon, FilledIcon: CenterFilledIcon, key: "tabs.center" },
-  { path: "/analyses", OutlineIcon: AnalysesOutlineIcon, FilledIcon: AnalysesFilledIcon, key: "tabs.analyses" },
+  { path: "/shop", OutlineIcon: ShopOutlineIcon, FilledIcon: ShopFilledIcon, key: "tabs.store" },
   { path: "/profile", OutlineIcon: ProfileOutlineIcon, FilledIcon: ProfileFilledIcon, key: "tabs.profile", useAvatar: true },
 ];
 

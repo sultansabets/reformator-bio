@@ -52,7 +52,7 @@ export const lightTheme = {
 
 /** Dark theme palette – use for .dark */
 export const darkTheme = {
-  background: "#0C0C0C",
+  background: "#000000",
   card: "#1D1D1D",
   textPrimary: "#EDEDED",
   textSecondary: "#6F6F6F",

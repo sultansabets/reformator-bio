@@ -7,10 +7,10 @@
   /* black #000000, darkGray #6F6F6F, gray #DDDDDD, lightGray #F6F6F6, white #FCFCFC */
   /* state: good #3FB37F, okay #7A7A7A, bad #EF3B3B */
 
-  /* Dark theme (default) – background #0C0C0C, card #1D1D1D, border #353535 */
+  /* Dark theme (default) – background #000000, card #1D1D1D, border #353535 */
   :root,
   .dark {
-    --background: 0 0% 4.7%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 92.9%;
 
     --card: 0 0% 11.4%;

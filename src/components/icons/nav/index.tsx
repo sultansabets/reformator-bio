@@ -4,8 +4,8 @@ import {
   HiHome,
   HiOutlineSquares2X2,
   HiSquares2X2,
-  HiOutlineChartBar,
-  HiChartBar,
+  HiOutlineShoppingBag,
+  HiShoppingBag,
   HiOutlineUser,
   HiUser,
 } from "react-icons/hi2";
@@ -29,12 +29,12 @@ export function CenterFilledIcon({ className }: { className?: string }) {
   return <HiSquares2X2 className={cn(iconClassName, className)} />;
 }
 
-export function AnalysesOutlineIcon({ className }: { className?: string }) {
-  return <HiOutlineChartBar className={cn(iconClassName, className)} strokeWidth={1.8} />;
+export function ShopOutlineIcon({ className }: { className?: string }) {
+  return <HiOutlineShoppingBag className={cn(iconClassName, className)} strokeWidth={1.8} />;
 }
 
-export function AnalysesFilledIcon({ className }: { className?: string }) {
-  return <HiChartBar className={cn(iconClassName, className)} />;
+export function ShopFilledIcon({ className }: { className?: string }) {
+  return <HiShoppingBag className={cn(iconClassName, className)} />;
 }
 
 export function ProfileOutlineIcon({ className }: { className?: string }) {
