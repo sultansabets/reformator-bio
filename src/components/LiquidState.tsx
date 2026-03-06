@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { getMetricColorHex, METRIC_COLORS } from "@/lib/colors";
+import { getMetricColorHex } from "@/lib/colors";
+import { colors } from "@/theme/colors";
 
 const VISUAL_SIZE = 320;
 const ATOM_COUNT = 42;
@@ -252,7 +253,7 @@ export default function LiquidState({ score }: LiquidStateProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const atomsRef = useRef<Atom[] | null>(null);
   const rafRef = useRef<number | null>(null);
-  const colorRef = useRef<string>(METRIC_COLORS.green);
+  const colorRef = useRef<string>(colors.state.good);
   const mountStartRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number>(0);
   const rotationRef = useRef(0);

@@ -42,13 +42,17 @@ export interface ParticlesIconProps {
 /**
  * Shared particle animation used in nav bar and AI page.
  * Inactive: muted color (matches other nav icons).
- * Active: white (#FFFFFF).
+ * Active: white (#FCFCFC).
  */
+const WHITE_RGB = "252, 252, 252";
+const DARK_MUTED_RGB = "111, 111, 111";
+const LIGHT_MUTED_RGB = "111, 111, 111";
+
 export function ParticlesIcon({ size = 40, active = false, colorRgb, className }: ParticlesIconProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
-  const colorRef = useRef<string>("161, 161, 170");
+  const colorRef = useRef<string>(DARK_MUTED_RGB);
   const { theme } = useTheme();
 
   const center = size / 2;
@@ -56,11 +60,7 @@ export function ParticlesIcon({ size = 40, active = false, colorRgb, className }
 
   colorRef.current =
     colorRgb ??
-    (active
-      ? "255, 255, 255"
-      : theme === "dark"
-        ? "161, 161, 170"
-        : "113, 113, 122");
+    (active ? WHITE_RGB : theme === "dark" ? DARK_MUTED_RGB : LIGHT_MUTED_RGB);
 
   useEffect(() => {
     const canvas = canvasRef.current;

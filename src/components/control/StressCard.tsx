@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { colors } from "@/theme/colors";
 
 export interface StressCardProps {
   percent?: number;
@@ -13,17 +14,20 @@ const CIRCLE_SIZE = 76;
 const STROKE_WIDTH = 3;
 
 function getStressColor(percent: number): string {
-  if (percent <= 30) return "rgb(55, 190, 126)";
-  if (percent <= 60) return "rgb(234, 179, 8)";
-  if (percent <= 80) return "rgb(249, 115, 22)";
-  return "rgb(239, 68, 68)";
+  if (percent <= 33) return colors.state.good;
+  if (percent <= 66) return colors.state.okay;
+  return colors.state.bad;
 }
 
 function getStressGlowColor(percent: number): string {
-  if (percent <= 30) return "rgba(55, 190, 126, 0.4)";
-  if (percent <= 60) return "rgba(234, 179, 8, 0.4)";
-  if (percent <= 80) return "rgba(249, 115, 22, 0.4)";
-  return "rgba(239, 68, 68, 0.4)";
+  const [r, g, b] = hexToRgb(getStressColor(percent));
+  return `rgba(${r}, ${g}, ${b}, 0.4)`;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  if (!m) return [0, 0, 0];
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
 }
 
 function StressIcon({ className, isHighStress }: { className?: string; isHighStress?: boolean }) {

@@ -85,7 +85,7 @@ function MoonWithParticles() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(253, 224, 71, ${currentOpacity})`;
+        ctx.fillStyle = `rgba(252, 252, 252, ${currentOpacity})`;
         ctx.fill();
       }
 
@@ -102,10 +102,10 @@ function MoonWithParticles() {
         moonCenterX, moonCenterY, radius * 0.5,
         moonCenterX, moonCenterY, radius * 3.5
       );
-      glowGradient.addColorStop(0, `rgba(253, 224, 71, ${0.18 * glowIntensity})`);
-      glowGradient.addColorStop(0.25, `rgba(253, 224, 71, ${0.08 * glowIntensity})`);
-      glowGradient.addColorStop(0.5, `rgba(253, 224, 71, ${0.03 * glowIntensity})`);
-      glowGradient.addColorStop(1, "rgba(253, 224, 71, 0)");
+      glowGradient.addColorStop(0, `rgba(252, 252, 252, ${0.18 * glowIntensity})`);
+      glowGradient.addColorStop(0.25, `rgba(252, 252, 252, ${0.08 * glowIntensity})`);
+      glowGradient.addColorStop(0.5, `rgba(252, 252, 252, ${0.03 * glowIntensity})`);
+      glowGradient.addColorStop(1, "rgba(252, 252, 252, 0)");
       ctx.fillStyle = glowGradient;
       ctx.fillRect(0, 0, size, size);
 
@@ -115,12 +115,12 @@ function MoonWithParticles() {
         moonCenterX - radius * 0.25, moonCenterY - radius * 0.25, 0,
         moonCenterX, moonCenterY, radius
       );
-      moonGradient.addColorStop(0, "#ffffff");
-      moonGradient.addColorStop(0.35, "#e5e5e5");
-      moonGradient.addColorStop(1, "#c0c0c0");
+      moonGradient.addColorStop(0, "#FCFCFC");
+      moonGradient.addColorStop(0.35, "#F6F6F6");
+      moonGradient.addColorStop(1, "#DDDDDD");
       ctx.fillStyle = moonGradient;
       ctx.shadowBlur = 30 * glowIntensity;
-      ctx.shadowColor = "rgba(192, 192, 192, 0.5)";
+      ctx.shadowColor = "rgba(221, 221, 221, 0.5)";
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -191,7 +191,7 @@ export default function SleepMode({ wakeTime, onCancel }: SleepModeProps) {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="fixed inset-0 z-[9999] flex flex-col"
       style={{ 
-        background: "linear-gradient(180deg, #050508 0%, #0a0a12 50%, #050508 100%)" 
+        background: "linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%)" 
       }}
     >
       <div className="absolute inset-0 backdrop-blur-[2px]" />

@@ -6,6 +6,7 @@ import { X, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SleepMode from "@/components/SleepMode";
 import { getMetricColorHex } from "@/lib/colors";
+import { colors } from "@/theme/colors";
 
 const STORAGE_KEY = "smartWake_alarm";
 const SLEEP_CYCLE_MINUTES = 90;
@@ -143,9 +144,9 @@ function MoonIcon({ size = 100 }: { size?: number }) {
         moonCenterX, moonCenterY, radius * 0.5,
         moonCenterX, moonCenterY, radius * 2.5
       );
-      glowGradient.addColorStop(0, `rgba(253, 224, 71, ${0.12 * glowIntensity})`);
-      glowGradient.addColorStop(0.4, `rgba(253, 224, 71, ${0.04 * glowIntensity})`);
-      glowGradient.addColorStop(1, "rgba(253, 224, 71, 0)");
+      glowGradient.addColorStop(0, `rgba(252, 252, 252, ${0.12 * glowIntensity})`);
+      glowGradient.addColorStop(0.4, `rgba(252, 252, 252, ${0.04 * glowIntensity})`);
+      glowGradient.addColorStop(1, "rgba(252, 252, 252, 0)");
       ctx.fillStyle = glowGradient;
       ctx.fillRect(0, 0, size, size);
 
@@ -155,12 +156,12 @@ function MoonIcon({ size = 100 }: { size?: number }) {
         moonCenterX - radius * 0.25, moonCenterY - radius * 0.25, 0,
         moonCenterX, moonCenterY, radius
       );
-      moonGradient.addColorStop(0, "#ffffff");
-      moonGradient.addColorStop(0.4, "#e5e5e5");
-      moonGradient.addColorStop(1, "#c0c0c0");
+      moonGradient.addColorStop(0, "#FCFCFC");
+      moonGradient.addColorStop(0.4, "#F6F6F6");
+      moonGradient.addColorStop(1, "#DDDDDD");
       ctx.fillStyle = moonGradient;
       ctx.shadowBlur = 20 * glowIntensity;
-      ctx.shadowColor = "rgba(192, 192, 192, 0.4)";
+      ctx.shadowColor = "rgba(221, 221, 221, 0.4)";
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -328,8 +329,8 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(55, 190, 126, 0.3)" />
-            <stop offset="100%" stopColor="rgba(55, 190, 126, 0)" />
+            <stop offset="0%" stopColor="rgba(63, 179, 127, 0.3)" />
+            <stop offset="100%" stopColor="rgba(63, 179, 127, 0)" />
           </linearGradient>
         </defs>
         
@@ -341,7 +342,7 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
         <polyline
           points={points}
           fill="none"
-          stroke="#37BE7E"
+          stroke={colors.state.good}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -357,7 +358,7 @@ function SleepChart({ data, period }: { data: DaySleepData[]; period: 7 | 30 }) 
               cx={x}
               cy={y}
               r="2"
-              fill="#37BE7E"
+              fill={colors.state.good}
               className="opacity-60"
             />
           );
@@ -450,7 +451,7 @@ function CalendarModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="mx-4 w-full max-w-[340px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] overflow-hidden"
+        className="mx-4 w-full max-w-[340px] rounded-3xl border-0 bg-popover p-5 shadow-[var(--shadow-dialog)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">

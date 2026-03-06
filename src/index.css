@@ -3,101 +3,119 @@
 @tailwind utilities;
 
 @layer base {
-  /* Dark theme (default) – Threads-style: #000000, #1C1C1E, #FFFFFF, #A1A1A6, #6E6E73 */
+  /* Design tokens – base UI palette */
+  /* black #000000, darkGray #6F6F6F, gray #DDDDDD, lightGray #F6F6F6, white #FCFCFC */
+  /* state: good #3FB37F, okay #7A7A7A, bad #EF3B3B */
+
+  /* Dark theme (default) */
   :root,
   .dark {
     --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --foreground: 0 0% 99%;
 
-    --card: 240 2% 11%;
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 99%;
 
-    --popover: 240 2% 11%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 99%;
 
-    --primary: 0 0% 100%;
+    --primary: 0 0% 99%;
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 240 2% 11%;
-    --secondary-foreground: 240 3% 64%;
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 44%;
 
-    --muted: 240 2% 11%;
-    --muted-foreground: 240 2% 44%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 44%;
 
-    --accent: 240 2% 14%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 99%;
 
-    --destructive: 0 98% 24%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 58%;
+    --destructive-foreground: 0 0% 99%;
 
-    --border: 240 2% 16%;
-    --input: 240 2% 16%;
-    --ring: 0 0% 100%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 99%;
 
     --radius: 0.5rem;
+    --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06);
+    --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-text: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-dialog: 0 10px 40px rgba(0, 0, 0, 0.6);
 
-    --status-green: 151 55% 48%;
-    --status-amber: 0 0% 75%;
-    --status-red: 240 4% 16%;
+    --status-good: 151 48% 47%;
+    --status-okay: 0 0% 48%;
+    --status-bad: 0 84% 58%;
+    --status-green: 151 48% 47%;
+    --status-amber: 0 0% 48%;
+    --status-red: 0 84% 58%;
 
     --store-bg: 0 0% 0%;
 
     --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 240 3% 64%;
-    --sidebar-primary: 0 0% 100%;
+    --sidebar-foreground: 0 0% 44%;
+    --sidebar-primary: 0 0% 99%;
     --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 240 2% 14%;
-    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 99%;
     --sidebar-border: transparent;
-    --sidebar-ring: 0 0% 100%;
+    --sidebar-ring: 0 0% 99%;
   }
 
-  /* Light theme – switchable */
+  /* Light theme – backgrounds white/lightGray, borders gray, text black/darkGray */
   .light {
-    --background: 0 0% 98%;
-    --foreground: 240 2% 11%;
+    --background: 0 0% 99%;
+    --foreground: 0 0% 0%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 2% 11%;
+    --card: 0 0% 99%;
+    --card-foreground: 0 0% 0%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 2% 11%;
+    --popover: 0 0% 99%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 240 6% 10%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 99%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 240 2% 11%;
+    --secondary-foreground: 0 0% 0%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 42%;
+    --muted-foreground: 0 0% 44%;
 
     --accent: 0 0% 96%;
-    --accent-foreground: 240 2% 11%;
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 98% 24%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 58%;
+    --destructive-foreground: 0 0% 99%;
 
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 240 6% 10%;
+    --border: 0 0% 87%;
+    --input: 0 0% 87%;
+    --ring: 0 0% 0%;
 
     --radius: 0.75rem;
+    --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.08);
+    --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-text: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-dialog: 0 10px 40px rgba(0, 0, 0, 0.12);
 
-    --status-green: 151 55% 48%;
-    --status-amber: 0 0% 75%;
-    --status-red: 240 4% 16%;
+    --status-good: 151 48% 47%;
+    --status-okay: 0 0% 48%;
+    --status-bad: 0 84% 58%;
+    --status-green: 151 48% 47%;
+    --status-amber: 0 0% 48%;
+    --status-red: 0 84% 58%;
 
-    --store-bg: 0 0% 98%;
+    --store-bg: 0 0% 99%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 42%;
-    --sidebar-primary: 240 6% 10%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 0 0% 44%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 99%;
     --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 240 2% 11%;
-    --sidebar-border: 0 0% 92%;
-    --sidebar-ring: 240 6% 10%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 87%;
+    --sidebar-ring: 0 0% 0%;
   }
 }
 

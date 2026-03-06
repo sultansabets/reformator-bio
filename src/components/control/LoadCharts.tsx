@@ -12,15 +12,16 @@ import {
   ComposedChart,
 } from "recharts";
 import type { LoadEngineResult } from "@/engine/loadEngine";
+import { colors } from "@/theme/colors";
 
 const CHART_HEIGHT = 240;
 const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
-const BODY_STRENGTH = "#C0C0C0";
-const BODY_CARDIO = "#37BE7E";
-const BODY_STEPS = "#C0C0C0";
-const NEURO_STRESS = "#C0C0C0";
-const NEURO_HRV = "#37BE7E";
-const NEURO_SLEEP = "#28282B";
+const BODY_STRENGTH = colors.ui.gray;
+const BODY_CARDIO = colors.state.good;
+const BODY_STEPS = colors.ui.gray;
+const NEURO_STRESS = colors.ui.gray;
+const NEURO_HRV = colors.state.good;
+const NEURO_SLEEP = colors.ui.darkGray;
 const GRID_STROKE = "rgba(255,255,255,0.08)";
 const DAY_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 

@@ -14,6 +14,18 @@ export default {
     },
     extend: {
       colors: {
+        ui: {
+          black: "#000000",
+          dark: "#6F6F6F",
+          gray: "#DDDDDD",
+          light: "#F6F6F6",
+          white: "#FCFCFC",
+        },
+        state: {
+          good: "#3FB37F",
+          okay: "#7A7A7A",
+          bad: "#EF3B3B",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -57,10 +69,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "state-good": "#3FB37F",
+        "state-okay": "#7A7A7A",
+        "state-bad": "#EF3B3B",
         status: {
           green: "hsl(var(--status-green))",
           amber: "hsl(var(--status-amber))",
           red: "hsl(var(--status-red))",
+          good: "#3FB37F",
+          okay: "#7A7A7A",
+          bad: "#EF3B3B",
         },
         store: {
           bg: "hsl(var(--store-bg))",

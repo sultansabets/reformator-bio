@@ -25,37 +25,43 @@ const ParticleSphere = memo(function ParticleSphere({
   const geometry = useMemo(() => {
     const simplex = createNoise3D();
     const positions = new Float32Array(PARTICLE_COUNT * 3);
+    const baseRadius = 1;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Layered depth: inner sparse (15%), dense middle (60%), turbulent outer (25%)
-      const rn = Math.random();
-      let rBase: number;
-      if (rn < 0.15) {
-        rBase = 0.7 + Math.random() * 0.1; // inner sparse
-      } else if (rn < 0.75) {
-        rBase = 0.8 + Math.random() * 0.15; // dense middle
-      } else {
-        rBase = 0.95 + Math.random() * 0.05; // turbulent outer
-      }
-
-      const r = rBase;
+      // Spherical coordinates: uniform distribution on sphere
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
+      // Density falloff: center sparse, mid dense, outer turbulent
+      const rn = Math.random();
+      let rBase: number;
+      let distortion: number;
+      if (rn < 0.15) {
+        rBase = 0.7 + Math.random() * 0.1; // center sparse
+        distortion = 0.04;
+      } else if (rn < 0.75) {
+        rBase = 0.8 + Math.random() * 0.15; // mid dense
+        distortion = 0.06;
+      } else {
+        rBase = 0.95 + Math.random() * 0.05; // outer shell turbulent
+        distortion = 0.1;
+      }
+
+      let radius = baseRadius * rBase;
+
+      // Unit direction for noise sampling (use surface direction)
+      const ux = Math.sin(phi) * Math.cos(theta);
+      const uy = Math.sin(phi) * Math.sin(theta);
+      const uz = Math.cos(phi);
+
+      // Apply noise ONLY to radius (keeps sphere shape visible)
+      const noise = simplex(ux * 2, uy * 2, uz * 2);
+      radius += noise * distortion;
+
       // Spherical to cartesian
-      let x = r * Math.sin(phi) * Math.cos(theta);
-      let y = r * Math.sin(phi) * Math.sin(theta);
-      let z = r * Math.cos(phi);
-
-      // Noise-based distortion to avoid perfect sphere
-      const noise = simplex(x * 0.8, y * 0.8, z * 0.8);
-      const radiusOffset = noise * 0.4;
-      const finalRadius = r + radiusOffset;
-
-      const scale = r > 0.0001 ? finalRadius / r : 1;
-      x *= scale;
-      y *= scale;
-      z *= scale;
+      const x = radius * ux;
+      const y = radius * uy;
+      const z = radius * uz;
 
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;

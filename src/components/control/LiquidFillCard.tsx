@@ -68,7 +68,7 @@ export function LiquidFillCard({
       </div>
 
       {/* Content overlay */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-2 py-4 [text-shadow:0_1px_2px_rgba(0,0,0,0.1)]">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-2 py-4 [text-shadow:var(--shadow-text)]">
         <span className="text-foreground/95">{icon}</span>
         <span className="mt-1 text-center text-xs font-medium text-foreground">
           {label}

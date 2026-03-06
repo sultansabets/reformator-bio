@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { RotateCcw } from "lucide-react";
+import { colors } from "@/theme/colors";
 
 export interface MuscleProgress {
   chest: number;
@@ -19,8 +20,8 @@ interface MuscleMapProps {
 
 function getProgressColor(percent: number): string {
   if (percent === 0) return "hsl(var(--muted-foreground) / 0.3)";
-  if (percent < 50) return "rgb(249, 115, 22)";
-  return "rgb(55, 190, 126)";
+  if (percent < 50) return colors.state.okay;
+  return colors.state.good;
 }
 
 function MuscleRing({ 

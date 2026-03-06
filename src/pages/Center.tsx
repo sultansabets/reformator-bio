@@ -21,6 +21,7 @@ import {
   Dumbbell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { colors } from "@/theme/colors";
 import { useHealthStore } from "@/store/healthStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -277,16 +278,22 @@ function convertHistoryToWorkoutDays(history: WorkoutHistoryEntry[]): WorkoutDay
   return Object.values(dayMap);
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  if (!m) return `rgba(0,0,0,${alpha})`;
+  return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})`;
+}
+
 /**
  * Macro circle color based on progress:
- * - 0% (nothing added): dark gray #28282B
- * - > 0%: green #37BE7E
+ * - 0% (nothing added): dark gray (inactive)
+ * - > 0%: green (active)
  */
 function getMacroColor(progress: number): string {
   if (progress > 0) {
-    return "#37BE7E"; // green - active
+    return colors.state.good;
   }
-  return "#28282B"; // dark gray - inactive
+  return colors.ui.dark;
 }
 
 function MacroCircle({
@@ -320,7 +327,7 @@ function MacroCircle({
         style={{
           width: CIRCLE_SIZE,
           height: CIRCLE_SIZE,
-          filter: isActive ? `drop-shadow(0 0 8px rgba(55, 190, 126, ${glowOpacity}))` : "none",
+          filter: isActive ? `drop-shadow(0 0 8px ${hexToRgba(colors.state.good, glowOpacity)})` : "none",
         }}
       >
         <svg
@@ -333,7 +340,7 @@ function MacroCircle({
             cy={CIRCLE_SIZE / 2}
             r={radius}
             fill="none"
-            stroke="#28282B"
+            stroke={colors.ui.dark}
             strokeWidth={STROKE_WIDTH}
             opacity={0.6}
           />
@@ -422,7 +429,7 @@ function CalendarPopup({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         hideClose
-        className="max-w-[340px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
+        className="max-w-[340px] rounded-3xl border-0 bg-popover p-5 shadow-[var(--shadow-dialog)]"
       >
         <div className="flex items-center justify-between mb-4">
           <button
@@ -1237,7 +1244,7 @@ export default function Center() {
 
       {/* Program editor */}
       <Dialog open={programEditorOpen} onOpenChange={(open) => !open && setProgramEditorOpen(false)}>
-        <DialogContent hideClose className="max-w-[400px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+        <DialogContent hideClose className="max-w-[400px] rounded-3xl border-0 bg-popover p-5 shadow-[var(--shadow-dialog)]">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Программа недели</h2>
             <button
@@ -1261,7 +1268,7 @@ export default function Center() {
 
       {/* Workout log editor */}
       <Dialog open={logEditorOpen} onOpenChange={(open) => !open && setLogEditorOpen(false)}>
-        <DialogContent hideClose className="max-w-[380px] rounded-3xl border-0 bg-[#141414] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+        <DialogContent hideClose className="max-w-[380px] rounded-3xl border-0 bg-popover p-5 shadow-[var(--shadow-dialog)]">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">
               {editingWorkout ? "Редактировать тренировку" : "Добавить тренировку"}

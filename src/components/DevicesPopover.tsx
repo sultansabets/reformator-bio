@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Watch, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { colors } from "@/theme/colors";
 
 interface Device {
   id: string;
@@ -14,12 +15,12 @@ interface Device {
 }
 
 function getStatusColor(devices: Device[]): string {
-  if (devices.length === 0) return "rgb(239, 68, 68)";
+  if (devices.length === 0) return colors.state.bad;
   const hasConnected = devices.some((d) => d.connected);
-  if (!hasConnected) return "rgb(239, 68, 68)";
+  if (!hasConnected) return colors.state.bad;
   const hasLowBattery = devices.some((d) => d.connected && d.battery < 20);
-  if (hasLowBattery) return "rgb(234, 179, 8)";
-  return "rgb(55, 190, 126)";
+  if (hasLowBattery) return colors.state.okay;
+  return colors.state.good;
 }
 
 export function DevicesPopover() {

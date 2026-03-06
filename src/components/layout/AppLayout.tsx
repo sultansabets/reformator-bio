@@ -22,6 +22,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import BottomNav from "./BottomNav";
+import { colors } from "@/theme/colors";
 import { DevicesPopover } from "@/components/DevicesPopover";
 import { HealthStoreHydrator } from "@/components/HealthStoreHydrator";
 import logoLight from "@/assets/logo-light.png";
@@ -105,9 +106,9 @@ const AppLayout = () => {
   return (
     <div
       className={`mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden transition-colors duration-300 ${
-        isAI ? "bg-[#000000]" : "bg-background"
+        isAI ? "bg-ui-black" : "bg-background"
       }`}
-      style={isAI ? { backgroundColor: "#000000" } : undefined}
+      style={isAI ? { backgroundColor: colors.black } : undefined}
     >
       <div
         ref={scrollRef}
@@ -116,8 +117,8 @@ const AppLayout = () => {
         }`}
       >
       <header
-        className={`z-40 ${isAI ? "fixed left-0 right-0 top-0 mx-auto max-w-[28rem] border-0 bg-[#000000]" : "sticky top-0 bg-background dark:border-0"}`}
-        style={isAI ? { backgroundColor: "#000000" } : undefined}
+        className={`z-40 ${isAI ? "fixed left-0 right-0 top-0 mx-auto max-w-[28rem] border-0 bg-ui-black" : "sticky top-0 bg-background dark:border-0"}`}
+        style={isAI ? { backgroundColor: colors.black } : undefined}
       >
         <div className="relative flex h-14 items-center justify-between px-4">
           {isAI ? (
@@ -366,7 +367,7 @@ const AppLayout = () => {
         </SheetContent>
       </Sheet>
       <Dialog open={deviceModal !== null} onOpenChange={(open) => !open && setDeviceModal(null)}>
-        <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+        <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">
               {deviceModal?.name}
@@ -407,9 +408,9 @@ const AppLayout = () => {
         <HealthStoreHydrator />
         <main
           className={`flex-1 transition-colors duration-300 ${
-            isAI ? "bg-[#000000]" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
+            isAI ? "bg-ui-black" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
           }`}
-          style={isAI ? { backgroundColor: "#000000" } : undefined}
+          style={isAI ? { backgroundColor: colors.black } : undefined}
         >
           <Outlet />
         </main>

@@ -36,7 +36,7 @@ function LoadRing({ percent, color }: RingProps) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="hsl(var(--border))"
           strokeWidth={RING_STROKE}
         />
         <motion.circle

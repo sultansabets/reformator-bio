@@ -115,7 +115,7 @@ const Register = () => {
         transition={{ duration: 0.25 }}
         className="w-full max-w-sm"
       >
-        <Card className="border border-border bg-card shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+        <Card className="border border-border bg-card shadow-[var(--shadow-card)]">
           <CardHeader className="space-y-1 pb-4 pt-8 text-center">
             <p className="text-sm font-semibold tracking-tight text-foreground">
               REFORMATOR BIO

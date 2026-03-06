@@ -2,12 +2,13 @@ import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import type { SleepEngineResult } from "@/engine/sleepEngine";
+import { colors } from "@/theme/colors";
 
 const PHASE_COLORS = {
-  deep: "#6366F1",
-  light: "#A5B4FC",
-  rem: "#F472B6",
-  awake: "#94A3B8",
+  deep: colors.state.good,
+  light: colors.ui.gray,
+  rem: colors.state.okay,
+  awake: colors.ui.darkGray,
 };
 
 function formatHoursMinutes(minutes: number): string {
@@ -50,7 +51,7 @@ function QualityRing({ percent, color }: QualityRingProps) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="hsl(var(--border))"
           strokeWidth={RING_STROKE}
         />
         <motion.circle
@@ -255,7 +256,7 @@ interface DurationBarProps {
 function DurationBar({ actualMinutes, targetMinutes }: DurationBarProps) {
   const percent = Math.min(100, (actualMinutes / targetMinutes) * 100);
   const isDeficit = actualMinutes < targetMinutes;
-  const color = isDeficit ? "#F59E0B" : "#37BE7E";
+  const color = isDeficit ? colors.state.okay : colors.state.good;
 
   return (
     <div className="space-y-3">
@@ -341,11 +342,11 @@ export function SleepCharts({ sleepDetail, nightsCount = 7 }: SleepChartsProps) 
 
   if (!sleepDetail || !displayData) return null;
 
-  const qualityColor = sleepDetail.sleepScore >= 80 
-    ? "#37BE7E" 
-    : sleepDetail.sleepScore >= 60 
-      ? "#F59E0B" 
-      : "#EF4444";
+  const qualityColor = sleepDetail.sleepScore >= 80
+    ? colors.state.good
+    : sleepDetail.sleepScore >= 60
+      ? colors.state.okay
+      : colors.state.bad;
 
   return (
     <div className="space-y-8">

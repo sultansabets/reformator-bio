@@ -14,9 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const BORDER = "rgba(255,255,255,0.06)";
-const CARD_BG = "#111111";
-
 type MessageRole = "user" | "support";
 type MessageStatus = "sent" | "read";
 
@@ -115,34 +112,34 @@ function SupportTab() {
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 border border-border ${
                 m.role === "user"
-                  ? "bg-[#1a1a1a] border border-[rgba(255,255,255,0.08)] rounded-br-md"
-                  : "bg-[#0d0d0d] border border-[rgba(255,255,255,0.06)] rounded-bl-md"
+                  ? "bg-card rounded-br-md"
+                  : "bg-muted rounded-bl-md"
               }`}
             >
-              <p className="text-sm text-[#e5e5e5]">{m.text}</p>
+              <p className="text-sm text-foreground">{m.text}</p>
               <div className="flex items-center gap-1.5 mt-1 justify-end">
-                <span className="text-[10px] text-[#888]">
+                <span className="text-[10px] text-muted-foreground">
                   {new Date(m.timestamp).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                 </span>
                 {m.role === "user" && m.status === "sent" && (
-                  <Check className="h-3 w-3 text-[#666]" strokeWidth={2.5} />
+                  <Check className="h-3 w-3 text-muted-foreground" strokeWidth={2.5} />
                 )}
                 {m.role === "user" && m.status === "read" && (
-                  <CheckCheck className="h-3 w-3 text-[#4DA3FF]" strokeWidth={2.5} />
+                  <CheckCheck className="h-3 w-3 text-state-good" strokeWidth={2.5} />
                 )}
               </div>
             </div>
           </motion.div>
         ))}
       </div>
-      <div className="shrink-0 p-4 pt-2 border-t" style={{ borderColor: BORDER }}>
-        <p className="text-[11px] text-[#666] mb-2">Мы ответим в течение 24 часов</p>
+      <div className="shrink-0 p-4 pt-2 border-t border-border">
+        <p className="text-[11px] text-muted-foreground mb-2">Мы ответим в течение 24 часов</p>
         <div className="flex gap-2">
           <button
             type="button"
-            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg border border-[rgba(255,255,255,0.08)] text-[#888] hover:bg-[#1a1a1a] transition-colors"
+            className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-card transition-colors"
             aria-label="Прикрепить скрин"
           >
             <ImagePlus className="h-5 w-5" />
@@ -153,12 +150,12 @@ function SupportTab() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Сообщение..."
-            className="flex-1 bg-[#111] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] placeholder:text-[#666] rounded-lg focus-visible:ring-[rgba(255,255,255,0.1)]"
+            className="flex-1 bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg focus-visible:ring-ring"
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim()}
-            className="shrink-0 h-10 w-10 p-0 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5] border border-[rgba(255,255,255,0.08)]"
+            className="shrink-0 h-10 w-10 p-0 rounded-lg bg-card hover:bg-accent text-foreground border border-border"
           >
             <Send className="h-4 w-4" />
           </Button>
@@ -191,7 +188,7 @@ function GroupsTab() {
     <div className="px-4 py-4 space-y-4">
       <Button
         onClick={() => setShowCreate(true)}
-        className="w-full h-12 rounded-lg bg-[#111] border border-[rgba(255,255,255,0.08)] text-[#e5e5e5] hover:bg-[#1a1a1a] justify-center gap-2"
+        className="w-full h-12 rounded-lg bg-muted border border-border text-foreground hover:bg-card justify-center gap-2"
       >
         <Plus className="h-5 w-5" />
         Создать группу
@@ -207,9 +204,9 @@ function GroupsTab() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold text-[#e5e5e5]">{g.name}</h3>
-              <p className="text-xs text-[#888] mt-1">{g.description}</p>
-              <p className="text-[11px] text-[#666] mt-2">
+              <h3 className="text-sm font-semibold text-foreground">{g.name}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{g.description}</p>
+              <p className="text-[11px] text-muted-foreground mt-2">
                 {g.members} участников · {g.theme}
               </p>
             </div>
@@ -217,7 +214,7 @@ function GroupsTab() {
               onClick={() => handleJoin(g.id)}
               disabled={joined.has(g.id)}
               size="sm"
-              className="shrink-0 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5] border border-[rgba(255,255,255,0.08)] disabled:opacity-50"
+              className="shrink-0 rounded-lg bg-card hover:bg-accent text-foreground border border-border disabled:opacity-50"
             >
               {joined.has(g.id) ? "Вы в группе" : "Вступить"}
             </Button>
@@ -240,23 +237,22 @@ function GroupsTab() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-md rounded-t-2xl p-5 pb-8"
-              style={{ backgroundColor: CARD_BG, borderTop: `1px solid ${BORDER}` }}
+              className="w-full max-w-md rounded-t-2xl p-5 pb-8 bg-card border-t border-border"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-base font-semibold text-[#e5e5e5] mb-4">Создать группу</h3>
+              <h3 className="text-base font-semibold text-foreground mb-4">Создать группу</h3>
               <div className="space-y-3">
                 <Input
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   placeholder="Название"
-                  className="bg-[#0d0d0d] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] rounded-lg"
+                  className="bg-muted border-border text-foreground rounded-lg"
                 />
                 <Input
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
                   placeholder="Описание"
-                  className="bg-[#0d0d0d] border-[rgba(255,255,255,0.08)] text-[#e5e5e5] rounded-lg"
+                  className="bg-muted border-border text-foreground rounded-lg"
                 />
                 <div className="flex flex-wrap gap-2">
                   {GROUP_THEMES.map((t) => (
@@ -265,14 +261,14 @@ function GroupsTab() {
                       type="button"
                       onClick={() => setCreateTheme(t)}
                       className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                        createTheme === t ? "bg-[#1a1a1a] text-[#e5e5e5]" : "bg-[#0d0d0d] text-[#888]"
+                        createTheme === t ? "bg-card text-foreground" : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {t}
                     </button>
                   ))}
                 </div>
-                <label className="flex items-center gap-2 text-sm text-[#888]">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={createPrivate}
@@ -286,13 +282,13 @@ function GroupsTab() {
                 <Button
                   variant="outline"
                   onClick={() => setShowCreate(false)}
-                  className="flex-1 rounded-lg border-[rgba(255,255,255,0.08)] text-[#888]"
+                  className="flex-1 rounded-lg border-border text-muted-foreground"
                 >
                   Отмена
                 </Button>
                 <Button
                   onClick={handleCreate}
-                  className="flex-1 rounded-lg bg-[#1a1a1a] hover:bg-[#222] text-[#e5e5e5]"
+                  className="flex-1 rounded-lg bg-card hover:bg-accent text-foreground"
                 >
                   Создать
                 </Button>
@@ -328,33 +324,33 @@ function FeedTab() {
           style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}` }}
         >
           <div className="flex gap-3">
-            <Avatar className="h-10 w-10 shrink-0 border border-[rgba(255,255,255,0.08)]">
+            <Avatar className="h-10 w-10 shrink-0 border border-border">
               <AvatarImage src={p.avatar} alt="" />
-              <AvatarFallback className="bg-[#1a1a1a] text-xs text-[#888]">
+              <AvatarFallback className="bg-card text-xs text-muted-foreground">
                 {p.author.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#e5e5e5]">{p.author}</span>
-                <span className="text-[10px] text-[#666] bg-[#1a1a1a] px-1.5 py-0.5 rounded">LVL {p.level}</span>
+                <span className="text-sm font-medium text-foreground">{p.author}</span>
+                <span className="text-[10px] text-muted-foreground bg-card px-1.5 py-0.5 rounded">LVL {p.level}</span>
               </div>
-              <p className="text-sm text-[#b0b0b0] mt-1">{p.text}</p>
+              <p className="text-sm text-muted-foreground mt-1">{p.text}</p>
               {p.achievement && (
-                <p className="text-xs text-[#4DA3FF] mt-2 font-medium">{p.achievement}</p>
+                <p className="text-xs text-state-good mt-2 font-medium">{p.achievement}</p>
               )}
               <div className="flex items-center gap-4 mt-3">
                 <button
                   type="button"
                   onClick={() => toggleLike(p.id)}
-                  className="flex items-center gap-1 text-[#888] hover:text-[#e5e5e5] transition-colors"
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Heart
-                    className={`h-4 w-4 ${liked.has(p.id) ? "fill-[#37BE7E] text-[#37BE7E]" : ""}`}
+                    className={`h-4 w-4 ${liked.has(p.id) ? "fill-state-good text-state-good" : ""}`}
                   />
                   <span className="text-xs">{p.likes + (liked.has(p.id) ? 1 : 0)}</span>
                 </button>
-                <span className="flex items-center gap-1 text-[#888] text-xs">
+                <span className="flex items-center gap-1 text-muted-foreground text-xs">
                   <MessageCircle className="h-4 w-4" />
                   {p.comments}
                 </span>
@@ -369,32 +365,31 @@ function FeedTab() {
 
 export default function Community() {
   return (
-    <div className="min-h-[100dvh] bg-[#000000]">
+    <div className="min-h-[100dvh] bg-background">
       <div className="px-5 pt-6 pb-4">
-        <h1 className="text-2xl font-semibold text-[#e5e5e5]">Community</h1>
-        <p className="text-sm text-[#888] mt-1">Единомышленники. Поддержка. Рост.</p>
+        <h1 className="text-2xl font-semibold text-foreground">Community</h1>
+        <p className="text-sm text-muted-foreground mt-1">Единомышленники. Поддержка. Рост.</p>
       </div>
 
       <Tabs defaultValue="support" className="px-4">
         <TabsList
-          className="w-full bg-[#111] border rounded-lg p-1 mb-4"
-          style={{ borderColor: BORDER }}
+          className="w-full bg-muted border border-border rounded-lg p-1 mb-4"
         >
           <TabsTrigger
             value="support"
-            className="flex-1 data-[state=active]:bg-[#1a1a1a] data-[state=active]:text-[#e5e5e5] data-[state=active]:shadow-none rounded-lg text-[#888]"
+            className="flex-1 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none rounded-lg text-muted-foreground"
           >
             Поддержка
           </TabsTrigger>
           <TabsTrigger
             value="groups"
-            className="flex-1 data-[state=active]:bg-[#1a1a1a] data-[state=active]:text-[#e5e5e5] data-[state=active]:shadow-none rounded-lg text-[#888]"
+            className="flex-1 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none rounded-lg text-muted-foreground"
           >
             Группы
           </TabsTrigger>
           <TabsTrigger
             value="feed"
-            className="flex-1 data-[state=active]:bg-[#1a1a1a] data-[state=active]:text-[#e5e5e5] data-[state=active]:shadow-none rounded-lg text-[#888]"
+            className="flex-1 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none rounded-lg text-muted-foreground"
           >
             Лента
           </TabsTrigger>

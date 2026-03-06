@@ -152,7 +152,7 @@ export default function HealthCore({ score }: HealthCoreProps) {
 
   const glowColor = themeHex;
   const glowOpacity = isDark ? 0.2 : 0.25;
-  const coreBg = isDark ? "rgba(15, 15, 18, 0.95)" : "rgba(250, 250, 250, 0.98)";
+  const coreBg = isDark ? "rgba(0, 0, 0, 0.95)" : "rgba(252, 252, 252, 0.98)";
 
   return (
     <div

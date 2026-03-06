@@ -1029,7 +1029,7 @@ const Profile = () => {
 
       {/* Detail modal */}
       <Dialog open={modal !== null} onOpenChange={(open) => !open && setModal(null)}>
-        <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+        <DialogContent className="max-w-[340px] border border-border bg-card p-5 shadow-[var(--shadow-card)]">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground">
               {modal === "fullName" && t("profile.firstName")}

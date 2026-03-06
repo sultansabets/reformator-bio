@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Dna, Zap, Dumbbell, Flame, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { colors } from "@/theme/colors";
 
 interface ResourceSystem {
   id: string;
@@ -12,6 +13,12 @@ interface ResourceSystem {
   sources: string[];
   iconColor: string;
   iconBg: string;
+}
+
+function rgba(hex: string, alpha: number): string {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  if (!m) return `rgba(0,0,0,${alpha})`;
+  return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})`;
 }
 
 export interface ResourceSystemsProps {
@@ -38,8 +45,8 @@ export function ResourceSystems({
       label: t("systems.hormonal"),
       percent: hormonalPercent ?? 72,
       sources: [t("systems.testosterone"), t("systems.estradiol"), t("systems.shbg"), t("systems.prolactin")],
-      iconColor: "#37BE7E",
-      iconBg: "rgba(55,190,126,0.15)",
+      iconColor: colors.state.good,
+      iconBg: rgba(colors.state.good, 0.15),
     },
     {
       id: "nervous",
@@ -47,8 +54,8 @@ export function ResourceSystems({
       label: t("systems.nervous"),
       percent: nervousPercent ?? 65,
       sources: [t("systems.hrv"), t("systems.restPulse"), t("systems.sleep"), t("systems.stress")],
-      iconColor: "#3B82F6",
-      iconBg: "rgba(59,130,246,0.15)",
+      iconColor: colors.state.okay,
+      iconBg: rgba(colors.state.okay, 0.15),
     },
     {
       id: "physical",
@@ -56,8 +63,8 @@ export function ResourceSystems({
       label: t("systems.physical"),
       percent: physicalPercent ?? 58,
       sources: [t("systems.workouts"), t("systems.recovery"), t("systems.muscleMass"), t("systems.protein")],
-      iconColor: "#37BE7E",
-      iconBg: "rgba(55,190,126,0.15)",
+      iconColor: colors.state.good,
+      iconBg: rgba(colors.state.good, 0.15),
     },
     {
       id: "metabolic",
@@ -65,8 +72,8 @@ export function ResourceSystems({
       label: t("systems.metabolic"),
       percent: metabolicPercent ?? 70,
       sources: [t("systems.glucose"), t("systems.insulin"), t("systems.fatPct"), t("systems.waist")],
-      iconColor: "#37BE7E",
-      iconBg: "rgba(55,190,126,0.15)",
+      iconColor: colors.state.good,
+      iconBg: rgba(colors.state.good, 0.15),
     },
   ];
 
