@@ -173,7 +173,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     migrateLegacyUserIfNeeded();
     return getCurrentUser();
   });
-  const isAuthenticated = !!getAccessToken() || !!user?.id;
+  const [, setAuthVersion] = useState(0);
+  const isAuthenticated = !!getAccessToken();
 
   useEffect(() => {
     setUser(getCurrentUser());
@@ -232,9 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await apiLogin(loginId.trim(), password);
       if (res.accessToken) {
-        setStoredApiUser(null);
-        setCurrentUserId(null);
-        setUser(null);
+        setAuthVersion((v) => v + 1);
         return { success: true };
       }
       return { success: false, error: "Неверный ответ сервера." };

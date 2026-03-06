@@ -1,15 +1,15 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { getAccessToken } from "@/api/apiClient";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const hasToken = !!getAccessToken();
   const location = useLocation();
 
-  if (!isAuthenticated) {
+  if (!hasToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

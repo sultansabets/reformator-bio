@@ -19,7 +19,7 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/control" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +30,7 @@ const Login = () => {
       setError(result.error ?? t("errors.invalidLogin"));
       return;
     }
-    navigate("/", { replace: true });
+    navigate("/control", { replace: true });
   };
 
   return (
