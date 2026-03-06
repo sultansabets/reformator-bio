@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
 import { useHealthStore } from "@/store/healthStore";
+import { useMetricsSummaryQuery } from "@/hooks/useMetricsQuery";
+import { getAccessToken } from "@/api/apiClient";
 import HealthOrb from "@/components/control/HealthOrb";
 import { SleepCard } from "@/components/control/SleepCard";
 import { LoadCard } from "@/components/control/LoadCard";
@@ -31,6 +33,21 @@ const ControlCenter = () => {
   const selectedDate = useDateStore((s) => s.selectedDate);
   const hydrateForDate = useHealthStore((s) => s.hydrateForDate);
   const hydrate = useHealthStore((s) => s.hydrate);
+
+  const metricsQuery = useMetricsSummaryQuery(selectedDate, user?.id);
+  const hasToken = !!getAccessToken();
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (hasToken && !metricsQuery.isError) return;
+    const profile = {
+      weight: user.weight,
+      height: user.height,
+      age: user.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : undefined,
+      activityLevel: user.activityLevel,
+    };
+    hydrateForDate(user.id, profile, selectedDate);
+  }, [user?.id, user?.weight, user?.height, user?.dob, user?.activityLevel, selectedDate, hydrateForDate, hasToken, metricsQuery.isError]);
   const sleepPercent = useHealthStore((s) => s.sleepPercent);
   const loadPercent = useHealthStore((s) => s.loadPercent);
   const stress = useHealthStore((s) => s.stress);
@@ -39,17 +56,6 @@ const ControlCenter = () => {
   const heartRate = useHealthStore((s) => s.heartRate);
   const testosterone = useHealthStore((s) => s.testosterone);
   const testosteroneDate = useHealthStore((s) => s.testosteroneDate);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    const profile = {
-      weight: user.weight,
-      height: user.height,
-      age: user.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : undefined,
-      activityLevel: user.activityLevel,
-    };
-    hydrateForDate(user.id, profile, selectedDate);
-  }, [user?.id, user?.weight, user?.height, user?.dob, user?.activityLevel, selectedDate, hydrateForDate]);
 
   useEffect(() => {
     return () => {

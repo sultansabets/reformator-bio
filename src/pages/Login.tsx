@@ -22,10 +22,10 @@ const Login = () => {
     return <Navigate to="/" replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const result = login(loginId, password);
+    const result = await login(loginId, password);
     if (!result.success) {
       setError(result.error ?? t("errors.invalidLogin"));
       return;

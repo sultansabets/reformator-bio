@@ -10,6 +10,9 @@ import {
   getStorageKey,
   type AppUser,
 } from "@/lib/userStorage";
+import { login as apiLogin } from "@/api/authApi";
+import { clearAccessToken, getAccessToken } from "@/api/apiClient";
+import { getStoredApiUser, setStoredApiUser, type ApiUser } from "@/api/authStorage";
 
 const LEGACY_USER_KEY = "reformator_bio_user";
 
@@ -99,7 +102,7 @@ export type UserWithFullName = StoredUser & { fullName: string; id: string };
 interface AuthContextType {
   isAuthenticated: boolean;
   user: UserWithFullName | null;
-  login: (loginId: string, password: string) => { success: boolean; error?: string };
+  login: (loginId: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: {
     phone: string;
     password: string;
@@ -133,18 +136,47 @@ function getCurrentStoredUser(): UserWithFullName | null {
   return app ? withFullName(app) : null;
 }
 
+function apiUserToUserWithFullName(api: ApiUser): UserWithFullName {
+  const fullName =
+    api.nickname?.trim() ||
+    [api.firstName, api.lastName].filter(Boolean).join(" ").trim() ||
+    "Пользователь";
+  return {
+    id: api.id,
+    fullName,
+    phone: api.phone ?? "",
+    email: api.email,
+    nickname: api.nickname,
+    firstName: api.firstName,
+    lastName: api.lastName,
+    password: "",
+    height: api.height,
+    weight: api.weight,
+    dob: api.dob,
+    activityLevel: api.activityLevel,
+  };
+}
+
+function getCurrentUser(): UserWithFullName | null {
+  const token = getAccessToken();
+  const apiUser = getStoredApiUser();
+  if (token && apiUser) {
+    return apiUserToUserWithFullName(apiUser);
+  }
+  return getCurrentStoredUser();
+}
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserWithFullName | null>(() => {
     migrateLegacyUserIfNeeded();
-    return getCurrentStoredUser();
+    return getCurrentUser();
   });
   const isAuthenticated = !!user?.id;
 
   useEffect(() => {
-    const current = getCurrentStoredUser();
-    setUser(current);
+    setUser(getCurrentUser());
   }, []);
 
   const updateUser = useCallback((updates: ProfileUpdates) => {
@@ -155,7 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(next);
   }, []);
 
-  const hasUser = useCallback(() => !!getCurrentStoredUser(), []);
+  const hasUser = useCallback(() => !!getCurrentUser(), []);
 
   const register = useCallback(
     (data: {
@@ -196,17 +228,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
-  const login = useCallback((loginId: string, password: string): { success: boolean; error?: string } => {
-    const found = findUserByPhoneAndPassword(loginId.trim(), password);
-    if (!found) {
-      return { success: false, error: "Неверный логин или пароль." };
+  const login = useCallback(async (loginId: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await apiLogin(loginId.trim(), password);
+      if (res.accessToken) {
+        setStoredApiUser(res.user);
+        setCurrentUserId(res.user.id);
+        setUser(apiUserToUserWithFullName(res.user));
+        return { success: true };
+      }
+      return { success: false, error: "Неверный ответ сервера." };
+    } catch (err: unknown) {
+      const msg = err && typeof err === "object" && "message" in err
+        ? String((err as { message: string }).message)
+        : "Неверный логин или пароль.";
+      return { success: false, error: msg };
     }
-    setCurrentUserId(found.id);
-    setUser(withFullName(found));
-    return { success: true };
   }, []);
 
   const logout = useCallback(() => {
+    clearAccessToken();
+    setStoredApiUser(null);
     setCurrentUserId(null);
     setUser(null);
   }, []);

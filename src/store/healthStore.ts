@@ -18,6 +18,7 @@ import {
 import { calculateSleepFromBlocks, mapHealthToSleepInput, type SleepEngineResult } from "@/engine/sleepEngine";
 import { calculateEnergyDetail, type EnergyEngineResult } from "@/engine/energyEngine";
 import { hydrateFromStorage, hydrateFromStorageForDate } from "@/lib/healthDataSync";
+import type { MetricsSummary } from "@/api/metricsApi";
 
 function getTodayISO(): string {
   return new Date().toLocaleDateString("en-CA", {
@@ -172,7 +173,30 @@ function getInitialState(): HealthState {
   return { ...initialRaw, ...computed };
 }
 
+function metricsSummaryToRaw(api: MetricsSummary, viewDate: string): HealthRawState {
+  return {
+    sleepHours: api.sleepHours ?? 7.5,
+    sleepQuality: api.sleepQuality ?? 80,
+    hrv: api.hrv ?? 45,
+    heartRate: api.heartRate ?? 62,
+    steps: api.steps ?? 6500,
+    caloriesIntake: api.caloriesIntake ?? 0,
+    caloriesBurned: api.caloriesBurned ?? 0,
+    protein: api.protein ?? 0,
+    carbs: api.carbs ?? 0,
+    fats: api.fats ?? 0,
+    targetCalories: api.targetCalories ?? 2000,
+    targetProtein: api.targetProtein ?? 150,
+    testosterone: api.testosterone,
+    testosteroneDate: api.testosteroneDate,
+    workouts: (api.workouts ?? []) as WorkoutEntryStore[],
+    nutritionHistory: (api.nutritionHistory ?? []) as NutritionHistoryEntry[],
+    viewDate,
+  };
+}
+
 type HealthActions = {
+  setFromApiMetrics: (api: MetricsSummary, viewDate: string) => void;
   hydrate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }) => void;
   hydrateForDate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }, dateStr: string) => void;
   setRaw: (patch: Partial<HealthRawState>) => void;
@@ -189,6 +213,11 @@ export const useHealthStore = create<HealthState & HealthActions>()(
     const initialState = getInitialState();
     return {
       ...initialState,
+
+      setFromApiMetrics: (api, viewDate) => {
+        const rawState = metricsSummaryToRaw(api, viewDate);
+        set({ ...rawState, ...recompute(rawState) });
+      },
 
       hydrate: (userId, profile) => {
       const raw = hydrateFromStorage({
