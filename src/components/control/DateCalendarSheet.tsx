@@ -47,7 +47,7 @@ export function DateCalendarSheet({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] flex flex-col border-0 bg-[#141414] rounded-t-[24px]">
+      <DrawerContent className="max-h-[85vh] flex flex-col border-0 bg-card rounded-t-[24px]">
         <DrawerHeader className="shrink-0 px-5 pb-3 pt-2 flex flex-row items-center justify-between">
           <h2 className="text-base font-medium text-foreground">{t("center.datePickTitle")}</h2>
           <button

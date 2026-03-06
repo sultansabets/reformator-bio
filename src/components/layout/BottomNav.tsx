@@ -8,18 +8,18 @@ import { ParticlesIcon } from "@/components/ParticlesIcon";
 import {
   HomeOutlineIcon,
   HomeFilledIcon,
-  StatsOutlineIcon,
-  StatsFilledIcon,
-  LabsOutlineIcon,
-  LabsFilledIcon,
+  CenterOutlineIcon,
+  CenterFilledIcon,
+  AnalysesOutlineIcon,
+  AnalysesFilledIcon,
   ProfileOutlineIcon,
   ProfileFilledIcon,
 } from "@/components/icons/nav";
 
 const TABS = [
   { path: "/control", OutlineIcon: HomeOutlineIcon, FilledIcon: HomeFilledIcon, key: "tabs.home" },
-  { path: "/insights", OutlineIcon: StatsOutlineIcon, FilledIcon: StatsFilledIcon, key: "tabs.stats" },
-  { path: "/data", OutlineIcon: LabsOutlineIcon, FilledIcon: LabsFilledIcon, key: "tabs.labs" },
+  { path: "/center", OutlineIcon: CenterOutlineIcon, FilledIcon: CenterFilledIcon, key: "tabs.center" },
+  { path: "/analyses", OutlineIcon: AnalysesOutlineIcon, FilledIcon: AnalysesFilledIcon, key: "tabs.analyses" },
   { path: "/profile", OutlineIcon: ProfileOutlineIcon, FilledIcon: ProfileFilledIcon, key: "tabs.profile", useAvatar: true },
 ];
 

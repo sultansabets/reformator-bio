@@ -17,7 +17,6 @@ import AI from "@/pages/AI";
 import Insights from "@/pages/Insights";
 import LabInsights from "@/pages/LabInsights";
 import Labs from "@/pages/Labs";
-import Store from "@/pages/Store";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import MedicalSectionDetails from "@/pages/MedicalSectionDetails";
@@ -48,10 +47,10 @@ const App = () => (
               <Route path="/control" element={<ControlCenter />} />
               <Route path="/center" element={<Center />} />
               <Route path="/ai" element={<AI />} />
-              <Route path="/insights" element={<Insights />} />
+              <Route path="/analyses" element={<Insights />} />
+              <Route path="/insights" element={<Navigate to="/analyses" replace />} />
               <Route path="/lab-insights" element={<LabInsights />} />
               <Route path="/data" element={<Labs />} />
-              <Route path="/shop" element={<Store />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/medical/:id" element={<MedicalSectionDetails />} />

@@ -31,7 +31,7 @@
     "evening": "Good evening",
     "night": "Good night"
   },
-  "tabs": { "home": "Home", "center": "Center", "stats": "Stats", "store": "Store", "labs": "Labs", "profile": "Profile", "ai": "AI" },
+  "tabs": { "home": "Home", "center": "Center", "stats": "Stats", "analyses": "Analyses", "store": "Store", "labs": "Labs", "profile": "Profile", "ai": "AI" },
   "auth": {
     "login": "Sign in",
     "register": "Sign up",

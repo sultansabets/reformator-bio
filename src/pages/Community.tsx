@@ -199,8 +199,7 @@ function GroupsTab() {
           key={g.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-4 transition-colors hover:bg-[#0d0d0d]"
-          style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}` }}
+          className="rounded-2xl p-4 border border-border bg-card transition-colors hover:bg-accent"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -320,8 +319,7 @@ function FeedTab() {
           key={p.id}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-4 transition-colors hover:bg-[#0d0d0d]"
-          style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}` }}
+          className="rounded-2xl p-4 border border-border bg-card transition-colors hover:bg-accent"
         >
           <div className="flex gap-3">
             <Avatar className="h-10 w-10 shrink-0 border border-border">

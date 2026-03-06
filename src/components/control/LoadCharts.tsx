@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import type { LoadEngineResult } from "@/engine/loadEngine";
 import { colors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const CHART_HEIGHT = 240;
 const CHART_MARGIN = { top: 16, right: 8, left: 0, bottom: 24 };
@@ -22,7 +23,6 @@ const BODY_STEPS = colors.ui.gray;
 const NEURO_STRESS = colors.ui.gray;
 const NEURO_HRV = colors.state.good;
 const NEURO_SLEEP = colors.ui.darkGray;
-const GRID_STROKE = "rgba(255,255,255,0.08)";
 const DAY_LABELS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
 export interface LoadChartsProps {
@@ -31,6 +31,32 @@ export interface LoadChartsProps {
 
 export function LoadCharts({ loadDetail }: LoadChartsProps) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const gridStroke = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  const tickFill = isDark ? "rgba(255,255,255,0.5)" : colors.darkGray;
+  const lineStroke = isDark ? "rgba(255,255,255,0.9)" : colors.black;
+
+  const commonXAxisProps = useMemo(
+    () => ({
+      tick: { fontSize: 10, fill: tickFill },
+      height: 32,
+      axisLine: false,
+      tickLine: false,
+    }),
+    [tickFill],
+  );
+
+  const commonYAxisProps = useMemo(
+    () => ({
+      tick: { fontSize: 10, fill: tickFill },
+      width: 44,
+      axisLine: false,
+      tickLine: false,
+    }),
+    [tickFill],
+  );
 
   const chartData = useMemo(() => {
     if (!loadDetail) return [];
@@ -59,20 +85,6 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
     }
     return data;
   }, [loadDetail]);
-
-  const commonXAxisProps = {
-    tick: { fontSize: 10, fill: "rgba(255,255,255,0.5)" },
-    height: 32,
-    axisLine: false,
-    tickLine: false,
-  };
-
-  const commonYAxisProps = {
-    tick: { fontSize: 10, fill: "rgba(255,255,255,0.5)" },
-    width: 44,
-    axisLine: false,
-    tickLine: false,
-  };
 
   const ChartSection = ({
     title,
@@ -103,13 +115,13 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
       <ChartSection title={t("loadDetail.chartTotalLoad")}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <LineChart data={chartData} margin={CHART_MARGIN}>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
             <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis domain={[0, 100]} {...commonYAxisProps} tickFormatter={(v) => `${v}%`} />
             <Line
               type="monotone"
               dataKey="totalLoad"
-              stroke="rgba(255,255,255,0.9)"
+              stroke={lineStroke}
               strokeWidth={2}
               dot={false}
               connectNulls
@@ -139,7 +151,7 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
       >
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
             <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis domain={[0, 100]} {...commonYAxisProps} tickFormatter={(v) => `${v}%`} />
             <Bar dataKey="strengthLoad" stackId="body" fill={BODY_STRENGTH} radius={[0, 0, 0, 0]} />
@@ -170,7 +182,7 @@ export function LoadCharts({ loadDetail }: LoadChartsProps) {
       >
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <ComposedChart data={chartData} margin={CHART_MARGIN} barCategoryGap="20%">
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
             <XAxis dataKey="label" {...commonXAxisProps} interval="preserveStartEnd" />
             <YAxis domain={[0, 100]} {...commonYAxisProps} tickFormatter={(v) => `${v}%`} />
             <Bar dataKey="sleepDebtLoad" fill={NEURO_SLEEP} radius={[2, 2, 0, 0]} opacity={0.7} />

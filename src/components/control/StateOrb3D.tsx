@@ -3,9 +3,10 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { createNoise3D } from "simplex-noise";
 
-import { getMetricColorHex } from "@/lib/colors";
+import { orbParticleColors } from "@/theme/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const PARTICLE_COUNT = 10000;
+const PARTICLE_COUNT = 9000;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
@@ -96,9 +97,9 @@ const ParticleSphere = memo(function ParticleSphere({
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
         ref={materialRef}
-        size={0.015}
+        size={0.035}
         transparent
-        opacity={0.9}
+        opacity={1}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         color={color}
@@ -113,7 +114,11 @@ interface StateOrb3DProps {
 }
 
 function StateOrb3D({ score }: StateOrb3DProps) {
-  const color = useMemo(() => getMetricColorHex(score), [score]);
+  const { theme } = useTheme();
+  const color = useMemo(
+    () => orbParticleColors[theme],
+    [theme],
+  );
 
   return (
     <div className="absolute inset-0 w-full h-full">

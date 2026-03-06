@@ -39,3 +39,29 @@ export const colors = {
     bad: "#EF3B3B",
   },
 } as const;
+
+/** Light theme palette – use for .light */
+export const lightTheme = {
+  background: "#FCFCFC",
+  card: "#FFFFFF",
+  textPrimary: "#000000",
+  textSecondary: "#6F6F6F",
+  border: "#DDDDDD",
+  surface: "#F6F6F6",
+} as const;
+
+/** Dark theme palette – use for .dark */
+export const darkTheme = {
+  background: "#0C0C0C",
+  card: "#1D1D1D",
+  textPrimary: "#EDEDED",
+  textSecondary: "#6F6F6F",
+  border: "#353535",
+  surface: "#1D1D1D",
+} as const;
+
+/** Particle orb colors – theme-aware for visibility */
+export const orbParticleColors = {
+  light: "#00AA66",
+  dark: "#00ff88",
+} as const;

@@ -2,10 +2,10 @@ import React from "react";
 import {
   HiOutlineHome,
   HiHome,
+  HiOutlineSquares2X2,
+  HiSquares2X2,
   HiOutlineChartBar,
   HiChartBar,
-  HiOutlineBeaker,
-  HiBeaker,
   HiOutlineUser,
   HiUser,
 } from "react-icons/hi2";
@@ -21,20 +21,20 @@ export function HomeFilledIcon({ className }: { className?: string }) {
   return <HiHome className={cn(iconClassName, className)} />;
 }
 
-export function StatsOutlineIcon({ className }: { className?: string }) {
+export function CenterOutlineIcon({ className }: { className?: string }) {
+  return <HiOutlineSquares2X2 className={cn(iconClassName, className)} strokeWidth={1.8} />;
+}
+
+export function CenterFilledIcon({ className }: { className?: string }) {
+  return <HiSquares2X2 className={cn(iconClassName, className)} />;
+}
+
+export function AnalysesOutlineIcon({ className }: { className?: string }) {
   return <HiOutlineChartBar className={cn(iconClassName, className)} strokeWidth={1.8} />;
 }
 
-export function StatsFilledIcon({ className }: { className?: string }) {
+export function AnalysesFilledIcon({ className }: { className?: string }) {
   return <HiChartBar className={cn(iconClassName, className)} />;
-}
-
-export function LabsOutlineIcon({ className }: { className?: string }) {
-  return <HiOutlineBeaker className={cn(iconClassName, className)} strokeWidth={1.8} />;
-}
-
-export function LabsFilledIcon({ className }: { className?: string }) {
-  return <HiBeaker className={cn(iconClassName, className)} />;
 }
 
 export function ProfileOutlineIcon({ className }: { className?: string }) {

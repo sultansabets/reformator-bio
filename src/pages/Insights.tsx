@@ -166,7 +166,7 @@ const Insights = () => {
       <motion.div variants={item} className="mb-8">
         <Card
           className="cursor-pointer border-0 shadow-sm transition-shadow hover:shadow-md"
-          onClick={() => navigate("/lab-insights")}
+          onClick={() => navigate("/lab-insights", { state: { from: "/analyses" } })}
         >
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
