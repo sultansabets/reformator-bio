@@ -1,48 +1,67 @@
 import React, { useRef, useMemo, useEffect, memo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { createNoise3D } from "simplex-noise";
 
 import { getMetricColorHex } from "@/lib/colors";
 
-const PARTICLE_COUNT = 3200;
-const OUTER_RADIUS = 1.55;
+const PARTICLE_COUNT = 10000;
 const LERP_SPEED = 3.0;
 
 interface ParticleSphereProps {
   color: string;
+  recoveryScore: number;
 }
 
-const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSphereProps) {
+const ParticleSphere = memo(function ParticleSphere({
+  color,
+  recoveryScore,
+}: ParticleSphereProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-  
+  const materialRef = useRef<THREE.PointsMaterial>(null);
   const targetColor = useRef(new THREE.Color(color));
   const currentColor = useRef(new THREE.Color(color));
-  const time = useRef(0);
-  const basePositions = useRef<Float32Array | null>(null);
-
-  const uniforms = useMemo(() => ({
-    uColor: { value: new THREE.Color(color) }
-  }), []);
 
   const geometry = useMemo(() => {
+    const simplex = createNoise3D();
     const positions = new Float32Array(PARTICLE_COUNT * 3);
-    
+
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const r = OUTER_RADIUS * Math.sqrt(Math.random());
-      
-      const x = r * Math.cos(angle);
-      const y = r * Math.sin(angle);
-      const z = 0;
-      
+      // Layered depth: inner sparse (15%), dense middle (60%), turbulent outer (25%)
+      const rn = Math.random();
+      let rBase: number;
+      if (rn < 0.15) {
+        rBase = 0.7 + Math.random() * 0.1; // inner sparse
+      } else if (rn < 0.75) {
+        rBase = 0.8 + Math.random() * 0.15; // dense middle
+      } else {
+        rBase = 0.95 + Math.random() * 0.05; // turbulent outer
+      }
+
+      const r = rBase;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      // Spherical to cartesian
+      let x = r * Math.sin(phi) * Math.cos(theta);
+      let y = r * Math.sin(phi) * Math.sin(theta);
+      let z = r * Math.cos(phi);
+
+      // Noise-based distortion to avoid perfect sphere
+      const noise = simplex(x * 0.8, y * 0.8, z * 0.8);
+      const radiusOffset = noise * 0.4;
+      const finalRadius = r + radiusOffset;
+
+      const scale = r > 0.0001 ? finalRadius / r : 1;
+      x *= scale;
+      y *= scale;
+      z *= scale;
+
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
     }
-    
-    basePositions.current = positions.slice();
-    
+
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     return geo;
@@ -52,76 +71,32 @@ const ParticleSphere = memo(function ParticleSphere({ color }: ParticleSpherePro
     targetColor.current.set(color);
   }, [color]);
 
-  useFrame((_, delta) => {
-    time.current += delta;
-    
+  useFrame((state, delta) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.z += delta * 0.1;
-      
-      const pulse = 1 + Math.sin(time.current * 1.5) * 0.02;
-      pointsRef.current.scale.setScalar(pulse);
-      
-      const positions = geometry.attributes.position.array as Float32Array;
-      const base = basePositions.current;
-      
-      if (base) {
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-          const i3 = i * 3;
-          const noise = Math.sin(time.current * 2 + i * 0.01) * 0.015;
-          
-          positions[i3] = base[i3] * (1 + noise);
-          positions[i3 + 1] = base[i3 + 1] * (1 + noise);
-          positions[i3 + 2] = 0;
-        }
-        geometry.attributes.position.needsUpdate = true;
-      }
+      pointsRef.current.rotation.y += delta * 0.08;
+
+      const breathing = 1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.03;
+      const radiusScale = 1 + recoveryScore * 0.01;
+      pointsRef.current.scale.setScalar(breathing * radiusScale);
     }
 
     if (materialRef.current) {
       currentColor.current.lerp(targetColor.current, delta * LERP_SPEED);
-      materialRef.current.uniforms.uColor.value.copy(currentColor.current);
+      materialRef.current.color.copy(currentColor.current);
     }
   });
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <shaderMaterial
+      <pointsMaterial
         ref={materialRef}
+        size={0.015}
         transparent
+        opacity={0.9}
         depthWrite={false}
-        depthTest={true}
         blending={THREE.AdditiveBlending}
-        uniforms={uniforms}
-        vertexShader={`
-          varying vec3 vPosition;
-          void main() {
-            vPosition = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = 3.8;
-          }
-        `}
-        fragmentShader={`
-          uniform vec3 uColor;
-          varying vec3 vPosition;
-
-          void main() {
-            vec2 coord = gl_PointCoord - vec2(0.5);
-            float d = length(coord);
-            
-            if (d > 0.5) discard;
-            
-            float pointMask = 1.0 - smoothstep(0.0, 0.5, d);
-            
-            float r = length(vPosition);
-            float outerRadius = 1.55;
-            
-            float edgeBoost = smoothstep(outerRadius * 0.6, outerRadius, r);
-            
-            float alpha = pointMask * (0.6 + edgeBoost * 0.6);
-            
-            gl_FragColor = vec4(uColor, alpha);
-          }
-        `}
+        color={color}
+        sizeAttenuation
       />
     </points>
   );
@@ -142,7 +117,7 @@ function StateOrb3D({ score }: StateOrb3DProps) {
         style={{ background: "transparent" }}
         dpr={[1, 2]}
       >
-        <ParticleSphere color={color} />
+        <ParticleSphere color={color} recoveryScore={score} />
       </Canvas>
     </div>
   );
