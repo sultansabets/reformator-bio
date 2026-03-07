@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { METRICS_QUERY_KEY } from "@/hooks/useMetricsQuery";
 import {
   getUsersData,
   setCurrentUserId,
@@ -169,6 +171,7 @@ function getCurrentUser(): UserWithFullName | null {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<UserWithFullName | null>(() => {
     migrateLegacyUserIfNeeded();
     return getCurrentUser();
@@ -186,7 +189,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateAppUser(current.id, updates);
     const next = getCurrentStoredUser();
     setUser(next);
-  }, []);
+    if ("wearable" in updates) {
+      void queryClient.invalidateQueries({ queryKey: [METRICS_QUERY_KEY] });
+    }
+  }, [queryClient]);
 
   const hasUser = useCallback(() => !!getCurrentUser(), []);
 
@@ -234,6 +240,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const res = await apiLogin(loginId.trim(), password);
       if (res.accessToken) {
         setAuthVersion((v) => v + 1);
+        void queryClient.invalidateQueries({ queryKey: [METRICS_QUERY_KEY] });
         return { success: true };
       }
       return { success: false, error: "Неверный ответ сервера." };
@@ -243,7 +250,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         : "Неверный логин или пароль.";
       return { success: false, error: msg };
     }
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(() => {
     clearAccessToken();

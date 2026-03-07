@@ -34,16 +34,19 @@ export function useMetricsSummaryQuery(
     queryKey: [METRICS_QUERY_KEY, "summary", date ?? "today"],
     queryFn: () => getMetricsSummary(date),
     enabled: isAuthenticated && hasToken,
-    staleTime: 60 * 1000,
+    staleTime: 0,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
     retry: 1,
   });
 
   useEffect(() => {
-    if (query.isSuccess && query.data) {
+    if (query.data) {
       const viewDate = date ?? getTodayISO();
       setFromApiMetrics(query.data, viewDate);
     }
-  }, [query.isSuccess, query.data, date, setFromApiMetrics]);
+  }, [query.data, date, setFromApiMetrics]);
 
   return query;
 }
@@ -63,7 +66,8 @@ export function useMetricsRangeQuery(
     queryKey: [METRICS_QUERY_KEY, "range", startDate, endDate],
     queryFn: () => getMetricsRange(startDate!, endDate!),
     enabled: !!startDate && !!endDate && isAuthenticated && hasToken,
-    staleTime: 60 * 1000,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
     retry: 1,
   });
 }
