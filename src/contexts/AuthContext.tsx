@@ -13,7 +13,7 @@ import {
   type AppUser,
 } from "@/lib/userStorage";
 import { login as apiLogin } from "@/api/authApi";
-import { clearAccessToken, clearRefreshToken, getAccessToken } from "@/api/apiClient";
+import { clearAccessToken, clearRefreshToken, getAccessToken, setOnSessionExpired } from "@/api/apiClient";
 import { getStoredApiUser, setStoredApiUser, type ApiUser } from "@/api/authStorage";
 
 const LEGACY_USER_KEY = "reformator_bio_user";
@@ -259,6 +259,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setCurrentUserId(null);
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    setOnSessionExpired(logout);
+    return () => setOnSessionExpired(null);
+  }, [logout]);
 
   return (
     <AuthContext.Provider

@@ -36,6 +36,41 @@ export function clearRefreshToken(): void {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
+/** Called when token refresh fails. Register via setOnSessionExpired. */
+let onSessionExpired: (() => void) | null = null;
+
+export function setOnSessionExpired(fn: (() => void) | null): void {
+  onSessionExpired = fn;
+}
+
+async function refreshAuth(): Promise<void> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error("No refresh token");
+
+  const url = `${BASE_URL.replace(/\/$/, "")}/auth/refresh`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    clearAccessToken();
+    clearRefreshToken();
+    onSessionExpired?.();
+    const body = await response.json().catch(() => ({}));
+    throw {
+      message: (body as { message?: string })?.message || "Refresh failed",
+      status: response.status,
+      body,
+    } as ApiError;
+  }
+
+  const data = (await response.json()) as { accessToken?: string; refreshToken?: string };
+  if (data.accessToken) setAccessToken(data.accessToken);
+  if (data.refreshToken) setRefreshToken(data.refreshToken);
+}
+
 export interface ApiError {
   message: string;
   status: number;
@@ -44,7 +79,8 @@ export interface ApiError {
 
 export async function apiFetch<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  isRetry = false
 ): Promise<T> {
   const url = `${BASE_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
   const token = getAccessToken();
@@ -62,6 +98,19 @@ export async function apiFetch<T>(
     ...options,
     headers,
   });
+
+  if (response.status === 401 && !isRetry && getRefreshToken()) {
+    try {
+      await refreshAuth();
+      return apiFetch<T>(path, options, true);
+    } catch {
+      throw {
+        message: "Session expired",
+        status: 401,
+        body: undefined,
+      } as ApiError;
+    }
+  }
 
   if (!response.ok) {
     let body: unknown;

@@ -3,63 +3,92 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { createNoise3D } from "simplex-noise";
 
-import { orbParticleColors } from "@/theme/colors";
-import { useTheme } from "@/contexts/ThemeContext";
+/** State colors for orb – premium health-tech palette */
+const ORB_STATE_COLORS = {
+  good: "#63C38D",  // score ≥ 80
+  okay: "#6F6F6F",  // score 50–79
+  bad: "#E14B42",   // score < 50
+} as const;
 
-const PARTICLE_COUNT = 10000;
-const LERP_SPEED = 3.0;
+function getOrbColor(score: number): string {
+  if (score >= 80) return ORB_STATE_COLORS.good;
+  if (score >= 50) return ORB_STATE_COLORS.okay;
+  return ORB_STATE_COLORS.bad;
+}
+
+const PARTICLE_COUNT = 2500;
+const BREATH_PERIOD = 6;
+const BREATH_AMPLITUDE = 0.02;
+const ROTATION_SPEED = 0.015;
+
+const particleVertexShader = `
+  attribute float radiusNorm;
+  attribute float phase;
+  uniform float uTime;
+  uniform float uSize;
+  varying float vOpacity;
+
+  void main() {
+    vec3 pos = position;
+    float drift = 0.012 * sin(uTime * 0.4 + phase) * radiusNorm;
+    pos += normalize(pos) * drift;
+    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * mvPos;
+    float dist = length(mvPos.xyz);
+    gl_PointSize = uSize * (300.0 / dist) * (1.4 - 0.5 * radiusNorm);
+    vOpacity = 0.95 - 0.5 * radiusNorm;
+  }
+`;
+
+const particleFragmentShader = `
+  uniform vec3 uColor;
+  varying float vOpacity;
+
+  void main() {
+    float d = length(gl_PointCoord - 0.5) * 2.0;
+    float a = 1.0 - smoothstep(0.5, 1.0, d);
+    gl_FragColor = vec4(uColor, a * vOpacity);
+  }
+`;
 
 interface ParticleSphereProps {
   color: string;
-  recoveryScore: number;
+  stateScore: number;
 }
 
 const ParticleSphere = memo(function ParticleSphere({
   color,
-  recoveryScore,
+  stateScore,
 }: ParticleSphereProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const materialRef = useRef<THREE.PointsMaterial>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
   const targetColor = useRef(new THREE.Color(color));
   const currentColor = useRef(new THREE.Color(color));
 
   const geometry = useMemo(() => {
     const simplex = createNoise3D();
     const positions = new Float32Array(PARTICLE_COUNT * 3);
+    const radiusNorms = new Float32Array(PARTICLE_COUNT);
+    const phases = new Float32Array(PARTICLE_COUNT);
     const baseRadius = 1;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Spherical coordinates: uniform distribution on sphere
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
-      // Density falloff: center sparse, mid dense, outer turbulent
-      const rn = Math.random();
-      let rBase: number;
-      let distortion: number;
-      if (rn < 0.15) {
-        rBase = 0.7 + Math.random() * 0.1; // center sparse
-        distortion = 0.04;
-      } else if (rn < 0.75) {
-        rBase = 0.8 + Math.random() * 0.15; // mid dense
-        distortion = 0.06;
-      } else {
-        rBase = 0.95 + Math.random() * 0.05; // outer shell turbulent
-        distortion = 0.1;
-      }
+      // Radial density: ~3x denser near center (bias radius toward 0)
+      const rT = Math.pow(Math.random(), 2);
+      let rBase = 0.35 + 0.65 * rT;
 
-      let radius = baseRadius * rBase;
-
-      // Unit direction for noise sampling (use surface direction)
       const ux = Math.sin(phi) * Math.cos(theta);
       const uy = Math.sin(phi) * Math.sin(theta);
       const uz = Math.cos(phi);
 
-      // Apply noise ONLY to radius (keeps sphere shape visible)
-      const noise = simplex(ux * 2, uy * 2, uz * 2);
-      radius += noise * distortion;
+      const noise = simplex(ux * 1.5, uy * 1.5, uz * 1.5);
+      rBase += noise * 0.04;
+      rBase = Math.max(0.2, Math.min(1, rBase));
 
-      // Spherical to cartesian
+      const radius = baseRadius * rBase;
       const x = radius * ux;
       const y = radius * uy;
       const z = radius * uz;
@@ -67,10 +96,14 @@ const ParticleSphere = memo(function ParticleSphere({
       positions[i * 3] = x;
       positions[i * 3 + 1] = y;
       positions[i * 3 + 2] = z;
+      radiusNorms[i] = rBase;
+      phases[i] = Math.random() * Math.PI * 2;
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("radiusNorm", new THREE.BufferAttribute(radiusNorms, 1));
+    geo.setAttribute("phase", new THREE.BufferAttribute(phases, 1));
     return geo;
   }, []);
 
@@ -78,34 +111,69 @@ const ParticleSphere = memo(function ParticleSphere({
     targetColor.current.set(color);
   }, [color]);
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.08;
-
-      const breathing = 1 + Math.sin(state.clock.elapsedTime * 0.6) * 0.03;
-      const radiusScale = 1 + recoveryScore * 0.01;
-      pointsRef.current.scale.setScalar(breathing * radiusScale);
+      pointsRef.current.rotation.y += state.clock.getDelta() * 60 * ROTATION_SPEED;
+      const breathing = 1 + Math.sin((t * Math.PI * 2) / BREATH_PERIOD) * BREATH_AMPLITUDE;
+      const scoreScale = 1 + stateScore * 0.005;
+      pointsRef.current.scale.setScalar(breathing * scoreScale);
     }
-
     if (materialRef.current) {
-      currentColor.current.lerp(targetColor.current, delta * LERP_SPEED);
-      materialRef.current.color.copy(currentColor.current);
+      materialRef.current.uniforms.uTime.value = t;
+      currentColor.current.lerp(targetColor.current, 0.02);
+      materialRef.current.uniforms.uColor.value.copy(currentColor.current);
     }
   });
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
+      <shaderMaterial
         ref={materialRef}
-        size={0.015}
+        vertexShader={particleVertexShader}
+        fragmentShader={particleFragmentShader}
+        uniforms={{
+          uTime: { value: 0 },
+          uColor: { value: new THREE.Color(color) },
+          uSize: { value: 0.04 },
+        }}
         transparent
-        opacity={0.9}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
-        color={color}
-        sizeAttenuation
       />
     </points>
+  );
+});
+
+const GlowSphere = memo(function GlowSphere({
+  color,
+  stateScore,
+}: {
+  color: string;
+  stateScore: number;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (meshRef.current) {
+      const breathing = 1 + Math.sin((t * Math.PI * 2) / BREATH_PERIOD) * BREATH_AMPLITUDE;
+      const s = 1.15 * breathing * (1 + stateScore * 0.005);
+      meshRef.current.scale.setScalar(s);
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} renderOrder={-1}>
+      <sphereGeometry args={[1, 32, 24]} />
+      <meshBasicMaterial
+        color={color}
+        transparent
+        opacity={0.2}
+        depthWrite={false}
+        side={THREE.BackSide}
+      />
+    </mesh>
   );
 });
 
@@ -114,11 +182,7 @@ interface StateOrb3DProps {
 }
 
 function StateOrb3D({ score }: StateOrb3DProps) {
-  const { theme } = useTheme();
-  const color = useMemo(
-    () => orbParticleColors[theme],
-    [theme],
-  );
+  const color = useMemo(() => getOrbColor(score), [score]);
 
   return (
     <div className="absolute inset-0 w-full h-full">
@@ -128,7 +192,8 @@ function StateOrb3D({ score }: StateOrb3DProps) {
         style={{ background: "transparent" }}
         dpr={[1, 2]}
       >
-        <ParticleSphere color={color} recoveryScore={score} />
+        <GlowSphere color={color} stateScore={score} />
+        <ParticleSphere color={color} stateScore={score} />
       </Canvas>
     </div>
   );
