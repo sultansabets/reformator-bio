@@ -74,7 +74,7 @@ const ControlCenter = () => {
   const baselineJustCompleted =
     baselineProgress != null &&
     baselineProgress.required > 0 &&
-    baselineProgress.collected === baselineProgress.required;
+    baselineProgress.collected >= baselineProgress.required;
 
   useEffect(() => {
     if (baselineJustCompleted && !hasShownBaselineSuccessRef.current) {
