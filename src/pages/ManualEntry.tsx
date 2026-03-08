@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { syncDevice } from "@/api/deviceApi";
+import { getOrRegisterSimulatorDevice, syncDevice } from "@/api/deviceApi";
 import { METRICS_QUERY_KEY } from "@/hooks/useMetricsQuery";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -18,9 +18,10 @@ const ManualEntry = () => {
     setError(null);
     setLoading(true);
     try {
+      const deviceId = await getOrRegisterSimulatorDevice();
       const now = new Date().toISOString();
       await syncDevice({
-        deviceId: "simulator-watch",
+        deviceId,
         heartRates: [{ valueBpm: 72, recordedAt: now }],
         hrv: [{ valueMs: 55, recordedAt: now }],
         steps: [{ count: 4200, recordedAt: now }],
