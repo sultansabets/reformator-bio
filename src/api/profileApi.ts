@@ -8,8 +8,10 @@ export interface UpdateProfilePayload {
   nickname?: string;
   firstName?: string;
   lastName?: string;
-  age?: number;
+  birthDate?: string;
+  height?: number;
   weight?: number;
+  sex?: "male" | "female";
   cityId?: string;
 }
 

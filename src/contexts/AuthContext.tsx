@@ -72,6 +72,7 @@ export interface StoredUser {
   wearable?: string;
   height?: number;
   weight?: number;
+  sex?: "male" | "female";
   goal?: "gain" | "maintain" | "lose";
   isVerified?: boolean;
   city?: string;
@@ -91,6 +92,7 @@ export type ProfileUpdates = Partial<
     | "activityLevel"
     | "height"
     | "weight"
+    | "sex"
     | "goal"
     | "wearable"
     | "isVerified"

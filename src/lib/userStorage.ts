@@ -23,6 +23,7 @@ export interface AppUser {
   wearable?: string;
   height?: number;
   weight?: number;
+  sex?: "male" | "female";
   goal?: "gain" | "maintain" | "lose";
   isVerified?: boolean;
   city?: string;

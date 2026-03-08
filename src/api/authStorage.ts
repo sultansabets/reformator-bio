@@ -15,6 +15,7 @@ export interface ApiUser {
   weight?: number;
   height?: number;
   dob?: string;
+  sex?: "male" | "female";
   activityLevel?: string;
 }
 

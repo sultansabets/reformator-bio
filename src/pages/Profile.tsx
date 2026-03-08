@@ -783,6 +783,7 @@ const Profile = () => {
   const [editDob, setEditDob] = useState("");
   const [editHeight, setEditHeight] = useState("");
   const [editWeight, setEditWeight] = useState("");
+  const [editSex, setEditSex] = useState<"male" | "female" | "">("");
   const [editCity, setEditCity] = useState("");
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -810,6 +811,7 @@ const Profile = () => {
       setEditDob(user.dob ?? "");
       setEditHeight(user.height != null ? String(user.height) : "");
       setEditWeight(user.weight != null ? String(user.weight) : "");
+      setEditSex((user as { sex?: "male" | "female" }).sex ?? "");
       setEditCity(user.city ?? "");
       setSaveError(null);
     }
@@ -819,21 +821,24 @@ const Profile = () => {
     setSaveError(null);
     setSaveLoading(true);
     try {
+      const heightNum = editHeight.trim() ? Number(editHeight) : undefined;
       const weightNum = editWeight.trim() ? Number(editWeight) : undefined;
-      const age = editDob.trim()
-        ? calculateAge(editDob)
+      const birthDate = editDob.trim()
+        ? new Date(editDob).toISOString()
         : undefined;
       await updateProfile({
         nickname: editNickname.trim() || undefined,
         firstName: editFirstName.trim() || undefined,
         lastName: editLastName.trim() || undefined,
-        age: age != null && age >= 0 ? age : undefined,
+        birthDate,
+        height:
+          heightNum != null && !Number.isNaN(heightNum) ? heightNum : undefined,
         weight:
           weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
+        sex: editSex === "male" || editSex === "female" ? editSex : undefined,
         cityId: editCity.trim() || undefined,
       });
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
-      const heightNum = editHeight.trim() ? Number(editHeight) : undefined;
       updateUser({
         firstName: editFirstName.trim() || undefined,
         lastName: editLastName.trim() || undefined,
@@ -843,6 +848,7 @@ const Profile = () => {
           heightNum != null && !Number.isNaN(heightNum) ? heightNum : undefined,
         weight:
           weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
+        sex: editSex === "male" || editSex === "female" ? editSex : undefined,
         city: editCity.trim() || undefined,
       });
       toast.success(t("profile.profileSaved"));
@@ -876,18 +882,6 @@ const Profile = () => {
     setModal(type);
     setModalPayload(payload ?? null);
   };
-
-  const editAge = editDob
-    ? (() => {
-        const d = new Date(editDob);
-        if (Number.isNaN(d.getTime())) return "";
-        const now = new Date();
-        let years = now.getFullYear() - d.getFullYear();
-        const m = now.getMonth() - d.getMonth();
-        if (m < 0 || (m === 0 && now.getDate() < d.getDate())) years--;
-        return years >= 0 ? String(years) : "";
-      })()
-    : "";
 
   const startEdit = (field: EditableField) => {
     setEditingField(field);
@@ -1213,19 +1207,6 @@ const Profile = () => {
                   />
                 </div>
 
-                {/* Age (readonly) */}
-                <div>
-                  <Label htmlFor="edit-age" className="text-xs text-muted-foreground">
-                    {t("profile.age")}
-                  </Label>
-                  <Input
-                    id="edit-age"
-                    value={editAge}
-                    readOnly
-                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left text-muted-foreground box-border"
-                  />
-                </div>
-
                 {/* Height & Weight in 2 columns */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -1268,6 +1249,32 @@ const Profile = () => {
                       className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                     />
                   </div>
+                </div>
+
+                {/* Sex */}
+                <div>
+                  <Label htmlFor="edit-sex" className="text-xs text-muted-foreground">
+                    {t("profile.sex")}
+                  </Label>
+                  <Select
+                    value={editSex || undefined}
+                    onValueChange={(v) => {
+                      const val = v === "male" || v === "female" ? v : "";
+                      setEditSex(val);
+                      if (val) updateUser({ sex: val });
+                    }}
+                  >
+                    <SelectTrigger
+                      id="edit-sex"
+                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
+                    >
+                      <SelectValue placeholder={t("profile.chooseSex")} />
+                    </SelectTrigger>
+                    <SelectContent className="z-[100000] border-border bg-popover" position="popper">
+                      <SelectItem value="male">{t("profile.male")}</SelectItem>
+                      <SelectItem value="female">{t("profile.female")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* City */}
