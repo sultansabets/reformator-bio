@@ -40,6 +40,7 @@ export function getCircadianState(hour: number): CircadianPhase {
 }
 
 let simulationInterval: ReturnType<typeof setInterval> | null = null;
+let simulationStartTime: number | null = null;
 let fastSimulationMode = false;
 let simulatedHours = 0;
 let latestMetrics: {
@@ -87,6 +88,7 @@ export async function startHealthSimulation(
   if (simulationInterval) return;
 
   const deviceId = await getOrRegisterSimulatorDevice();
+  simulationStartTime = Date.now();
   let tickCount = 0;
   simulatedHours = 0;
   latestMetrics = null;
@@ -115,9 +117,12 @@ export async function startHealthSimulation(
       lastHrv = valueMs;
     }
 
-    const recordedAt = fastSimulationMode
-      ? new Date(Date.now() + simulatedHours * 3600_000).toISOString()
-      : new Date().toISOString();
+    const recordedAt =
+      fastSimulationMode && simulationStartTime != null
+        ? new Date(
+            simulationStartTime + simulatedHours * 3600_000
+          ).toISOString()
+        : new Date().toISOString();
     if (fastSimulationMode) simulatedHours++;
     latestMetrics = {
       heartRate: valueBpm,
@@ -152,4 +157,5 @@ export function stopHealthSimulation(): void {
     clearInterval(simulationInterval);
     simulationInterval = null;
   }
+  simulationStartTime = null;
 }
