@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
@@ -42,7 +42,8 @@ import {
 import { formatDateRu, validateBirthDate, formatMedicalDate } from "@/lib/dateFormat";
 import { type NutritionGoal } from "@/lib/health";
 import { medicalSections, type MedicalSection } from "@/data/medicalMock";
-import { getProfile, updateProfile } from "@/api/profileApi";
+import { updateProfile } from "@/api/profileApi";
+import { useProfileQuery, PROFILE_QUERY_KEY } from "@/hooks/useProfileQuery";
 import { getCities, type City } from "@/api/cityApi";
 import { toast } from "sonner";
 
@@ -764,13 +765,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, updateUser } = useAuth();
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: getProfile,
-    enabled: !!editOpen,
-    staleTime: 0,
-    refetchOnMount: true,
-  });
+  const { data: profile, isLoading: profileLoading } = useProfileQuery();
   const { validateName, validateEmail, validateHeight, validateWeight } = useValidation();
   const [modal, setModal] = useState<ModalType>(null);
   const [modalPayload, setModalPayload] = useState<{
@@ -861,7 +856,7 @@ const Profile = () => {
           weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
         cityId: editCity.trim() || undefined,
       });
-      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({ queryKey: [PROFILE_QUERY_KEY] });
       updateUser({
         nickname: editNickname.trim() || undefined,
         weight:
@@ -948,6 +943,14 @@ const Profile = () => {
     setEditDraft("");
     setEditError(null);
   };
+
+  if (profileLoading) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center px-6">
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      </div>
+    );
+  }
 
   const personalInfoRows: { key: EditableField | "activity"; label: string; value: string; icon: typeof User; editable: boolean }[] = [
     { key: "firstName", label: t("profile.firstName"), value: profileDisplay.firstName || "—", icon: User, editable: true },

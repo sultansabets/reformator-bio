@@ -406,7 +406,7 @@ const AppLayout = () => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-        <HealthStoreHydrator />
+        {!isProfilePage && <HealthStoreHydrator />}
         <main
           className={`flex-1 transition-colors duration-normal ${
             isAI ? "bg-ui-black" : "pb-[calc(80px+env(safe-area-inset-bottom))]"
