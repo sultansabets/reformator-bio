@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
@@ -42,7 +42,7 @@ import {
 import { formatDateRu, validateBirthDate, formatMedicalDate } from "@/lib/dateFormat";
 import { type NutritionGoal } from "@/lib/health";
 import { medicalSections, type MedicalSection } from "@/data/medicalMock";
-import { updateProfile } from "@/api/profileApi";
+import { getProfile, updateProfile } from "@/api/profileApi";
 import { getCities, type City } from "@/api/cityApi";
 import { toast } from "sonner";
 
@@ -764,6 +764,13 @@ const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, updateUser } = useAuth();
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+    enabled: !!editOpen,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
   const { validateName, validateEmail, validateHeight, validateWeight } = useValidation();
   const [modal, setModal] = useState<ModalType>(null);
   const [modalPayload, setModalPayload] = useState<{
@@ -816,7 +823,21 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    if (editOpen && user) {
+    if (profile) {
+      setEditFirstName(profile.firstName ?? "");
+      setEditLastName(profile.lastName ?? "");
+      setEditNickname(profile.nickname ?? "");
+      setEditDob(profile.birthDate ? profile.birthDate.slice(0, 10) : "");
+      setEditHeight(profile.height != null ? String(profile.height) : "");
+      setEditWeight(profile.weight != null ? String(profile.weight) : "");
+      setEditSex(profile.sex ?? "");
+      setEditCity(profile.city?.id ?? "");
+      setSaveError(null);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (editOpen && !profile && user) {
       setEditFirstName(user.firstName ?? "");
       setEditLastName(user.lastName ?? "");
       setEditNickname(user.nickname ?? "");
@@ -827,40 +848,24 @@ const Profile = () => {
       setEditCity(user.city ?? "");
       setSaveError(null);
     }
-  }, [editOpen, user]);
+  }, [editOpen, user, profile]);
 
   const handleSaveProfile = async () => {
     setSaveError(null);
     setSaveLoading(true);
     try {
-      const heightNum = editHeight.trim() ? Number(editHeight) : undefined;
       const weightNum = editWeight.trim() ? Number(editWeight) : undefined;
-      const birthDate = editDob.trim()
-        ? new Date(editDob).toISOString()
-        : undefined;
       await updateProfile({
         nickname: editNickname.trim() || undefined,
-        firstName: editFirstName.trim() || undefined,
-        lastName: editLastName.trim() || undefined,
-        birthDate,
-        height:
-          heightNum != null && !Number.isNaN(heightNum) ? heightNum : undefined,
         weight:
           weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
-        sex: editSex === "male" || editSex === "female" ? editSex : undefined,
         cityId: editCity.trim() || undefined,
       });
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
       updateUser({
-        firstName: editFirstName.trim() || undefined,
-        lastName: editLastName.trim() || undefined,
         nickname: editNickname.trim() || undefined,
-        dob: editDob.trim() || undefined,
-        height:
-          heightNum != null && !Number.isNaN(heightNum) ? heightNum : undefined,
         weight:
           weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
-        sex: editSex === "male" || editSex === "female" ? editSex : undefined,
         city: editCity.trim() || undefined,
       });
       toast.success(t("profile.profileSaved"));
@@ -1148,7 +1153,7 @@ const Profile = () => {
           >
             <div className="px-5">
               <div className="space-y-4">
-                {/* First Name */}
+                {/* First Name (read-only) */}
                 <div>
                   <Label htmlFor="edit-firstName" className="text-xs text-muted-foreground">
                     {t("profile.firstName")}
@@ -1156,16 +1161,12 @@ const Profile = () => {
                   <Input
                     id="edit-firstName"
                     value={editFirstName}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setEditFirstName(v);
-                      updateUser({ firstName: v });
-                    }}
-                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
+                    disabled
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left box-border"
                   />
                 </div>
 
-                {/* Last Name */}
+                {/* Last Name (read-only) */}
                 <div>
                   <Label htmlFor="edit-lastName" className="text-xs text-muted-foreground">
                     {t("profile.lastName")}
@@ -1173,12 +1174,8 @@ const Profile = () => {
                   <Input
                     id="edit-lastName"
                     value={editLastName}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setEditLastName(v);
-                      updateUser({ lastName: v });
-                    }}
-                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
+                    disabled
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left box-border"
                   />
                 </div>
 
@@ -1194,14 +1191,13 @@ const Profile = () => {
                       const raw = e.target.value;
                       const sanitized = raw.toLowerCase().replace(/[^a-z0-9_.]/g, "");
                       setEditNickname(sanitized);
-                      updateUser({ nickname: sanitized });
                     }}
                     className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
                     placeholder={t("profile.placeholderUsername")}
                   />
                 </div>
 
-                {/* Date of Birth */}
+                {/* Date of Birth (read-only) */}
                 <div>
                   <Label htmlFor="edit-dob" className="text-xs text-muted-foreground">
                     {t("profile.dob")}
@@ -1210,12 +1206,8 @@ const Profile = () => {
                     id="edit-dob"
                     type="date"
                     value={editDob}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setEditDob(v);
-                      updateUser({ dob: v });
-                    }}
-                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border appearance-none [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-date-and-time-value]:text-left"
+                    disabled
+                    className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left box-border appearance-none [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-date-and-time-value]:text-left"
                   />
                 </div>
 
@@ -1232,13 +1224,8 @@ const Profile = () => {
                       min={120}
                       max={220}
                       value={editHeight}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setEditHeight(v);
-                        const n = Number(v);
-                        if (!Number.isNaN(n)) updateUser({ height: n });
-                      }}
-                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
+                      disabled
+                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left box-border"
                     />
                   </div>
                   <div>
@@ -1263,22 +1250,15 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Sex */}
+                {/* Sex (read-only) */}
                 <div>
                   <Label htmlFor="edit-sex" className="text-xs text-muted-foreground">
                     {t("profile.sex")}
                   </Label>
-                  <Select
-                    value={editSex || undefined}
-                    onValueChange={(v) => {
-                      const val = v === "male" || v === "female" ? v : "";
-                      setEditSex(val);
-                      if (val) updateUser({ sex: val });
-                    }}
-                  >
+                  <Select value={editSex || undefined} disabled>
                     <SelectTrigger
                       id="edit-sex"
-                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-card px-4 text-base text-left box-border"
+                      className="mt-1.5 h-14 w-full max-w-full rounded-2xl border-border bg-muted px-4 text-base text-left box-border"
                     >
                       <SelectValue placeholder={t("profile.chooseSex")} />
                     </SelectTrigger>

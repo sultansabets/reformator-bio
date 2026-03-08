@@ -4,6 +4,21 @@
 
 import { apiFetch } from "./apiClient";
 
+export interface Profile {
+  firstName?: string;
+  lastName?: string;
+  nickname?: string;
+  birthDate?: string;
+  height?: number;
+  weight?: number;
+  sex?: "male" | "female";
+  city?: { id: string; name?: string };
+}
+
+export async function getProfile(): Promise<Profile> {
+  return apiFetch<Profile>("/profile");
+}
+
 export interface UpdateProfilePayload {
   nickname?: string;
   firstName?: string;

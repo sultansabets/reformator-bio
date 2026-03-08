@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
+import { useProfileQuery } from "@/hooks/useProfileQuery";
 import { getGreetingByTime } from "@/lib/greeting";
 import { useHealthStore, hasValidMetrics } from "@/store/healthStore";
 import { useMetricsSummaryQuery } from "@/hooks/useMetricsQuery";
@@ -28,8 +28,18 @@ const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 const ControlCenter = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const displayName = user?.fullName?.trim() || t("common.user");
+  const { data: profile } = useProfileQuery();
+  const initials =
+    [profile?.firstName, profile?.lastName]
+      .filter(Boolean)
+      .map((s) => (s as string)[0])
+      .join("")
+      .toUpperCase() || undefined;
+  const displayName =
+    profile?.nickname?.trim() ??
+    profile?.firstName?.trim() ??
+    initials ??
+    t("common.user");
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
@@ -87,6 +97,7 @@ const ControlCenter = () => {
   }
 
   if (!baseline) {
+    const bp = metricsQuery.data?.baselineProgress;
     return (
       <motion.div
         className="flex min-h-[60vh] flex-col items-center justify-center px-6"
@@ -98,6 +109,14 @@ const ControlCenter = () => {
         <p className="mt-6 max-w-[280px] text-center text-muted-foreground">
           {t("adaptationDetail.collecting")}
         </p>
+        {bp && bp.collected > 0 && bp.required > 0 && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("adaptationDetail.dayOfRequired", {
+              collected: bp.collected,
+              required: bp.required,
+            })}
+          </p>
+        )}
       </motion.div>
     );
   }

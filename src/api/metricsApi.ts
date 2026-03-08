@@ -4,9 +4,15 @@
 
 import { apiFetch } from "./apiClient";
 
+export interface BaselineProgress {
+  collected: number;
+  required: number;
+}
+
 export interface MetricsSummary {
   date?: string;
   baseline?: unknown;
+  baselineProgress?: BaselineProgress;
   mainStateScore?: number;
   sleepScore?: number;
   sleepPercent?: number;
