@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -42,6 +42,8 @@ const ControlCenter = () => {
     t("common.user");
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
+  const [showBaselineSuccess, setShowBaselineSuccess] = useState(false);
+  const hasShownBaselineSuccessRef = useRef(false);
 
   const selectedDate = useDateStore((s) => s.selectedDate);
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
@@ -68,6 +70,20 @@ const ControlCenter = () => {
     setSelectedMetric(detail);
     setMetricSheetOpen(true);
   };
+
+  const baselineJustCompleted =
+    baselineProgress != null &&
+    baselineProgress.required > 0 &&
+    baselineProgress.collected === baselineProgress.required;
+
+  useEffect(() => {
+    if (baselineJustCompleted && !hasShownBaselineSuccessRef.current) {
+      hasShownBaselineSuccessRef.current = true;
+      setShowBaselineSuccess(true);
+      const timer = setTimeout(() => setShowBaselineSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [baselineJustCompleted]);
 
   if (metricsQuery.isLoading && !hasMetrics) {
     return (
@@ -111,6 +127,23 @@ const ControlCenter = () => {
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
 
+      {showBaselineSuccess && (
+        <motion.div
+          variants={item}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="mb-4 flex flex-col items-center justify-center rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-center"
+        >
+          <p className="text-sm font-medium text-foreground">
+            {t("adaptationDetail.baselineEstablished")}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("adaptationDetail.baselineEstablishedSubtitle")}
+          </p>
+        </motion.div>
+      )}
+
       {isLearning && (
         <motion.div
           variants={item}
@@ -120,12 +153,24 @@ const ControlCenter = () => {
             {t("adaptationDetail.collecting")}
           </p>
           {baselineProgress && baselineProgress.collected > 0 && baselineProgress.required > 0 && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {t("adaptationDetail.dayOfRequired", {
-                collected: baselineProgress.collected,
-                required: baselineProgress.required,
-              })}
-            </p>
+            <>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("adaptationDetail.dayOfRequired", {
+                  collected: baselineProgress.collected,
+                  required: baselineProgress.required,
+                })}
+              </p>
+              <div className="mt-2 w-full max-w-[200px]">
+                <div className="h-1.5 w-full overflow-hidden rounded bg-muted">
+                  <motion.div
+                    className="h-full rounded bg-primary"
+                    initial={false}
+                    animate={{ width: `${(baselineProgress.collected / baselineProgress.required) * 100}%` }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  />
+                </div>
+              </div>
+            </>
           )}
           <p className="mt-2 max-w-[260px] text-xs leading-relaxed text-muted-foreground">
             {t("adaptationDetail.learningExplanation")}

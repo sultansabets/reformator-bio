@@ -281,6 +281,8 @@
     "collecting": "Базалық деректерді жинау",
     "dayOfRequired": "{{collected}}/{{required}} күн",
     "learningExplanation": "Сіздің қалыпты жүрек соғысы, ұйқы және қалпына келу үлгілерін үйренеміз.",
+    "baselineEstablished": "Базалық деректер жинақталды",
+    "baselineEstablishedSubtitle": "Сіздің денсаулық профиліңіз жекелендірілді.",
     "recoveryDepth": "Қалпына келу тереңдігі",
     "stability": "Күй тұрақтылығы",
     "trend3d": "3 күн тренді",

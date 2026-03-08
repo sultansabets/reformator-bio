@@ -309,6 +309,8 @@
     "collecting": "Collecting baseline data",
     "dayOfRequired": "Day {{collected}} of {{required}}",
     "learningExplanation": "We are learning your normal heart rate, sleep and recovery patterns.",
+    "baselineEstablished": "Baseline established",
+    "baselineEstablishedSubtitle": "Your health profile is now personalized.",
     "recoveryDepth": "Recovery depth",
     "stability": "State stability",
     "trend3d": "3-day trend",

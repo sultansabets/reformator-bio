@@ -297,6 +297,8 @@
     "collecting": "Собираем baseline",
     "dayOfRequired": "День {{collected}} из {{required}}",
     "learningExplanation": "Учим твой пульс, сон и паттерны восстановления.",
+    "baselineEstablished": "Baseline готов",
+    "baselineEstablishedSubtitle": "Твой профиль здоровья персонализирован.",
     "recoveryDepth": "Глубина восстановления",
     "stability": "Стабильность",
     "trend3d": "Тренд за 3 дня",
