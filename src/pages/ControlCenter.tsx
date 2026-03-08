@@ -33,35 +33,32 @@ const ControlCenter = () => {
 
   const selectedDate = useDateStore((s) => s.selectedDate);
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
-  const metrics = metricsQuery.data;
+  const metrics = metricsQuery?.data;
 
-  const baseline = metrics?.baseline;
-  const baselineProgress = metrics?.baselineProgress;
-  const collected = baselineProgress?.collected ?? 0;
-  const required = baselineProgress?.required ?? 5;
-  const isLearning = !baseline;
-
-  const hasMetrics = metrics != null && hasValidMetrics(metrics);
   const showOnboarding =
     !metricsQuery.isLoading &&
     metricsQuery.isSuccess &&
-    (metricsQuery.data == null || !hasValidMetrics(metricsQuery.data));
+    (metrics == null || !hasValidMetrics(metrics));
 
   const openMetricSheet = (detail: MetricDetail) => {
     setSelectedMetric(detail);
     setMetricSheetOpen(true);
   };
 
-  const baselineJustCompleted = required > 0 && collected >= required;
-
   useEffect(() => {
+    if (!metrics) return;
+    const baseline = metrics.baseline;
+    const baselineProgress = metrics.baselineProgress;
+    const collected = baselineProgress?.collected ?? 0;
+    const required = baselineProgress?.required ?? 5;
+    const baselineJustCompleted = required > 0 && collected >= required;
     if (baselineJustCompleted && !hasShownBaselineSuccessRef.current) {
       hasShownBaselineSuccessRef.current = true;
       setShowBaselineSuccess(true);
       const timer = setTimeout(() => setShowBaselineSuccess(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [baselineJustCompleted]);
+  }, [metrics]);
 
   if (metricsQuery.isLoading) {
     return (
@@ -99,6 +96,12 @@ const ControlCenter = () => {
       </div>
     );
   }
+
+  const baseline = metrics.baseline;
+  const baselineProgress = metrics.baselineProgress;
+  const collected = baselineProgress?.collected ?? 0;
+  const required = baselineProgress?.required ?? 5;
+  const isLearning = !baseline;
 
   return (
     <motion.div
