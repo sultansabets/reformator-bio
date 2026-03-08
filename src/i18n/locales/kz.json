@@ -19,6 +19,9 @@
     "appleHealth": "Apple Health",
     "googleFit": "Google Fit",
     "manualEntry": "Қолмен енгізу",
+    "simulateHealthData": "Денсаулық деректерін симуляциялау",
+    "simulateHealthDataHint": "Нақты құрылғысыз тексеру үшін тест деректерін жасаңыз",
+    "generateTestData": "Тест деректерін жасау",
     "comingSoon": "Бұл интеграция жақында қосылады"
   },
   "greeting": {

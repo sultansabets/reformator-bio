@@ -35,6 +35,9 @@
     "appleHealth": "Apple Health",
     "googleFit": "Google Fit",
     "manualEntry": "Ручной ввод",
+    "simulateHealthData": "Симуляция здоровья",
+    "simulateHealthDataHint": "Сгенерируй тестовые данные без реального девайса",
+    "generateTestData": "Сгенерить тестовые данные",
     "comingSoon": "Скоро будет"
   },
   "greeting": {

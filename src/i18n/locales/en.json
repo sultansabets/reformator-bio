@@ -34,6 +34,9 @@
     "appleHealth": "Apple Health",
     "googleFit": "Google Fit",
     "manualEntry": "Manual entry",
+    "simulateHealthData": "Simulate Health Data",
+    "simulateHealthDataHint": "Generate test data to try the metrics engine without a real device",
+    "generateTestData": "Generate Test Data",
     "comingSoon": "This integration is coming soon"
   },
   "greeting": {

@@ -1,57 +1,37 @@
 /**
- * Device API endpoints.
+ * Device sync API for health data.
  */
 
 import { apiFetch } from "./apiClient";
 
-export interface RegisterDeviceRequest {
-  deviceId: string;
-  type: "apple" | "reformator-band";
-  name?: string;
+export interface DeviceSyncHeartRate {
+  valueBpm: number;
+  recordedAt: string;
 }
 
-export interface RegisterDeviceResponse {
-  id?: string;
-  deviceId: string;
-  type: string;
-  registeredAt?: string;
+export interface DeviceSyncHrv {
+  valueMs: number;
+  recordedAt: string;
+}
+
+export interface DeviceSyncSteps {
+  count: number;
+  recordedAt: string;
 }
 
 export interface DeviceSyncPayload {
-  date?: string;
-  sleepMinutes?: number;
-  sleepQuality?: number;
-  hrv?: number;
-  heartRate?: number;
-  steps?: number;
-  raw?: Record<string, unknown>;
-}
-
-export interface DeviceSyncResponse {
-  success: boolean;
-  syncedAt?: string;
-}
-
-/**
- * POST /devices/register
- */
-export async function registerDevice(
-  data: RegisterDeviceRequest
-): Promise<RegisterDeviceResponse> {
-  return apiFetch<RegisterDeviceResponse>("/devices/register", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  deviceId: string;
+  heartRates?: DeviceSyncHeartRate[];
+  hrv?: DeviceSyncHrv[];
+  steps?: DeviceSyncSteps[];
 }
 
 /**
  * POST /device/sync
- * Note: Backend may use /device/sync (singular) as per spec.
+ * Sends health data from a device (or simulator) to the backend.
  */
-export async function syncDevice(
-  payload: DeviceSyncPayload
-): Promise<DeviceSyncResponse> {
-  return apiFetch<DeviceSyncResponse>("/device/sync", {
+export async function syncDevice(payload: DeviceSyncPayload): Promise<unknown> {
+  return apiFetch("/device/sync", {
     method: "POST",
     body: JSON.stringify(payload),
   });

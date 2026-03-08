@@ -25,6 +25,7 @@ import Community from "@/pages/Community";
 import SmartWake from "@/pages/SmartWake";
 import Subscription from "@/pages/Subscription";
 import DataSourceSelect from "@/pages/DataSourceSelect";
+import ManualEntry from "@/pages/ManualEntry";
 import OnboardingFlowPlaceholder from "@/pages/OnboardingFlowPlaceholder";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
@@ -64,6 +65,7 @@ const App = () => (
             {/* Standalone pages without AppLayout */}
             <Route path="/smart-wake" element={<ProtectedRoute><SmartWake /></ProtectedRoute>} />
             <Route path="/onboarding/data-source" element={<ProtectedRoute><DataSourceSelect /></ProtectedRoute>} />
+            <Route path="/onboarding/manual-entry" element={<ProtectedRoute><ManualEntry /></ProtectedRoute>} />
             <Route path="/onboarding/:flow" element={<ProtectedRoute><OnboardingFlowPlaceholder /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
