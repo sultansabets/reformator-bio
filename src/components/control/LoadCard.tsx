@@ -34,7 +34,7 @@ export function LoadCard({ percent, onClick, size }: LoadCardProps) {
       label={t("center.load")}
       onClick={onClick}
       size={size}
-      inverted
+      useLoadColors
     />
   );
 }

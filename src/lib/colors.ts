@@ -31,6 +31,17 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 /**
+ * Load-specific 3-color system: gray (no activity), green (normal), red (overload).
+ * 0 → gray, 1–60 → green, 61–100 → red
+ */
+export function getLoadColor(load: number): string {
+  const clamped = Math.min(100, Math.max(0, Math.round(load)));
+  if (clamped === 0) return colors.ui.gray;
+  if (clamped <= 60) return colors.state.good;
+  return colors.state.bad;
+}
+
+/**
  * Returns a color based on score (0–100) using state colors.
  * @param score - Value from 0 to 100
  * @param inverted - If true, treats 0 as good and 100 as bad (e.g., for load metrics)

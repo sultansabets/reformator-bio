@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { METRICS_QUERY_KEY } from "@/hooks/useMetricsQuery";
+import { METRICS_QUERY_KEY } from "@/constants/queryKeys";
 import {
   getUsersData,
   setCurrentUserId,
@@ -106,6 +106,7 @@ export type UserWithFullName = StoredUser & { fullName: string; id: string };
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  token: string | null;
   user: UserWithFullName | null;
   login: (loginId: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithOtp: (phone: string, code: string) => Promise<{ success: boolean; error?: string }>;
@@ -181,7 +182,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return getCurrentUser();
   });
   const [, setAuthVersion] = useState(0);
-  const isAuthenticated = !!getAccessToken();
+  const token = getAccessToken();
+  const isAuthenticated = !!token;
 
   useEffect(() => {
     setUser(getCurrentUser());
@@ -290,6 +292,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        token,
         user,
         login,
         loginWithOtp,

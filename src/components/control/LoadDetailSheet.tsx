@@ -5,7 +5,7 @@ import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { calculateLoadDetail, type LoadStatus } from "@/engine/loadEngine";
 import { useHealthStore } from "@/store/healthStore";
 import { LoadCharts } from "@/components/control/LoadCharts";
-import { getMetricColor } from "@/lib/colors";
+import { getLoadColor } from "@/lib/colors";
 
 const STATUS_LABEL: Record<LoadStatus, string> = {
   balanced: "loadDetail.statusBalanced",
@@ -146,9 +146,9 @@ export function LoadDetailSheet({ open, onOpenChange }: LoadDetailSheetProps) {
 
   const { totalLoad, bodyLoad, neuroLoad, strengthLoad, cardioLoad, stepsLoad, stressLoad, sleepDebtLoad, hrvLoad, status } = detail;
 
-  const loadColor = getMetricColor(totalLoad, true);
-  const bodyLoadColor = getMetricColor(bodyLoad, true);
-  const neuroLoadColor = getMetricColor(neuroLoad, true);
+  const loadColor = getLoadColor(totalLoad);
+  const bodyLoadColor = getLoadColor(bodyLoad);
+  const neuroLoadColor = getLoadColor(neuroLoad);
 
   const recommendation = status === "overloaded"
     ? "loadDetail.recOverloaded"

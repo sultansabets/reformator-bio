@@ -35,11 +35,6 @@ const ControlCenter = () => {
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
   const metrics = metricsQuery?.data;
 
-  const showOnboarding =
-    !metricsQuery.isLoading &&
-    metricsQuery.isSuccess &&
-    (metrics == null || !hasValidMetrics(metrics));
-
   const openMetricSheet = (detail: MetricDetail) => {
     setSelectedMetric(detail);
     setMetricSheetOpen(true);
@@ -68,6 +63,7 @@ const ControlCenter = () => {
     );
   }
 
+  const showOnboarding = !metrics || !hasValidMetrics(metrics);
   if (showOnboarding) {
     return (
       <motion.div
@@ -90,11 +86,7 @@ const ControlCenter = () => {
   }
 
   if (!metrics) {
-    return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center px-6">
-        <p className="text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return null;
   }
 
   const baseline = metrics.baseline;

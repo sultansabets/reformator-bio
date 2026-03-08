@@ -7,9 +7,11 @@ import { useQuery } from "@tanstack/react-query";
 import { getMetricsSummary, getMetricsRange } from "@/api/metricsApi";
 import { useHealthStore, hasValidMetrics } from "@/store/healthStore";
 import { getAccessToken } from "@/api/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { METRICS_QUERY_KEY } from "@/constants/queryKeys";
 
-export const METRICS_QUERY_KEY = "metrics";
+export { METRICS_QUERY_KEY };
 
 function getTodayISO(): string {
   return new Date().toLocaleDateString("en-CA", {
@@ -25,16 +27,16 @@ function getTodayISO(): string {
  */
 export function useMetricsSummaryQuery(
   date: string | undefined,
-  isAuthenticated: boolean
+  _isAuthenticated?: boolean
 ) {
+  const { token } = useAuth();
   const setFromApiMetrics = useHealthStore((s) => s.setFromApiMetrics);
   const clearMetrics = useHealthStore((s) => s.clearMetrics);
-  const token = getAccessToken();
 
   const query = useQuery({
     queryKey: [METRICS_QUERY_KEY, "summary", date ?? "today"],
     queryFn: () => getMetricsSummary(date),
-    enabled: !!token && isAuthenticated,
+    enabled: Boolean(token),
     staleTime: 0,
     refetchInterval: 5000,
     refetchIntervalInBackground: true,

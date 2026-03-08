@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { getMetricColor } from "@/lib/colors";
+import { getMetricColor, getLoadColor } from "@/lib/colors";
 
 export interface MetricCardProps {
   percent: number;
@@ -13,6 +13,8 @@ export interface MetricCardProps {
   size?: "default" | "large";
   /** If true, treat metric as inverted (0 = good, 100 = bad) */
   inverted?: boolean;
+  /** If true, use load 3-color system: gray (0), green (1–60), red (61–100) */
+  useLoadColors?: boolean;
 }
 
 const CIRCLE_SIZE = 76;
@@ -28,9 +30,10 @@ export function MetricCard({
   className,
   size = "default",
   inverted = false,
+  useLoadColors = false,
 }: MetricCardProps) {
   const clamped = Math.min(100, Math.max(0, Math.round(percent)));
-  const color = getMetricColor(clamped, inverted);
+  const color = useLoadColors ? getLoadColor(clamped) : getMetricColor(clamped, inverted);
 
   const circleSize = size === "large" ? CIRCLE_SIZE_LARGE : CIRCLE_SIZE;
   const strokeWidth = size === "large" ? STROKE_WIDTH_LARGE : STROKE_WIDTH;
