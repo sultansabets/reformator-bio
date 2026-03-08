@@ -46,7 +46,10 @@ const ControlCenter = () => {
   const selectedDate = useDateStore((s) => s.selectedDate);
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
   const hasMetrics = metricsQuery.data != null && hasValidMetrics(metricsQuery.data);
-  const baseline = metricsQuery.data?.baseline;
+  const metrics = metricsQuery.data;
+  const baseline = metrics?.baseline;
+  const isLearning = !baseline;
+  const baselineProgress = metrics?.baselineProgress;
   const showOnboarding =
     !metricsQuery.isLoading &&
     metricsQuery.isSuccess &&
@@ -96,31 +99,6 @@ const ControlCenter = () => {
     );
   }
 
-  if (!baseline) {
-    const bp = metricsQuery.data?.baselineProgress;
-    return (
-      <motion.div
-        className="flex min-h-[60vh] flex-col items-center justify-center px-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
-        <h1 className="mt-1 text-xl font-semibold text-foreground">{displayName}</h1>
-        <p className="mt-6 max-w-[280px] text-center text-muted-foreground">
-          {t("adaptationDetail.collecting")}
-        </p>
-        {bp && bp.collected > 0 && bp.required > 0 && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("adaptationDetail.dayOfRequired", {
-              collected: bp.collected,
-              required: bp.required,
-            })}
-          </p>
-        )}
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div
       className="px-5 pt-6 pb-4"
@@ -132,6 +110,28 @@ const ControlCenter = () => {
         <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
         <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
       </motion.div>
+
+      {isLearning && (
+        <motion.div
+          variants={item}
+          className="mb-4 flex flex-col items-center justify-center rounded-lg border border-muted bg-muted/30 px-4 py-3 text-center"
+        >
+          <p className="text-sm font-medium text-foreground">
+            {t("adaptationDetail.collecting")}
+          </p>
+          {baselineProgress && baselineProgress.collected > 0 && baselineProgress.required > 0 && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {t("adaptationDetail.dayOfRequired", {
+                collected: baselineProgress.collected,
+                required: baselineProgress.required,
+              })}
+            </p>
+          )}
+          <p className="mt-2 max-w-[260px] text-xs leading-relaxed text-muted-foreground">
+            {t("adaptationDetail.learningExplanation")}
+          </p>
+        </motion.div>
+      )}
 
       <motion.div variants={item} className="mt-4 mb-1 flex justify-center overflow-visible">
         <div

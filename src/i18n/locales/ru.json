@@ -317,6 +317,7 @@
     "baselineZone": "Твоя норма: {{min}}–{{max}}%",
     "collecting": "Сбор базовых данных",
     "dayOfRequired": "День {{collected}} из {{required}}",
+    "learningExplanation": "Учим ваши обычные показатели пульса, сна и восстановления.",
     "recoveryDepth": "Глубина восстановления",
     "stability": "Стабильность состояния",
     "trend3d": "Тренд за 3 дня",
