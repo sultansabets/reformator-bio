@@ -29,12 +29,12 @@ export function useMetricsSummaryQuery(
 ) {
   const setFromApiMetrics = useHealthStore((s) => s.setFromApiMetrics);
   const clearMetrics = useHealthStore((s) => s.clearMetrics);
-  const hasToken = !!getAccessToken();
+  const token = getAccessToken();
 
   const query = useQuery({
     queryKey: [METRICS_QUERY_KEY, "summary", date ?? "today"],
     queryFn: () => getMetricsSummary(date),
-    enabled: isAuthenticated && hasToken,
+    enabled: !!token && isAuthenticated,
     staleTime: 0,
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
@@ -63,12 +63,12 @@ export function useMetricsRangeQuery(
   endDate: string | undefined,
   isAuthenticated: boolean
 ) {
-  const hasToken = !!getAccessToken();
+  const token = getAccessToken();
 
   return useQuery({
     queryKey: [METRICS_QUERY_KEY, "range", startDate, endDate],
     queryFn: () => getMetricsRange(startDate!, endDate!),
-    enabled: !!startDate && !!endDate && isAuthenticated && hasToken,
+    enabled: !!startDate && !!endDate && !!token && isAuthenticated,
     staleTime: 5000,
     refetchOnWindowFocus: true,
     retry: 1,
