@@ -63,8 +63,7 @@ const ControlCenter = () => {
     );
   }
 
-  const showOnboarding = !metrics || !hasValidMetrics(metrics);
-  if (showOnboarding) {
+  if (!metrics) {
     return (
       <motion.div
         className="flex min-h-[60vh] flex-col items-center justify-center px-6"
@@ -85,8 +84,25 @@ const ControlCenter = () => {
     );
   }
 
-  if (!metrics) {
-    return null;
+  if (!hasValidMetrics(metrics)) {
+    return (
+      <motion.div
+        className="flex min-h-[60vh] flex-col items-center justify-center px-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <GreetingHeader profile={profile} />
+        <p className="mt-6 max-w-[280px] text-center text-muted-foreground">
+          {t("onboarding.connectDevice")}
+        </p>
+        <Button
+          className="mt-6"
+          onClick={() => navigate("/onboarding/data-source")}
+        >
+          {t("onboarding.connectDeviceCta")}
+        </Button>
+      </motion.div>
+    );
   }
 
   const baseline = metrics.baseline;
