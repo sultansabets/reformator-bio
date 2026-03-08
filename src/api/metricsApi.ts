@@ -6,6 +6,7 @@ import { apiFetch } from "./apiClient";
 
 export interface MetricsSummary {
   date?: string;
+  baseline?: unknown;
   mainStateScore?: number;
   sleepScore?: number;
   sleepPercent?: number;

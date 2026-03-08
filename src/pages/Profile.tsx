@@ -43,6 +43,7 @@ import { formatDateRu, validateBirthDate, formatMedicalDate } from "@/lib/dateFo
 import { type NutritionGoal } from "@/lib/health";
 import { medicalSections, type MedicalSection } from "@/data/medicalMock";
 import { updateProfile } from "@/api/profileApi";
+import { getCities, type City } from "@/api/cityApi";
 import { toast } from "sonner";
 
 function calculateAge(dob: string): number {
@@ -85,8 +86,6 @@ function useValidation() {
     },
   };
 }
-
-const CITY_KEYS = ["almaty","astana","shymkent","karaganda","aktobe","taraz","pavlodar","ustKamenogorsk","semey","atyrau","kostanay","kyzylorda","aktau","petropavlovsk","oral","taldykorgan","turkistan"] as const;
 
 const LAB_ITEM_KEYS = ["labResults","uzi","ekg","mainDoctor","urologist","sportDoctor","rehab","psychotherapist"] as const;
 
@@ -785,8 +784,21 @@ const Profile = () => {
   const [editWeight, setEditWeight] = useState("");
   const [editSex, setEditSex] = useState<"male" | "female" | "">("");
   const [editCity, setEditCity] = useState("");
+  const [cities, setCities] = useState<City[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const list = await getCities();
+        setCities(list);
+      } catch {
+        // ignore
+      }
+    };
+    loadCities();
+  }, []);
 
   const profileDisplay = {
     fullName: user?.fullName?.trim() ?? "",
@@ -1003,7 +1015,7 @@ const Profile = () => {
             {user?.city && (
               <span>
                 {" • "}
-                {CITY_KEYS.includes(user.city as typeof CITY_KEYS[number]) ? t(`cities.${user.city}`) : user.city}
+                {cities.find((c) => c.id === user?.city)?.name ?? user?.city}
               </span>
             )}
           </div>
@@ -1296,9 +1308,9 @@ const Profile = () => {
                       <SelectValue placeholder={t("profile.chooseCity")} />
                     </SelectTrigger>
                     <SelectContent className="z-[100000] border-border bg-popover" position="popper">
-                      {CITY_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {t(`cities.${key}`)}
+                      {cities.map((city) => (
+                        <SelectItem key={city.id} value={city.id}>
+                          {city.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

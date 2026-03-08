@@ -40,6 +40,8 @@ export function getCircadianState(hour: number): CircadianPhase {
 }
 
 let simulationInterval: ReturnType<typeof setInterval> | null = null;
+let fastSimulationMode = false;
+let simulatedHours = 0;
 let latestMetrics: {
   heartRate: number;
   steps: number;
@@ -57,6 +59,14 @@ function clamp(value: number, minVal: number, maxVal: number): number {
 
 export function getIsSimulationRunning(): boolean {
   return simulationInterval != null;
+}
+
+export function enableFastSimulation(): void {
+  fastSimulationMode = true;
+}
+
+export function disableFastSimulation(): void {
+  fastSimulationMode = false;
 }
 
 export function getCurrentPhysiologicalState(): CircadianPhase {
@@ -78,11 +88,14 @@ export async function startHealthSimulation(
 
   const deviceId = await getOrRegisterSimulatorDevice();
   let tickCount = 0;
+  simulatedHours = 0;
   latestMetrics = null;
 
   const tick = async () => {
     tickCount++;
-    const hour = new Date().getHours();
+    const hour = fastSimulationMode
+      ? simulatedHours % 24
+      : new Date().getHours();
     const phase = getCircadianState(hour);
     const ranges = PHASE_RANGES[phase];
 
@@ -102,7 +115,10 @@ export async function startHealthSimulation(
       lastHrv = valueMs;
     }
 
-    const now = new Date().toISOString();
+    const recordedAt = fastSimulationMode
+      ? new Date(Date.now() + simulatedHours * 3600_000).toISOString()
+      : new Date().toISOString();
+    if (fastSimulationMode) simulatedHours++;
     latestMetrics = {
       heartRate: valueBpm,
       steps: count,
@@ -111,10 +127,10 @@ export async function startHealthSimulation(
 
     const payload = {
       deviceId,
-      heartRates: [{ valueBpm, recordedAt: now }],
-      steps: [{ count, recordedAt: now }],
+      heartRates: [{ valueBpm, recordedAt }],
+      steps: [{ count, recordedAt }],
       ...(valueMs != null && {
-        hrv: [{ valueMs, recordedAt: now }],
+        hrv: [{ valueMs, recordedAt }],
       }),
     };
 
@@ -127,7 +143,8 @@ export async function startHealthSimulation(
   };
 
   await tick();
-  simulationInterval = setInterval(tick, 60_000);
+  const intervalMs = fastSimulationMode ? 3_000 : 60_000;
+  simulationInterval = setInterval(tick, intervalMs);
 }
 
 export function stopHealthSimulation(): void {

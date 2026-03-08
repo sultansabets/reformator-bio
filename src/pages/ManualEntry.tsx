@@ -8,8 +8,11 @@ import {
   getIsSimulationRunning,
   getCurrentPhysiologicalState,
   getLatestMetrics,
+  enableFastSimulation,
+  disableFastSimulation,
 } from "@/services/liveHealthSimulator";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
 
 const ManualEntry = () => {
@@ -18,6 +21,7 @@ const ManualEntry = () => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fastMode, setFastMode] = useState(false);
   const [isRunning, setIsRunning] = useState(getIsSimulationRunning);
   const [state, setState] = useState(getCurrentPhysiologicalState);
   const [metrics, setMetrics] = useState(getLatestMetrics);
@@ -36,6 +40,8 @@ const ManualEntry = () => {
     setError(null);
     setLoading(true);
     try {
+      if (fastMode) enableFastSimulation();
+      else disableFastSimulation();
       await startHealthSimulation(queryClient);
       setIsRunning(true);
     } catch (err: unknown) {
@@ -66,6 +72,19 @@ const ManualEntry = () => {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        <div className="flex items-center justify-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            {t("onboarding.normalSimulation")}
+          </span>
+          <Switch
+            checked={fastMode}
+            onCheckedChange={setFastMode}
+            disabled={isRunning}
+          />
+          <span className="text-sm text-muted-foreground">
+            {t("onboarding.fastSimulation")}
+          </span>
+        </div>
         <p className="text-sm font-medium text-foreground">
           {isRunning
             ? t("onboarding.simulationRunning")

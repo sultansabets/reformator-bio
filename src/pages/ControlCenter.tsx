@@ -36,6 +36,7 @@ const ControlCenter = () => {
   const selectedDate = useDateStore((s) => s.selectedDate);
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
   const hasMetrics = metricsQuery.data != null && hasValidMetrics(metricsQuery.data);
+  const baseline = metricsQuery.data?.baseline;
   const showOnboarding =
     !metricsQuery.isLoading &&
     metricsQuery.isSuccess &&
@@ -81,6 +82,22 @@ const ControlCenter = () => {
         >
           {t("onboarding.connectDeviceCta")}
         </Button>
+      </motion.div>
+    );
+  }
+
+  if (!baseline) {
+    return (
+      <motion.div
+        className="flex min-h-[60vh] flex-col items-center justify-center px-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
+        <h1 className="mt-1 text-xl font-semibold text-foreground">{displayName}</h1>
+        <p className="mt-6 max-w-[280px] text-center text-muted-foreground">
+          {t("adaptationDetail.collecting")}
+        </p>
       </motion.div>
     );
   }
