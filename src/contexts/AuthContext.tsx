@@ -13,6 +13,7 @@ import {
   type AppUser,
 } from "@/lib/userStorage";
 import { login as apiLogin } from "@/api/authApi";
+import { verifyCode } from "@/api/phoneAuthApi";
 import { clearAccessToken, clearRefreshToken, getAccessToken, setOnSessionExpired } from "@/api/apiClient";
 import { getStoredApiUser, setStoredApiUser, type ApiUser } from "@/api/authStorage";
 
@@ -105,6 +106,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: UserWithFullName | null;
   login: (loginId: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithOtp: (phone: string, code: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: {
     phone: string;
     password: string;
@@ -252,6 +254,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [queryClient]);
 
+  const loginWithOtp = useCallback(async (phone: string, code: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await verifyCode(phone.trim(), code.trim());
+      if (res.accessToken) {
+        setAuthVersion((v) => v + 1);
+        void queryClient.invalidateQueries({ queryKey: [METRICS_QUERY_KEY] });
+        return { success: true };
+      }
+      return { success: false, error: "Invalid response" };
+    } catch (err: unknown) {
+      const msg = err && typeof err === "object" && "message" in err
+        ? String((err as { message: string }).message)
+        : "Invalid code or request failed.";
+      return { success: false, error: msg };
+    }
+  }, [queryClient]);
+
   const logout = useCallback(() => {
     clearAccessToken();
     clearRefreshToken();
@@ -271,6 +290,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         user,
         login,
+        loginWithOtp,
         register,
         logout,
         hasUser,
