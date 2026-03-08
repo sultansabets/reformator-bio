@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   User,
@@ -41,6 +42,8 @@ import {
 import { formatDateRu, validateBirthDate, formatMedicalDate } from "@/lib/dateFormat";
 import { type NutritionGoal } from "@/lib/health";
 import { medicalSections, type MedicalSection } from "@/data/medicalMock";
+import { updateProfile } from "@/api/profileApi";
+import { toast } from "sonner";
 
 function calculateAge(dob: string): number {
   const d = new Date(dob);
@@ -760,6 +763,7 @@ type EditableField = "firstName" | "lastName" | "email" | "dob" | "height" | "we
 const Profile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, updateUser } = useAuth();
   const { validateName, validateEmail, validateHeight, validateWeight } = useValidation();
   const [modal, setModal] = useState<ModalType>(null);
@@ -780,6 +784,8 @@ const Profile = () => {
   const [editHeight, setEditHeight] = useState("");
   const [editWeight, setEditWeight] = useState("");
   const [editCity, setEditCity] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const profileDisplay = {
     fullName: user?.fullName?.trim() ?? "",
@@ -805,8 +811,52 @@ const Profile = () => {
       setEditHeight(user.height != null ? String(user.height) : "");
       setEditWeight(user.weight != null ? String(user.weight) : "");
       setEditCity(user.city ?? "");
+      setSaveError(null);
     }
   }, [editOpen, user]);
+
+  const handleSaveProfile = async () => {
+    setSaveError(null);
+    setSaveLoading(true);
+    try {
+      const weightNum = editWeight.trim() ? Number(editWeight) : undefined;
+      const age = editDob.trim()
+        ? calculateAge(editDob)
+        : undefined;
+      await updateProfile({
+        nickname: editNickname.trim() || undefined,
+        firstName: editFirstName.trim() || undefined,
+        lastName: editLastName.trim() || undefined,
+        age: age != null && age >= 0 ? age : undefined,
+        weight:
+          weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
+        cityId: editCity.trim() || undefined,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      const heightNum = editHeight.trim() ? Number(editHeight) : undefined;
+      updateUser({
+        firstName: editFirstName.trim() || undefined,
+        lastName: editLastName.trim() || undefined,
+        nickname: editNickname.trim() || undefined,
+        dob: editDob.trim() || undefined,
+        height:
+          heightNum != null && !Number.isNaN(heightNum) ? heightNum : undefined,
+        weight:
+          weightNum != null && !Number.isNaN(weightNum) ? weightNum : undefined,
+        city: editCity.trim() || undefined,
+      });
+      toast.success(t("profile.profileSaved"));
+      setEditOpen(false);
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : t("errors.requestFailed");
+      setSaveError(msg);
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (editOpen) {
@@ -1260,11 +1310,17 @@ const Profile = () => {
               className="mx-auto max-w-[480px] px-5 pb-4 pt-8 pointer-events-auto"
               style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent 100%)" }}
             >
+              {saveError && (
+                <p className="mb-3 text-center text-sm text-destructive">
+                  {saveError}
+                </p>
+              )}
               <Button
                 className="h-14 w-full rounded-2xl text-base font-medium"
-                onClick={() => setEditOpen(false)}
+                onClick={handleSaveProfile}
+                disabled={saveLoading}
               >
-                {t("common.save")}
+                {saveLoading ? t("common.loading") : t("common.save")}
               </Button>
             </div>
           </div>

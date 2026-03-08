@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { getOrRegisterSimulatorDevice, syncDevice } from "@/api/deviceApi";
-import { METRICS_QUERY_KEY } from "@/hooks/useMetricsQuery";
+import {
+  startHealthSimulation,
+  stopHealthSimulation,
+  getIsSimulationRunning,
+  getCurrentPhysiologicalState,
+  getLatestMetrics,
+} from "@/services/liveHealthSimulator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -13,21 +18,26 @@ const ManualEntry = () => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(getIsSimulationRunning);
+  const [state, setState] = useState(getCurrentPhysiologicalState);
+  const [metrics, setMetrics] = useState(getLatestMetrics);
 
-  const handleGenerateTestData = async () => {
+  useEffect(() => {
+    const check = () => {
+      setIsRunning(getIsSimulationRunning());
+      setState(getCurrentPhysiologicalState());
+      setMetrics(getLatestMetrics());
+    };
+    const id = setInterval(check, 500);
+    return () => clearInterval(id);
+  }, []);
+
+  const handleStart = async () => {
     setError(null);
     setLoading(true);
     try {
-      const deviceId = await getOrRegisterSimulatorDevice();
-      const now = new Date().toISOString();
-      await syncDevice({
-        deviceId,
-        heartRates: [{ valueBpm: 72, recordedAt: now }],
-        hrv: [{ valueMs: 55, recordedAt: now }],
-        steps: [{ count: 4200, recordedAt: now }],
-      });
-      await queryClient.invalidateQueries({ queryKey: [METRICS_QUERY_KEY] });
-      navigate("/control", { replace: true });
+      await startHealthSimulation(queryClient);
+      setIsRunning(true);
     } catch (err: unknown) {
       const msg =
         err && typeof err === "object" && "message" in err
@@ -37,6 +47,11 @@ const ManualEntry = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStop = () => {
+    stopHealthSimulation();
+    setIsRunning(false);
   };
 
   return (
@@ -51,13 +66,46 @@ const ManualEntry = () => {
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6">
-        <Button
-          size="lg"
-          onClick={handleGenerateTestData}
-          disabled={loading}
-        >
-          {loading ? t("common.loading") : t("onboarding.generateTestData")}
-        </Button>
+        <p className="text-sm font-medium text-foreground">
+          {isRunning
+            ? t("onboarding.simulationRunning")
+            : t("onboarding.simulationStopped")}
+        </p>
+        {isRunning && (
+          <div className="rounded-lg border border-border bg-muted/30 px-5 py-4 text-center">
+            <p className="text-xs text-muted-foreground">
+              {t("onboarding.currentCircadianPhase")}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-foreground">
+              {t(`onboarding.phase${state}`)}
+            </p>
+            {metrics && (
+              <p className="mt-3 text-sm text-muted-foreground">
+                HR: {metrics.heartRate} bpm
+                {metrics.hrv != null && ` · HRV: ${metrics.hrv} ms`}
+                {" · "}
+                {t("onboarding.steps")}: {metrics.steps}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="flex gap-3">
+          <Button
+            size="lg"
+            onClick={handleStart}
+            disabled={loading || isRunning}
+          >
+            {loading ? t("common.loading") : t("onboarding.startSimulation")}
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={handleStop}
+            disabled={!isRunning}
+          >
+            {t("onboarding.stopSimulation")}
+          </Button>
+        </div>
         {error && (
           <p className="text-center text-sm text-destructive">{error}</p>
         )}
