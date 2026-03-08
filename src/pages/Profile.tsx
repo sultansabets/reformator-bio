@@ -802,17 +802,31 @@ const Profile = () => {
     loadCities();
   }, []);
 
+  const displayName =
+    profile?.firstName && profile?.lastName
+      ? `${profile.firstName} ${profile.lastName}`.trim()
+      : profile?.nickname?.trim() ?? user?.fullName?.trim() ?? t("profile.placeholderName");
+  const nickname = profile?.nickname?.trim()
+    ? `@${profile.nickname.replace(/[^a-zA-Z0-9_.]/g, "") || "user"}`
+    : user?.nickname?.trim()
+      ? `@${user.nickname.replace(/[^a-zA-Z0-9_.]/g, "") || "user"}`
+      : "";
+  const headerDob = profile?.birthDate ?? user?.dob ?? "";
+  const headerCity = profile?.city?.name ?? profile?.city?.id ?? user?.city ?? "";
+
   const profileDisplay = {
-    fullName: user?.fullName?.trim() ?? "",
-    firstName: user?.firstName?.trim() ?? "",
-    lastName: user?.lastName?.trim() ?? "",
+    fullName: profile?.firstName && profile?.lastName
+      ? `${profile.firstName} ${profile.lastName}`.trim()
+      : profile?.nickname ?? user?.fullName?.trim() ?? "",
+    firstName: profile?.firstName?.trim() ?? user?.firstName?.trim() ?? "",
+    lastName: profile?.lastName?.trim() ?? user?.lastName?.trim() ?? "",
     email: user?.email?.trim() ?? "",
-    dob: user?.dob?.trim() ?? "",
+    dob: profile?.birthDate ?? user?.dob?.trim() ?? "",
     activityLevel: user?.activityLevel?.trim() ?? "",
-    height: user?.height != null ? String(user.height) : "",
-    weight: user?.weight != null ? String(user.weight) : "",
+    height: (profile?.height ?? user?.height) != null ? String(profile?.height ?? user?.height) : "",
+    weight: (profile?.weight ?? user?.weight) != null ? String(profile?.weight ?? user?.weight) : "",
     goal: user?.goal ? t(`health.goal${user.goal === "gain" ? "Gain" : user.goal === "maintain" ? "Maintain" : "Lose"}`) : "",
-    city: user?.city?.trim() ?? "",
+    city: profile?.city?.id ?? user?.city?.trim() ?? "",
     mentalHealthScore: user?.mentalHealthScore,
     mentalHealthStatus: user?.mentalHealthStatus,
   };
@@ -822,7 +836,7 @@ const Profile = () => {
       setEditFirstName(profile.firstName ?? "");
       setEditLastName(profile.lastName ?? "");
       setEditNickname(profile.nickname ?? "");
-      setEditDob(profile.birthDate ? profile.birthDate.slice(0, 10) : "");
+      setEditDob(profile.birthDate ? profile.birthDate.split("T")[0] : "");
       setEditHeight(profile.height != null ? String(profile.height) : "");
       setEditWeight(profile.weight != null ? String(profile.weight) : "");
       setEditSex(profile.sex ?? "");
@@ -836,7 +850,7 @@ const Profile = () => {
       setEditFirstName(user.firstName ?? "");
       setEditLastName(user.lastName ?? "");
       setEditNickname(user.nickname ?? "");
-      setEditDob(user.dob ?? "");
+      setEditDob(user.dob ? user.dob.split("T")[0] : "");
       setEditHeight(user.height != null ? String(user.height) : "");
       setEditWeight(user.weight != null ? String(user.weight) : "");
       setEditSex((user as { sex?: "male" | "female" }).sex ?? "");
@@ -992,16 +1006,14 @@ const Profile = () => {
           <Avatar className="h-20 w-20 border-2 border-border cursor-pointer hover:opacity-90 transition-opacity">
             <AvatarImage src={user?.avatar} alt="" />
             <AvatarFallback className="bg-primary text-lg font-semibold text-primary-foreground">
-              {getInitials(profileDisplay.fullName || t("profile.placeholderName"))}
+              {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
         </label>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="truncate text-lg font-semibold tracking-tight text-foreground">
-              {(profileDisplay.firstName || profileDisplay.lastName)
-                ? `${profileDisplay.firstName || ""} ${profileDisplay.lastName || ""}`.trim()
-                : t("profile.placeholderName")}
+              {displayName}
             </span>
             {user?.isVerified && (
               <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary">
@@ -1010,20 +1022,18 @@ const Profile = () => {
             )}
           </div>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {user?.nickname
-              ? `@${user.nickname.replace(/[^a-zA-Z0-9_.]/g, "") || "user"}`
-              : t("profile.placeholderNickname")}
+            {nickname || t("profile.placeholderNickname")}
           </p>
           <div className="mt-1 text-xs text-muted-foreground">
-            {user?.dob && (
+            {headerDob && (
               <span>
-                {calculateAge(user.dob)} {t("profile.years")}
+                {calculateAge(headerDob)} {t("profile.years")}
               </span>
             )}
-            {user?.city && (
+            {headerCity && (
               <span>
-                {" • "}
-                {cities.find((c) => c.id === user?.city)?.name ?? user?.city}
+                {headerDob ? " • " : ""}
+                {cities.find((c) => c.id === (profile?.city?.id ?? user?.city))?.name ?? headerCity}
               </span>
             )}
           </div>
