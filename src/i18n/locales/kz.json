@@ -8,7 +8,18 @@
     "continue": "Жалғастыру",
     "cancel": "Болдырмау",
     "connect": "Қосу",
-    "user": "Пайдаланушы"
+    "user": "Пайдаланушы",
+    "loading": "Жүктелуде..."
+  },
+  "onboarding": {
+    "connectDevice": "Көрсеткіштерді қадағалау үшін құрылғыны қосыңыз",
+    "connectDeviceCta": "Құрылғыны қосу",
+    "selectSource": "Денсаулық деректерін қайдан синхрондау керектігін таңдаңыз",
+    "connectWatch": "Смарт-сағат қосу",
+    "appleHealth": "Apple Health",
+    "googleFit": "Google Fit",
+    "manualEntry": "Қолмен енгізу",
+    "comingSoon": "Бұл интеграция жақында қосылады"
   },
   "greeting": {
     "morning": "Қайырлы таң",

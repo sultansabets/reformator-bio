@@ -5,7 +5,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getMetricsSummary, getMetricsRange } from "@/api/metricsApi";
-import { useHealthStore } from "@/store/healthStore";
+import { useHealthStore, hasValidMetrics } from "@/store/healthStore";
 import { getAccessToken } from "@/api/apiClient";
 import { useEffect } from "react";
 
@@ -28,6 +28,7 @@ export function useMetricsSummaryQuery(
   isAuthenticated: boolean
 ) {
   const setFromApiMetrics = useHealthStore((s) => s.setFromApiMetrics);
+  const clearMetrics = useHealthStore((s) => s.clearMetrics);
   const hasToken = !!getAccessToken();
 
   const query = useQuery({
@@ -42,11 +43,13 @@ export function useMetricsSummaryQuery(
   });
 
   useEffect(() => {
-    if (query.data) {
+    if (query.data && hasValidMetrics(query.data)) {
       const viewDate = date ?? getTodayISO();
       setFromApiMetrics(query.data, viewDate);
+    } else if (query.isSuccess && query.data !== undefined) {
+      clearMetrics();
     }
-  }, [query.data, date, setFromApiMetrics]);
+  }, [query.data, query.isSuccess, date, setFromApiMetrics, clearMetrics]);
 
   return query;
 }

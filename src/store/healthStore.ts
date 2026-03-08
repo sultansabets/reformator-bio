@@ -17,7 +17,6 @@ import {
 } from "@/engine/healthEngine";
 import { calculateSleepFromBlocks, mapHealthToSleepInput, type SleepEngineResult } from "@/engine/sleepEngine";
 import { calculateEnergyDetail, type EnergyEngineResult } from "@/engine/energyEngine";
-import { hydrateFromStorage, hydrateFromStorageForDate } from "@/lib/healthDataSync";
 import type { MetricsSummary } from "@/api/metricsApi";
 
 function getTodayISO(): string {
@@ -149,11 +148,11 @@ function recompute(raw: HealthRawState): HealthComputedState {
 }
 
 const initialRaw: HealthRawState = {
-  sleepHours: 7.5,
-  sleepQuality: 80,
-  hrv: 45,
-  heartRate: 62,
-  steps: 6500,
+  sleepHours: 0,
+  sleepQuality: 0,
+  hrv: 0,
+  heartRate: 0,
+  steps: 0,
   caloriesIntake: 0,
   caloriesBurned: 0,
   protein: 0,
@@ -195,10 +194,20 @@ function metricsSummaryToRaw(api: MetricsSummary, viewDate: string): HealthRawSt
   };
 }
 
+export function hasValidMetrics(api: MetricsSummary | null | undefined): boolean {
+  if (!api || api === null) return false;
+  return (
+    api.mainStateScore != null ||
+    api.sleepHours != null ||
+    api.steps != null ||
+    api.hrv != null ||
+    api.heartRate != null
+  );
+}
+
 type HealthActions = {
   setFromApiMetrics: (api: MetricsSummary, viewDate: string) => void;
-  hydrate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }) => void;
-  hydrateForDate: (userId: string, profile: { weight?: number; height?: number; age?: number; activityLevel?: string }, dateStr: string) => void;
+  clearMetrics: () => void;
   setRaw: (patch: Partial<HealthRawState>) => void;
   addNutrition: (entry: { calories: number; protein: number; carbs: number; fats: number }) => void;
   addWorkout: (entry: WorkoutEntryStore) => void;
@@ -219,62 +228,13 @@ export const useHealthStore = create<HealthState & HealthActions>()(
         set({ ...rawState, ...recompute(rawState) });
       },
 
-      hydrate: (userId, profile) => {
-      const raw = hydrateFromStorage({
-        userId,
-        weight: profile.weight,
-        height: profile.height,
-        age: profile.age,
-        activityLevel: profile.activityLevel,
-      });
-      const rawState: HealthRawState = {
-        sleepHours: raw.sleepHours,
-        sleepQuality: raw.sleepQuality,
-        hrv: raw.hrv,
-        heartRate: raw.heartRate,
-        steps: raw.steps,
-        caloriesIntake: raw.caloriesIntake,
-        caloriesBurned: raw.caloriesBurned,
-        protein: raw.protein,
-        carbs: raw.carbs,
-        fats: raw.fats,
-        targetCalories: raw.targetCalories,
-        targetProtein: raw.targetProtein,
-        testosterone: raw.testosterone,
-        testosteroneDate: raw.testosteroneDate,
-        workouts: raw.workouts,
-        nutritionHistory: raw.nutritionHistory,
-        viewDate: getTodayISO(),
-      };
-      set({ ...rawState, ...recompute(rawState) });
-    },
-
-    hydrateForDate: (userId, profile, dateStr) => {
-      const raw = hydrateFromStorageForDate(
-        { userId, weight: profile.weight, height: profile.height, age: profile.age, activityLevel: profile.activityLevel },
-        dateStr
-      );
-      const rawState: HealthRawState = {
-        sleepHours: raw.sleepHours,
-        sleepQuality: raw.sleepQuality,
-        hrv: raw.hrv,
-        heartRate: raw.heartRate,
-        steps: raw.steps,
-        caloriesIntake: raw.caloriesIntake,
-        caloriesBurned: raw.caloriesBurned,
-        protein: raw.protein,
-        carbs: raw.carbs,
-        fats: raw.fats,
-        targetCalories: raw.targetCalories,
-        targetProtein: raw.targetProtein,
-        testosterone: raw.testosterone,
-        testosteroneDate: raw.testosteroneDate,
-        workouts: raw.workouts,
-        nutritionHistory: raw.nutritionHistory,
-        viewDate: dateStr,
-      };
-      set({ ...rawState, ...recompute(rawState) });
-    },
+      clearMetrics: () => {
+        const empty: HealthRawState = {
+          ...initialRaw,
+          viewDate: get().viewDate ?? getTodayISO(),
+        };
+        set({ ...empty, ...recompute(empty) });
+      },
 
     setRaw: (patch) => {
       const next = { ...get(), ...patch } as HealthRawState;

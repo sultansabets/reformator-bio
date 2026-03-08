@@ -23,7 +23,18 @@
     "continue": "Continue",
     "cancel": "Cancel",
     "connect": "Connect",
-    "user": "User"
+    "user": "User",
+    "loading": "Loading..."
+  },
+  "onboarding": {
+    "connectDevice": "Connect your device to start tracking",
+    "connectDeviceCta": "Connect device",
+    "selectSource": "Choose how you want to sync your health data",
+    "connectWatch": "Connect Watch",
+    "appleHealth": "Apple Health",
+    "googleFit": "Google Fit",
+    "manualEntry": "Manual entry",
+    "comingSoon": "This integration is coming soon"
   },
   "greeting": {
     "morning": "Good morning",

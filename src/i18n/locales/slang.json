@@ -24,7 +24,18 @@
     "cancel": "Не щас",
     "connect": "Подрубить",
     "user": "Юзер",
-    "details": "Чекнуть"
+    "details": "Чекнуть",
+    "loading": "Грузим..."
+  },
+  "onboarding": {
+    "connectDevice": "Подруби устройство — начнём отслеживать",
+    "connectDeviceCta": "Подключить",
+    "selectSource": "Откуда тянем данные о здоровье",
+    "connectWatch": "Часы",
+    "appleHealth": "Apple Health",
+    "googleFit": "Google Fit",
+    "manualEntry": "Ручной ввод",
+    "comingSoon": "Скоро будет"
   },
   "greeting": {
     "morning": "Даров",

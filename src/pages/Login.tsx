@@ -5,6 +5,8 @@ import { Navigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestCode } from "@/api/phoneAuthApi";
+import { getMetricsSummary } from "@/api/metricsApi";
+import { hasValidMetrics } from "@/store/healthStore";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,7 +93,13 @@ const Login = () => {
         setError(result.error ?? t("errors.invalidSmsCode"));
         return;
       }
-      navigate("/control", { replace: true });
+      try {
+        const metrics = await getMetricsSummary();
+        const hasDevice = metrics != null && hasValidMetrics(metrics);
+        navigate(hasDevice ? "/control" : "/onboarding/data-source", { replace: true });
+      } catch {
+        navigate("/onboarding/data-source", { replace: true });
+      }
     } catch (err: unknown) {
       const msg = err && typeof err === "object" && "message" in err
         ? String((err as { message: string }).message)

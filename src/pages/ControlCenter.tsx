@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGreetingByTime } from "@/lib/greeting";
-import { useHealthStore } from "@/store/healthStore";
+import { useHealthStore, hasValidMetrics } from "@/store/healthStore";
 import { useMetricsSummaryQuery } from "@/hooks/useMetricsQuery";
 import { getAccessToken } from "@/api/apiClient";
 import HealthOrb from "@/components/control/HealthOrb";
@@ -13,6 +14,7 @@ import { MetricDetailSheet, type MetricDetail } from "@/components/control/Metri
 import { InfluenceFactors } from "@/components/control/InfluenceFactors";
 import { DateNavigator } from "@/components/control/DateNavigator";
 import { useDateStore } from "@/store/dateStore";
+import { Button } from "@/components/ui/button";
 
 function formatDateShort(iso: string | undefined): string {
   if (!iso) return "";
@@ -25,29 +27,20 @@ const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 
 const ControlCenter = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const displayName = user?.fullName?.trim() || t("common.user");
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
 
   const selectedDate = useDateStore((s) => s.selectedDate);
-  const hydrateForDate = useHealthStore((s) => s.hydrateForDate);
-  const hydrate = useHealthStore((s) => s.hydrate);
-
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
-  const hasToken = !!getAccessToken();
+  const hasMetrics = metricsQuery.data != null && hasValidMetrics(metricsQuery.data);
+  const showOnboarding =
+    !metricsQuery.isLoading &&
+    metricsQuery.isSuccess &&
+    (metricsQuery.data == null || !hasValidMetrics(metricsQuery.data));
 
-  useEffect(() => {
-    if (!user?.id) return;
-    if (hasToken && !metricsQuery.isError) return;
-    const profile = {
-      weight: user.weight,
-      height: user.height,
-      age: user.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : undefined,
-      activityLevel: user.activityLevel,
-    };
-    hydrateForDate(user.id, profile, selectedDate);
-  }, [user?.id, user?.weight, user?.height, user?.dob, user?.activityLevel, selectedDate, hydrateForDate, hasToken, metricsQuery.isError]);
   const sleepPercent = useHealthStore((s) => s.sleepPercent);
   const loadPercent = useHealthStore((s) => s.loadPercent);
   const stress = useHealthStore((s) => s.stress);
@@ -57,23 +50,40 @@ const ControlCenter = () => {
   const testosterone = useHealthStore((s) => s.testosterone);
   const testosteroneDate = useHealthStore((s) => s.testosteroneDate);
 
-  useEffect(() => {
-    return () => {
-      if (user?.id) {
-        hydrate(user.id, {
-          weight: user.weight,
-          height: user.height,
-          age: user.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : undefined,
-          activityLevel: user.activityLevel,
-        });
-      }
-    };
-  }, [user?.id, hydrate]);
-
   const openMetricSheet = (detail: MetricDetail) => {
     setSelectedMetric(detail);
     setMetricSheetOpen(true);
   };
+
+  if (metricsQuery.isLoading && !hasMetrics) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center px-6">
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      </div>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <motion.div
+        className="flex min-h-[60vh] flex-col items-center justify-center px-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
+        <h1 className="mt-1 text-xl font-semibold text-foreground">{displayName}</h1>
+        <p className="mt-6 max-w-[280px] text-center text-muted-foreground">
+          {t("onboarding.connectDevice")}
+        </p>
+        <Button
+          className="mt-6"
+          onClick={() => navigate("/onboarding/data-source")}
+        >
+          {t("onboarding.connectDeviceCta")}
+        </Button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

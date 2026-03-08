@@ -23,7 +23,18 @@
     "continue": "Продолжить",
     "cancel": "Отмена",
     "connect": "Подключить",
-    "user": "Пользователь"
+    "user": "Пользователь",
+    "loading": "Загрузка..."
+  },
+  "onboarding": {
+    "connectDevice": "Подключите устройство для отслеживания показателей",
+    "connectDeviceCta": "Подключить устройство",
+    "selectSource": "Выберите источник данных о здоровье",
+    "connectWatch": "Подключить часы",
+    "appleHealth": "Apple Health",
+    "googleFit": "Google Fit",
+    "manualEntry": "Ручной ввод",
+    "comingSoon": "Эта интеграция скоро появится"
   },
   "greeting": {
     "morning": "Доброе утро",
