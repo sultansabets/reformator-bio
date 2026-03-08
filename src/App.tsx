@@ -10,7 +10,6 @@ import { KeyboardProvider } from "@/contexts/KeyboardContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import ControlCenter from "@/pages/ControlCenter";
 import Center from "@/pages/Center";
 import AI from "@/pages/AI";
@@ -45,9 +44,9 @@ const App = () => (
             <SplashScreen />
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Navigate to="/control" replace />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<ControlCenter />} />
               <Route path="/control" element={<ControlCenter />} />
               <Route path="/center" element={<Center />} />
               <Route path="/ai" element={<AI />} />

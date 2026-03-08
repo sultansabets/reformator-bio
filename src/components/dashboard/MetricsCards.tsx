@@ -16,12 +16,29 @@ export interface MetricsCardsProps {
 
 const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } } };
 
+function computeSleepScore(metrics: MetricsSummary): number {
+  if (metrics.sleepPercent != null) return metrics.sleepPercent;
+  const sleepMin = metrics.sleepMinutes ?? (metrics.sleepHours != null ? metrics.sleepHours * 60 : null);
+  if (sleepMin != null) {
+    return Math.min(100, Math.round((sleepMin / 480) * 100));
+  }
+  return 0;
+}
+
+function computeLoadScore(metrics: MetricsSummary): number {
+  if (metrics.loadPercent != null) return metrics.loadPercent;
+  if (metrics.steps != null) {
+    return Math.min(100, Math.round((metrics.steps / 10000) * 100));
+  }
+  return 0;
+}
+
 export function MetricsCards({ metrics, onMetricClick }: MetricsCardsProps) {
   const { t } = useTranslation();
   if (!metrics) return null;
-  const sleepPercent = metrics.sleepPercent ?? 0;
-  const loadPercent = metrics.loadPercent ?? 0;
-  const heartRate = metrics.heartRate ?? 0;
+  const sleepPercent = computeSleepScore(metrics);
+  const loadPercent = computeLoadScore(metrics);
+  const heartRate = metrics.heartRate ?? metrics.avgHeartRate ?? 0;
   const steps = metrics.steps ?? 0;
   const stress = metrics.stress ?? 0;
   const testosterone = metrics.testosterone;

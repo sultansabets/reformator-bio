@@ -16,12 +16,16 @@ export interface MetricsSummary {
   mainStateScore?: number;
   sleepScore?: number;
   sleepPercent?: number;
+  sleepMinutes?: number;
   loadPercent?: number;
   stress?: number;
   sleepHours?: number;
   sleepQuality?: number;
   hrv?: number;
   heartRate?: number;
+  avgHeartRate?: number;
+  avgHRV?: number;
+  stateScore?: number;
   steps?: number;
   caloriesIntake?: number;
   caloriesBurned?: number;

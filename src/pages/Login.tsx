@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestCode } from "@/api/phoneAuthApi";
@@ -53,7 +53,7 @@ const Login = () => {
   const fullPhone = dial + digitsOnly(phoneDigits);
 
   if (isAuthenticated) {
-    return <Navigate to="/control" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSendCode = async (e: React.FormEvent) => {
@@ -96,7 +96,7 @@ const Login = () => {
       try {
         const metrics = await getMetricsSummary();
         const hasDevice = metrics != null && hasValidMetrics(metrics);
-        navigate(hasDevice ? "/control" : "/onboarding/data-source", { replace: true });
+        navigate(hasDevice ? "/dashboard" : "/onboarding/data-source", { replace: true });
       } catch {
         navigate("/onboarding/data-source", { replace: true });
       }
@@ -232,12 +232,6 @@ const Login = () => {
                 </motion.form>
               )}
             </AnimatePresence>
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              {t("auth.noAccount")}{" "}
-              <Link to="/register" className="font-medium text-foreground underline hover:no-underline">
-                {t("auth.register")}
-              </Link>
-            </p>
           </CardContent>
         </Card>
       </motion.div>

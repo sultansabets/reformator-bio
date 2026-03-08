@@ -15,7 +15,7 @@ const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 export function HealthOrbSection({ metrics, onMetricClick }: HealthOrbSectionProps) {
   const { t } = useTranslation();
   if (!metrics) return null;
-  const mainStateScore = metrics.mainStateScore ?? 0;
+  const score = metrics?.stateScore ?? metrics?.mainStateScore ?? 0;
 
   return (
     <motion.div
@@ -29,7 +29,7 @@ export function HealthOrbSection({ metrics, onMetricClick }: HealthOrbSectionPro
           onMetricClick({
             key: "energy",
             title: t("energyDetail.title"),
-            percent: mainStateScore,
+            percent: score,
           })
         }
         onKeyDown={(e) =>
@@ -37,12 +37,12 @@ export function HealthOrbSection({ metrics, onMetricClick }: HealthOrbSectionPro
           onMetricClick({
             key: "energy",
             title: t("energyDetail.title"),
-            percent: mainStateScore,
+            percent: score,
           })
         }
         className="relative mx-auto flex w-full max-w-[420px] cursor-pointer items-center justify-center overflow-visible"
       >
-        <HealthOrb score={mainStateScore} />
+        <HealthOrb score={score} />
       </div>
     </motion.div>
   );

@@ -1,12 +1,11 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { METRICS_QUERY_KEY } from "@/constants/queryKeys";
 import {
   getUsersData,
   setCurrentUserId,
   setUsersData,
-  addUser as addAppUser,
-  findUserByPhoneAndPassword,
   updateAppUser,
   getAppUserById,
   getStorageKey,
@@ -110,14 +109,6 @@ interface AuthContextType {
   user: UserWithFullName | null;
   login: (loginId: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithOtp: (phone: string, code: string) => Promise<{ success: boolean; error?: string }>;
-  register: (data: {
-    phone: string;
-    password: string;
-    nickname: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-  }) => { success: boolean; error?: string };
   logout: () => void;
   hasUser: () => boolean;
   updateUser: (updates: ProfileUpdates) => void;
@@ -176,6 +167,7 @@ function getCurrentUser(): UserWithFullName | null {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [user, setUser] = useState<UserWithFullName | null>(() => {
     migrateLegacyUserIfNeeded();
@@ -201,45 +193,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [queryClient]);
 
   const hasUser = useCallback(() => !!getCurrentUser(), []);
-
-  const register = useCallback(
-    (data: {
-      phone: string;
-      password: string;
-      nickname: string;
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-    }): { success: boolean; error?: string } => {
-      const baseNickname = data.nickname.trim();
-      const result = addAppUser({
-        phone: data.phone.trim(),
-        password: data.password,
-        nickname: baseNickname,
-        firstName: data.firstName?.trim() || "",
-        lastName: data.lastName?.trim() || "",
-        email: data.email?.trim() || "",
-        avatar: null as unknown as string | undefined,
-        dob: "",
-        activityLevel: "",
-        wearable: null as unknown as string | undefined,
-        height: null as unknown as number | undefined,
-        weight: null as unknown as number | undefined,
-        goal: null as unknown as AppUser["goal"],
-        isVerified: false,
-        city: "",
-        mentalHealthScore: null as unknown as number | undefined,
-        mentalHealthStatus: undefined,
-      });
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-      setCurrentUserId(result.user.id);
-      setUser(withFullName(result.user));
-      return { success: true };
-    },
-    []
-  );
 
   const login = useCallback(async (loginId: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -281,7 +234,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setStoredApiUser(null);
     setCurrentUserId(null);
     setUser(null);
-  }, []);
+    queryClient.clear();
+    navigate("/login", { replace: true });
+  }, [queryClient, navigate]);
 
   useEffect(() => {
     setOnSessionExpired(logout);
@@ -296,7 +251,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         login,
         loginWithOtp,
-        register,
         logout,
         hasUser,
         updateUser,

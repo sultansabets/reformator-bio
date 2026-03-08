@@ -173,11 +173,12 @@ function getInitialState(): HealthState {
 }
 
 function metricsSummaryToRaw(api: MetricsSummary, viewDate: string): HealthRawState {
+  const sleepHours = api.sleepHours ?? (api.sleepMinutes != null ? api.sleepMinutes / 60 : 7.5);
   return {
-    sleepHours: api.sleepHours ?? 7.5,
+    sleepHours,
     sleepQuality: api.sleepQuality ?? 80,
-    hrv: api.hrv ?? 45,
-    heartRate: api.heartRate ?? 62,
+    hrv: api.hrv ?? api.avgHRV ?? 45,
+    heartRate: api.heartRate ?? api.avgHeartRate ?? 62,
     steps: api.steps ?? 6500,
     caloriesIntake: api.caloriesIntake ?? 0,
     caloriesBurned: api.caloriesBurned ?? 0,
@@ -198,10 +199,14 @@ export function hasValidMetrics(api: MetricsSummary | null | undefined): boolean
   if (!api || api === null) return false;
   return (
     api.mainStateScore != null ||
+    api.stateScore != null ||
     api.sleepHours != null ||
+    api.sleepMinutes != null ||
     api.steps != null ||
     api.hrv != null ||
-    api.heartRate != null
+    api.avgHRV != null ||
+    api.heartRate != null ||
+    api.avgHeartRate != null
   );
 }
 
