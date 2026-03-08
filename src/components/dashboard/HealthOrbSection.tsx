@@ -6,7 +6,7 @@ import type { MetricsSummary } from "@/api/metricsApi";
 import type { MetricDetail } from "@/components/control/MetricDetailSheet";
 
 export interface HealthOrbSectionProps {
-  metrics: MetricsSummary;
+  metrics: MetricsSummary | null | undefined;
   onMetricClick: (detail: MetricDetail) => void;
 }
 
@@ -14,6 +14,7 @@ const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 
 export function HealthOrbSection({ metrics, onMetricClick }: HealthOrbSectionProps) {
   const { t } = useTranslation();
+  if (!metrics) return null;
   const mainStateScore = metrics.mainStateScore ?? 0;
 
   return (

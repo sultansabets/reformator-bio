@@ -10,7 +10,7 @@ import type { MetricDetail } from "@/components/control/MetricDetailSheet";
 import { formatMedicalDate } from "@/lib/dateFormat";
 
 export interface MetricsCardsProps {
-  metrics: MetricsSummary;
+  metrics: MetricsSummary | null | undefined;
   onMetricClick: (detail: MetricDetail) => void;
 }
 
@@ -18,6 +18,7 @@ const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 
 export function MetricsCards({ metrics, onMetricClick }: MetricsCardsProps) {
   const { t } = useTranslation();
+  if (!metrics) return null;
   const sleepPercent = metrics.sleepPercent ?? 0;
   const loadPercent = metrics.loadPercent ?? 0;
   const heartRate = metrics.heartRate ?? 0;
