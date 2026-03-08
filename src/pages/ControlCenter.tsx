@@ -3,24 +3,19 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useProfileQuery } from "@/hooks/useProfileQuery";
-import { getGreetingByTime } from "@/lib/greeting";
-import { useHealthStore, hasValidMetrics } from "@/store/healthStore";
+import { hasValidMetrics } from "@/store/healthStore";
 import { useMetricsSummaryQuery } from "@/hooks/useMetricsQuery";
 import { getAccessToken } from "@/api/apiClient";
-import HealthOrb from "@/components/control/HealthOrb";
-import { SleepCard } from "@/components/control/SleepCard";
-import { LoadCard } from "@/components/control/LoadCard";
-import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
-import { InfluenceFactors } from "@/components/control/InfluenceFactors";
-import { DateNavigator } from "@/components/control/DateNavigator";
 import { useDateStore } from "@/store/dateStore";
+import { MetricDetailSheet, type MetricDetail } from "@/components/control/MetricDetailSheet";
 import { Button } from "@/components/ui/button";
-
-function formatDateShort(iso: string | undefined): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return [d, m, y].filter(Boolean).join(".") || iso;
-}
+import {
+  GreetingHeader,
+  BaselineBanner,
+  BaselineSuccessBanner,
+  HealthOrbSection,
+  MetricsCards,
+} from "@/components/dashboard";
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] } } };
@@ -28,18 +23,9 @@ const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 const ControlCenter = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: profile } = useProfileQuery();
-  const initials =
-    [profile?.firstName, profile?.lastName]
-      .filter(Boolean)
-      .map((s) => (s as string)[0])
-      .join("")
-      .toUpperCase() || undefined;
-  const displayName =
-    profile?.nickname?.trim() ??
-    profile?.firstName?.trim() ??
-    initials ??
-    t("common.user");
+  const profileQuery = useProfileQuery();
+  const profile = profileQuery.data;
+
   const [metricSheetOpen, setMetricSheetOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricDetail | null>(null);
   const [showBaselineSuccess, setShowBaselineSuccess] = useState(false);
@@ -47,34 +33,26 @@ const ControlCenter = () => {
 
   const selectedDate = useDateStore((s) => s.selectedDate);
   const metricsQuery = useMetricsSummaryQuery(selectedDate, !!getAccessToken());
-  const hasMetrics = metricsQuery.data != null && hasValidMetrics(metricsQuery.data);
   const metrics = metricsQuery.data;
+
   const baseline = metrics?.baseline;
-  const isLearning = !baseline;
   const baselineProgress = metrics?.baselineProgress;
+  const collected = baselineProgress?.collected ?? 0;
+  const required = baselineProgress?.required ?? 5;
+  const isLearning = !baseline;
+
+  const hasMetrics = metrics != null && hasValidMetrics(metrics);
   const showOnboarding =
     !metricsQuery.isLoading &&
     metricsQuery.isSuccess &&
     (metricsQuery.data == null || !hasValidMetrics(metricsQuery.data));
-
-  const sleepPercent = useHealthStore((s) => s.sleepPercent);
-  const loadPercent = useHealthStore((s) => s.loadPercent);
-  const stress = useHealthStore((s) => s.stress);
-  const mainStateScore = useHealthStore((s) => s.mainStateScore);
-  const steps = useHealthStore((s) => s.steps);
-  const heartRate = useHealthStore((s) => s.heartRate);
-  const testosterone = useHealthStore((s) => s.testosterone);
-  const testosteroneDate = useHealthStore((s) => s.testosteroneDate);
 
   const openMetricSheet = (detail: MetricDetail) => {
     setSelectedMetric(detail);
     setMetricSheetOpen(true);
   };
 
-  const baselineJustCompleted =
-    baselineProgress != null &&
-    baselineProgress.required > 0 &&
-    baselineProgress.collected >= baselineProgress.required;
+  const baselineJustCompleted = required > 0 && collected >= required;
 
   useEffect(() => {
     if (baselineJustCompleted && !hasShownBaselineSuccessRef.current) {
@@ -85,7 +63,7 @@ const ControlCenter = () => {
     }
   }, [baselineJustCompleted]);
 
-  if (metricsQuery.isLoading && !hasMetrics) {
+  if (metricsQuery.isLoading) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center px-6">
         <p className="text-muted-foreground">{t("common.loading")}</p>
@@ -100,8 +78,7 @@ const ControlCenter = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
-        <h1 className="mt-1 text-xl font-semibold text-foreground">{displayName}</h1>
+        <GreetingHeader profile={profile} />
         <p className="mt-6 max-w-[280px] text-center text-muted-foreground">
           {t("onboarding.connectDevice")}
         </p>
@@ -115,6 +92,14 @@ const ControlCenter = () => {
     );
   }
 
+  if (!metrics) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center px-6">
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className="px-5 pt-6 pb-4"
@@ -122,115 +107,26 @@ const ControlCenter = () => {
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={item} className="mb-4 flex flex-col items-center text-center">
-        <p className="text-sm text-muted-foreground">{getGreetingByTime()}</p>
-        <h1 className="mt-1 text-2xl font-semibold text-foreground">{displayName}</h1>
+      <motion.div variants={item}>
+        <GreetingHeader profile={profile} />
       </motion.div>
 
-      {showBaselineSuccess && (
-        <motion.div
-          variants={item}
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          className="mb-4 flex flex-col items-center justify-center rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-center"
-        >
-          <p className="text-sm font-medium text-foreground">
-            {t("adaptationDetail.baselineEstablished")}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {t("adaptationDetail.baselineEstablishedSubtitle")}
-          </p>
-        </motion.div>
-      )}
-
-      {isLearning && (
-        <motion.div
-          variants={item}
-          className="mb-4 flex flex-col items-center justify-center rounded-lg border border-muted bg-muted/30 px-4 py-3 text-center"
-        >
-          <p className="text-sm font-medium text-foreground">
-            {t("adaptationDetail.collecting")}
-          </p>
-          {baselineProgress && baselineProgress.collected > 0 && baselineProgress.required > 0 && (
-            <>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {t("adaptationDetail.dayOfRequired", {
-                  collected: baselineProgress.collected,
-                  required: baselineProgress.required,
-                })}
-              </p>
-              <div className="mt-2 w-full max-w-[200px]">
-                <div className="h-1.5 w-full overflow-hidden rounded bg-muted">
-                  <motion.div
-                    className="h-full rounded bg-primary"
-                    initial={false}
-                    animate={{ width: `${(baselineProgress.collected / baselineProgress.required) * 100}%` }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-          <p className="mt-2 max-w-[260px] text-xs leading-relaxed text-muted-foreground">
-            {t("adaptationDetail.learningExplanation")}
-          </p>
-        </motion.div>
-      )}
-
-      <motion.div variants={item} className="mt-4 mb-1 flex justify-center overflow-visible">
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
-          onKeyDown={(e) => e.key === "Enter" && openMetricSheet({ key: "energy", title: t("energyDetail.title"), percent: mainStateScore })}
-          className="relative mx-auto flex w-full max-w-[420px] cursor-pointer items-center justify-center overflow-visible"
-        >
-          <HealthOrb score={mainStateScore} />
-        </div>
+      <motion.div variants={item}>
+        <BaselineSuccessBanner show={showBaselineSuccess} />
       </motion.div>
 
-      <motion.div variants={item} className="mb-5 flex justify-center">
-        <div className="grid w-full max-w-[360px] grid-cols-2 justify-items-center gap-x-2 gap-y-2">
-          <SleepCard
-            percent={sleepPercent}
-            size="large"
-            onClick={() =>
-              openMetricSheet({
-                key: "sleep",
-                title: t("center.sleep"),
-                percent: sleepPercent,
-              })
-            }
-          />
-          <LoadCard
-            percent={loadPercent}
-            size="large"
-            onClick={() =>
-              openMetricSheet({
-                key: "load",
-                title: t("center.load"),
-                percent: loadPercent,
-              })
-            }
-          />
-        </div>
-      </motion.div>
-
-      <motion.div variants={item} className="mb-6 flex justify-center">
-        <DateNavigator />
-      </motion.div>
-
-      <motion.div variants={item} className="mb-6">
-        <InfluenceFactors
-          systolic={125}
-          diastolic={82}
-          pulse={heartRate}
-          steps={steps}
-          stressPercent={stress}
-          testosteroneValue={testosterone != null ? Math.round(testosterone) : undefined}
-          testosteroneDate={formatDateShort(testosteroneDate)}
+      <motion.div variants={item}>
+        <BaselineBanner
+          isLearning={isLearning}
+          collected={collected}
+          required={required}
         />
+      </motion.div>
+
+      <HealthOrbSection metrics={metrics} onMetricClick={openMetricSheet} />
+
+      <motion.div variants={container}>
+        <MetricsCards metrics={metrics} onMetricClick={openMetricSheet} />
       </motion.div>
 
       <MetricDetailSheet
