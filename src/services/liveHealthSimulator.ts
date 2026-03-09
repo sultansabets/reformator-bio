@@ -130,6 +130,8 @@ export async function startHealthSimulation(
       hrv: valueMs ?? lastHrv,
     };
 
+    if (!deviceId) return;
+
     const payload = {
       deviceId,
       heartRates: [{ valueBpm, recordedAt }],

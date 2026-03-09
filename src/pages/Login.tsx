@@ -5,8 +5,6 @@ import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestCode } from "@/api/phoneAuthApi";
-import { getMetricsSummary } from "@/api/metricsApi";
-import { hasValidMetrics } from "@/store/healthStore";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,13 +91,7 @@ const Login = () => {
         setError(result.error ?? t("errors.invalidSmsCode"));
         return;
       }
-      try {
-        const metrics = await getMetricsSummary();
-        const hasDevice = metrics != null && hasValidMetrics(metrics);
-        navigate(hasDevice ? "/dashboard" : "/onboarding/data-source", { replace: true });
-      } catch {
-        navigate("/onboarding/data-source", { replace: true });
-      }
+      navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       const msg = err && typeof err === "object" && "message" in err
         ? String((err as { message: string }).message)
